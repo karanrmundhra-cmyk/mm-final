@@ -37,7 +37,7 @@ export default function Notes() {
     if (selected) {
       setEditContent(selected.content || "");
     }
-  }, [selected?.id]);
+  }, [selected?.id, selected?.content]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const parseAi = async () => {
     if (!aiText.trim()) return;

@@ -38,7 +38,7 @@ export default function Reports() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadTab(tab); }, [tab]);
+  useEffect(() => { loadTab(tab); }, [tab, loadTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const approve = async (id) => {
     try {

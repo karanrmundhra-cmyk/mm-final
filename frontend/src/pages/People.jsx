@@ -42,7 +42,7 @@ export default function People() {
   useEffect(() => {
     if (selected) loadItems(selected.id);
     else setItems([]);
-  }, [selected?.id]);
+  }, [selected?.id, loadItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const add = async () => {
     if (!newRow.name.trim()) return;
