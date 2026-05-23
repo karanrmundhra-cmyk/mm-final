@@ -122,20 +122,21 @@ export default function CashFlow() {
       </div>
 
       {/* ── Category totals / filter ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 mb-5"
-           style={{ border:"1px solid var(--mm-border)" }}>
-        {CATS.map((cat, i) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {CATS.map((cat) => (
           <button key={cat}
                   onClick={() => setFilter(f => ({ ...f, category: f.category===cat ? "" : cat }))}
                   title={`Filter by ${cat}`}
-                  className="p-4 text-left transition-all hover:bg-[rgba(230,196,121,0.04)]"
+                  className="mm-card p-4 text-left transition-all"
                   style={{
-                    borderRight: i < 3 ? "1px solid var(--mm-border)" : "none",
-                    background: filter.category===cat ? `${CAT_COLORS[cat]}12` : "transparent",
-                    borderBottom: filter.category===cat ? `2px solid ${CAT_COLORS[cat]}` : "2px solid transparent",
+                    background: filter.category===cat ? `${CAT_COLORS[cat]}12` : "var(--mm-surface-2)",
+                    borderColor: filter.category===cat ? `${CAT_COLORS[cat]}55` : "var(--mm-border)",
+                    boxShadow: filter.category===cat
+                      ? `0 4px 20px ${CAT_COLORS[cat]}22`
+                      : "var(--elev-1)",
                   }}>
             <div className="mm-label mb-2" style={{ color:"var(--mm-muted)" }}>{cat}</div>
-            <div className="text-lg font-semibold" style={{ color:CAT_COLORS[cat] }}>
+            <div className="text-xl font-light mm-font-display" style={{ color:CAT_COLORS[cat] }}>
               ₹{formatAmount(totals[cat]||0)}
             </div>
           </button>

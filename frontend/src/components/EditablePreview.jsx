@@ -23,21 +23,26 @@ export default function EditablePreview({ title = "Review before saving", fields
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-         style={{ background:"rgba(0,0,0,0.75)", backdropFilter:"blur(6px)" }}>
+         style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
 
-      <div className="w-full max-w-md overflow-hidden animate-slide-up"
-           style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)" }}>
+      <div className="w-full max-w-md overflow-hidden animate-scale-in"
+           style={{
+             background:"var(--mm-surface)",
+             border:"1px solid var(--mm-border-gold)",
+             borderRadius: 32,
+             boxShadow: "0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,175,55,0.08)",
+           }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4"
+        <div className="flex items-center justify-between px-6 py-5"
              style={{ borderBottom:"1px solid var(--mm-border)" }}>
           <div>
-            <h2 className="mm-font-display text-base" style={{ color:"var(--mm-text)", fontWeight:400 }}>
+            <h2 className="mm-font-display text-lg" style={{ color:"var(--mm-text)", fontWeight:400, letterSpacing:"-0.01em" }}>
               {title}
             </h2>
             {hasLow && (
-              <p className="mm-label mt-0.5" style={{ color:"#E05252", letterSpacing:"0.15em" }}>
-                Low confidence fields — please review
+              <p className="mm-label mt-1" style={{ color:"#E05252" }}>
+                Low confidence — please review
               </p>
             )}
           </div>
@@ -48,10 +53,10 @@ export default function EditablePreview({ title = "Review before saving", fields
         </div>
 
         {/* Fields */}
-        <div className="px-5 py-4 space-y-3 max-h-96 overflow-y-auto">
+        <div className="px-6 py-5 space-y-4 max-h-96 overflow-y-auto">
           {fields.map(f => (
             <div key={f.key} className="flex items-start gap-3">
-              <span className="text-xs w-24 flex-shrink-0 pt-1.5 mm-label" style={{ letterSpacing:"0.12em" }}>
+              <span className="text-xs w-24 flex-shrink-0 pt-2 mm-label">
                 {f.label}
               </span>
               <div className="flex-1">
@@ -67,9 +72,11 @@ export default function EditablePreview({ title = "Review before saving", fields
                   />
                 ) : (
                   <button onClick={() => setEditing(f.key)}
-                          className="w-full text-left text-sm px-2 py-1.5 transition-colors"
-                          style={{ color:"var(--mm-text)", minHeight:28 }}
-                          onMouseEnter={e => e.currentTarget.style.background = "rgba(230,196,121,0.04)"}
+                          className="w-full text-left text-sm px-3 py-2 transition-colors"
+                          style={{
+                            color:"var(--mm-text)", minHeight:32, borderRadius:12,
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(212,175,55,0.06)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     {values[f.key] || <span style={{ color:"var(--mm-muted)" }}>—</span>}
                   </button>
@@ -81,18 +88,19 @@ export default function EditablePreview({ title = "Review before saving", fields
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 px-5 py-4"
+        <div className="flex items-center gap-2 px-6 py-5"
              style={{ borderTop:"1px solid var(--mm-border)" }}>
           <button onClick={() => onConfirm(values)}
                   className="mm-btn-gold flex-1 flex items-center justify-center gap-2">
-            <Check size={13} /> Confirm
+            <Check size={13} /> Confirm &amp; Save
           </button>
           <button onClick={() => setEditing(null)} title="Edit fields"
                   className="mm-btn-ghost px-4">
             <Edit3 size={13} />
           </button>
           <button onClick={() => setShowDiscard(true)} title="Discard"
-                  style={{ padding:"8px 14px", border:"1px solid #E0505033", color:"#E05252", background:"transparent", cursor:"pointer", fontSize:11 }}>
+                  className="mm-icon-btn danger"
+                  style={{ padding:"10px 14px" }}>
             <Trash2 size={13} />
           </button>
         </div>
@@ -102,15 +110,21 @@ export default function EditablePreview({ title = "Review before saving", fields
       {showDiscard && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4"
              style={{ background:"rgba(0,0,0,0.6)" }}>
-          <div className="p-6 max-w-sm w-full"
-               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border)" }}>
-            <p className="text-sm mb-5" style={{ color:"var(--mm-text)" }}>
-              Discard this item? The original text will be lost.
+          <div className="p-6 max-w-sm w-full animate-scale-in"
+               style={{
+                 background:"var(--mm-surface-2)",
+                 border:"1px solid var(--mm-border)",
+                 borderRadius: 24,
+                 boxShadow:"var(--elev-4)",
+               }}>
+            <p className="text-sm mb-5 leading-relaxed" style={{ color:"var(--mm-text)" }}>
+              Discard this item? The parsed data will be lost.
             </p>
             <div className="flex gap-2">
               <button onClick={onDiscard}
                       className="flex-1 py-2.5 text-sm font-medium"
-                      style={{ background:"#E0505018", color:"#E05252", border:"1px solid #E0505033", cursor:"pointer" }}>
+                      style={{ background:"#E0505018", color:"#E05252",
+                               border:"1px solid #E0505033", cursor:"pointer", borderRadius:20 }}>
                 Yes, discard
               </button>
               <button onClick={() => setShowDiscard(false)}

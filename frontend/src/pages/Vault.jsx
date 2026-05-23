@@ -84,7 +84,7 @@ export default function Vault() {
           {expired.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
                  style={{ background:"#E0525211", border:"1px solid #E0525233",
-                          borderLeft:"2px solid #E05252" }}>
+                          borderLeft:"3px solid #E05252", borderRadius:12 }}>
               <AlertTriangle size={13} style={{ color:"#E05252", flexShrink:0 }} />
               <span className="text-sm" style={{ color:"#E05252" }}>
                 <strong>{d.title}</strong> — expired {Math.abs(daysUntil(d.expiry_date))} days ago
@@ -94,7 +94,7 @@ export default function Vault() {
           {expiring.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
                  style={{ background:"#E0A05211", border:"1px solid #E0A05233",
-                          borderLeft:"2px solid #E0A052" }}>
+                          borderLeft:"3px solid #E0A052", borderRadius:12 }}>
               <AlertTriangle size={13} style={{ color:"#E0A052", flexShrink:0 }} />
               <span className="text-sm" style={{ color:"#E0A052" }}>
                 <strong>{d.title}</strong> — expires in {daysUntil(d.expiry_date)} days
@@ -190,10 +190,11 @@ export default function Vault() {
 
       {/* ── Add modal ── */}
       {adding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center"
-             style={{ background:"rgba(0,0,0,0.75)", backdropFilter:"blur(6px)" }}>
-          <div className="p-6 w-full max-w-md animate-fade-in"
-               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+          <div className="p-7 w-full max-w-md animate-scale-in"
+               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                        borderRadius:32, boxShadow:"0 24px 80px rgba(0,0,0,0.8)" }}>
             <h2 className="mm-font-display text-base mb-5"
                 style={{ color:"var(--mm-text)", fontWeight:400 }}>
               New Document

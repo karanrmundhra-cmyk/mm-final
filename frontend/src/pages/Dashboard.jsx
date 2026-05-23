@@ -88,10 +88,10 @@ export default function Dashboard() {
 
   const ItemRow = ({ to, dot, dotColor, main, sub, right, rightColor }) => (
     <button onClick={() => navigate(to)}
-            className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
+            className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
             style={{ borderColor:"var(--mm-border)" }}>
-      <div className="w-1.5 h-1.5 flex-shrink-0"
-           style={{ background:dotColor, borderRadius:0 }} />
+      <div className="w-2 h-2 flex-shrink-0"
+           style={{ background:dotColor, borderRadius:"50%", boxShadow:`0 0 6px ${dotColor}66` }} />
       <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{main}</span>
       {sub && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{sub}</span>}
       {right && <span className="text-xs font-medium" style={{ color:rightColor||"var(--mm-muted)" }}>{right}</span>}
@@ -115,17 +115,16 @@ export default function Dashboard() {
 
       {/* ── Stats ── */}
       {data?.stats && (
-        <div className="grid grid-cols-4 gap-0" style={{ border:"1px solid var(--mm-border)" }}>
+        <div className="grid grid-cols-4 gap-3">
           {[
             { label:"Pending",   value:data.stats.pending,       color:"var(--mm-muted)" },
             { label:"Overdue",   value:data.stats.overdue,       color:data.stats.overdue>0 ? "#E05252" : "var(--mm-muted)" },
             { label:"Done Today",value:data.stats.done_today,    color:"#52C77A" },
             { label:"Reminders", value:data.stats.reminders_due, color:"var(--mm-gold)" },
-          ].map((s,i) => (
-            <div key={s.label} className="p-4 text-center"
-                 style={{ borderRight:i<3 ? "1px solid var(--mm-border)" : "none" }}>
-              <div className="text-2xl font-semibold mm-font-display" style={{ color:s.color }}>{s.value}</div>
-              <div className="mt-0.5 mm-label">{s.label}</div>
+          ].map((s) => (
+            <div key={s.label} className="mm-card p-4 text-center">
+              <div className="text-3xl font-light mm-font-display" style={{ color:s.color }}>{s.value}</div>
+              <div className="mt-1 mm-label">{s.label}</div>
             </div>
           ))}
         </div>
@@ -135,7 +134,7 @@ export default function Dashboard() {
       {data?.pending_review_count > 0 && (
         <button onClick={() => navigate("/reports")}
                 className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left"
-                style={{ background:"#E0A05211", border:"1px solid #E0A05244" }}>
+                style={{ background:"#E0A05211", border:"1px solid #E0A05244", borderRadius:16 }}>
           <AlertTriangle size={15} style={{ color:"#E0A052", flexShrink:0 }} />
           <div className="flex-1">
             <span className="text-sm font-medium" style={{ color:"#E0A052" }}>
@@ -208,7 +207,7 @@ export default function Dashboard() {
                       style={{ borderColor:"var(--mm-border)" }}>
                 <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
                      style={{ borderColor:r.done_today ? "#52C77A" : "var(--mm-border)",
-                              background:r.done_today ? "#52C77A22" : "transparent", borderRadius:0 }}>
+                              background:r.done_today ? "#52C77A22" : "transparent", borderRadius:"50%" }}>
                   {r.done_today && <span style={{ color:"#52C77A", fontSize:9, fontWeight:700 }}>✓</span>}
                 </div>
                 <span className="flex-1 text-sm" style={{ color:"var(--mm-text)", opacity:r.done_today?0.55:1 }}>
@@ -224,14 +223,12 @@ export default function Dashboard() {
       {/* ── Cash flow ── */}
       {data?.cashflow && (
         <Section id="cashflow" title="Month Finances">
-          <div className="grid grid-cols-2 gap-0" style={{ border:"1px solid var(--mm-border)" }}>
-            {Object.entries(data.cashflow).map(([cat,val],i) => (
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(data.cashflow).map(([cat,val]) => (
               <button key={cat} onClick={() => navigate("/cash-flow")}
-                      className="mm-row p-4 text-left"
-                      style={{ borderRight:i%2===0?"1px solid var(--mm-border)":"none",
-                               borderBottom:i<Object.entries(data.cashflow).length-2?"1px solid var(--mm-border)":"none" }}>
-                <div className="mm-label mb-1">{cat}</div>
-                <div className="text-lg font-semibold mm-font-display" style={{ color:"var(--mm-text)" }}>
+                      className="mm-card mm-row p-4 text-left">
+                <div className="mm-label mb-1.5">{cat}</div>
+                <div className="text-xl font-light mm-font-display" style={{ color:"var(--mm-text)" }}>
                   ₹{formatAmount(val)}
                 </div>
               </button>
@@ -242,18 +239,14 @@ export default function Dashboard() {
 
       {/* ── Quick access ── */}
       <Section id="quicknav" title="Quick Access">
-        <div className="grid grid-cols-4 gap-0" style={{ border:"1px solid var(--mm-border)" }}>
-          {QUICK_NAV.map((n,i) => {
+        <div className="grid grid-cols-4 gap-2">
+          {QUICK_NAV.map((n) => {
             const Icon = n.icon;
             return (
               <button key={n.to} onClick={() => navigate(n.to)} title={n.label}
-                      className="mm-row flex flex-col items-center gap-2.5 p-4"
-                      style={{
-                        borderRight:  i%4!==3 ? "1px solid var(--mm-border)" : "none",
-                        borderBottom: i<4     ? "1px solid var(--mm-border)" : "none",
-                      }}>
+                      className="mm-card mm-row flex flex-col items-center gap-2.5 p-4">
                 <div className="w-9 h-9 flex items-center justify-center"
-                     style={{ background:`${n.color}18`, border:`1px solid ${n.color}33` }}>
+                     style={{ background:`${n.color}18`, borderRadius:12 }}>
                   {Icon
                     ? <Icon size={16} style={{ color:n.color }} />
                     : <span style={{ fontSize:16 }}>{n.emoji}</span>}
@@ -268,8 +261,9 @@ export default function Dashboard() {
       {/* ── Daily quote ── */}
       {quote && (
         <Section id="quote" title="Daily Reflection">
-          <div className="px-5 py-4"
-               style={{ borderLeft:"2px solid var(--mm-border-gold)", background:"var(--mm-surface-2)" }}>
+          <div className="px-5 py-5"
+               style={{ borderLeft:"3px solid var(--mm-border-gold)", background:"var(--mm-surface-2)",
+                        borderRadius:"0 16px 16px 0" }}>
             <p className="mm-font-serif text-base italic" style={{ color:"var(--mm-text)", lineHeight:1.7 }}>
               "{quote.quote}"
             </p>

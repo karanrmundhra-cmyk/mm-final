@@ -282,10 +282,11 @@ export default function People() {
 
       {/* ── Add modal ── */}
       {adding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center"
-             style={{ background:"rgba(0,0,0,0.75)", backdropFilter:"blur(6px)" }}>
-          <div className="p-6 w-full max-w-md animate-fade-in"
-               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+          <div className="p-7 w-full max-w-md animate-scale-in"
+               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                        borderRadius:32, boxShadow:"0 24px 80px rgba(0,0,0,0.8)" }}>
             <h2 className="mm-font-display text-base mb-4"
                 style={{ color:"var(--mm-text)", fontWeight:400 }}>
               New Contact

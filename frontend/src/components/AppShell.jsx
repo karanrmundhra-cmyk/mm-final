@@ -66,30 +66,43 @@ export default function AppShell() {
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
+      {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
       <aside
         className="hidden md:flex flex-col flex-shrink-0 h-full transition-all duration-300"
         style={{
-          width: collapsed ? 56 : 224,
+          width: collapsed ? 64 : 232,
           background: "var(--mm-surface)",
           borderRight: "1px solid var(--mm-border)",
+          boxShadow: "4px 0 32px rgba(0,0,0,0.3)",
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-3 flex-shrink-0"
-             style={{ height: 64, borderBottom: "1px solid var(--mm-border)" }}>
-          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center"
-               style={{ border: "1px solid var(--mm-border-gold)" }}>
-            <span className="text-xs font-semibold tracking-widest"
-                  style={{ color: "var(--mm-gold)", fontFamily: "'EB Garamond', serif" }}>M</span>
+        <div className="flex items-center gap-3 px-4 flex-shrink-0"
+             style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
+          {/* Diamond mark */}
+          <div className="flex-shrink-0 flex items-center justify-center"
+               style={{
+                 width: 36, height: 36,
+                 background: "linear-gradient(135deg, var(--mm-gold-light) 0%, var(--mm-gold) 60%, var(--mm-gold-dark) 100%)",
+                 borderRadius: 10,
+                 boxShadow: "0 4px 16px rgba(212,175,55,0.35)",
+               }}>
+            <span style={{
+              color: "#0B0B0C", fontFamily: "'Cormorant Garamond', serif",
+              fontSize: 18, fontWeight: 600, lineHeight: 1,
+            }}>M</span>
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="text-sm tracking-[0.15em] uppercase"
-                   style={{ color: "var(--mm-gold)", fontFamily: "'EB Garamond', serif", letterSpacing: "0.2em" }}>
+              <div style={{
+                color: "var(--mm-text)",
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: 16, fontWeight: 500, letterSpacing: "0.05em",
+                lineHeight: 1.2,
+              }}>
                 Mind Matters
               </div>
-              <div className="mm-label" style={{ fontSize: 9, letterSpacing: "0.25em" }}>
+              <div className="mm-label" style={{ fontSize: 9, letterSpacing: "0.22em", marginTop: 2 }}>
                 Personal OS
               </div>
             </div>
@@ -103,32 +116,37 @@ export default function AppShell() {
             return (
               <NavLink
                 key={to} to={to} end={to === "/"}
-                title={label}
-                className="flex items-center gap-3 px-2 py-2 transition-all duration-150 relative"
+                title={collapsed ? label : undefined}
+                className="flex items-center gap-3 px-3 py-2.5 transition-all duration-200 relative"
                 style={({ isActive }) => ({
+                  borderRadius: 14,
                   color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
-                  background: isActive ? "rgba(230,196,121,0.06)" : "transparent",
-                  borderLeft: isActive ? "2px solid var(--mm-gold)" : "2px solid transparent",
+                  background: isActive
+                    ? "rgba(212,175,55,0.1)"
+                    : "transparent",
+                  boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
                 })}
               >
                 <Icon size={15} className="flex-shrink-0" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-xs tracking-[0.12em] uppercase"
-                          style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500, color: "inherit" }}>
+                    <span className="flex-1 text-xs"
+                          style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 500,
+                                   letterSpacing: "0.06em", color: "inherit" }}>
                       {label}
                     </span>
                     {hasBadge && (
                       <span className="text-xs px-1.5 py-0.5"
-                            style={{ background: "#E0505022", color: "#E05252", fontSize: 10 }}>
+                            style={{ background: "#E0505022", color: "#E05252",
+                                     fontSize: 9, borderRadius: 8 }}>
                         {pendingReview}
                       </span>
                     )}
                   </>
                 )}
                 {collapsed && hasBadge && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5"
-                        style={{ background: "#E05252", borderRadius: 0 }} />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5"
+                        style={{ background: "#E05252", borderRadius: "50%" }} />
                 )}
               </NavLink>
             );
@@ -136,11 +154,14 @@ export default function AppShell() {
         </nav>
 
         {/* Footer */}
-        <div className="flex-shrink-0 p-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
+        <div className="flex-shrink-0 px-3 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
           {!collapsed && (
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 flex items-center justify-center flex-shrink-0"
-                   style={{ background: "var(--mm-gold)", color: "#131313" }}>
+            <div className="flex items-center gap-2.5 mb-3 px-1">
+              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                   style={{
+                     background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
+                     borderRadius: 10, color: "#0B0B0C",
+                   }}>
                 <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
               </div>
               <div className="flex-1 min-w-0">
@@ -152,16 +173,16 @@ export default function AppShell() {
                 </div>
               </div>
               <button onClick={logout} title="Sign out"
-                      className="p-1 transition-colors hover:opacity-100"
-                      style={{ color: "var(--mm-muted)", opacity: 0.6 }}>
+                      className="p-1.5 transition-opacity hover:opacity-100"
+                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
                 <LogOut size={13} />
               </button>
             </div>
           )}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-1">
             <SyncDot />
             <button onClick={toggleCollapse}
-                    className="p-1 transition-colors"
+                    className="p-1.5 transition-colors"
                     style={{ color: "var(--mm-muted)" }}>
               {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
             </button>
@@ -169,42 +190,54 @@ export default function AppShell() {
         </div>
       </aside>
 
-      {/* ── MAIN ────────────────────────────────────────────────────────── */}
+      {/* ── MAIN ────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Top bar */}
+        {/* Top bar — glass */}
         <header className="flex items-center gap-3 px-5 flex-shrink-0"
-                style={{ height: 56, background: "var(--mm-surface)",
-                         borderBottom: "1px solid var(--mm-border)" }}>
+                style={{
+                  height: 60,
+                  background: "rgba(17,17,20,0.85)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  borderBottom: "1px solid var(--mm-border)",
+                  boxShadow: "0 1px 0 rgba(255,255,255,0.04)",
+                }}>
           <ProjectSelector />
           <div className="flex-1" />
 
-          {/* Search */}
+          {/* Search pill */}
           <button onClick={() => setShowSearch(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 transition-all hover:opacity-80"
-                  style={{ border: "1px solid var(--mm-border)", color: "var(--mm-muted)",
-                           fontSize: 11, letterSpacing: "0.1em" }}>
+                  className="flex items-center gap-2 px-4 py-2 transition-all hover:opacity-80"
+                  style={{
+                    background: "var(--mm-surface-2)",
+                    border: "1px solid var(--mm-border)",
+                    borderRadius: 20,
+                    color: "var(--mm-muted)",
+                    fontSize: 11, letterSpacing: "0.06em",
+                  }}>
             <Search size={12} />
-            <span className="hidden sm:inline uppercase tracking-widest" style={{ fontSize: 10 }}>Search</span>
-            <kbd className="hidden sm:inline text-xs px-1"
-                 style={{ background: "var(--mm-border)", color: "var(--mm-muted)", fontSize: 9 }}>⌘K</kbd>
+            <span className="hidden sm:inline" style={{ fontSize: 11 }}>Search</span>
+            <kbd className="hidden sm:inline text-xs px-1.5 py-0.5"
+                 style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)",
+                          fontSize: 9, borderRadius: 6 }}>⌘K</kbd>
           </button>
 
           <button onClick={() => setShowVoice(true)} title="Voice"
-                  className="p-2 transition-colors hover:opacity-80"
-                  style={{ color: "var(--mm-muted)" }}>
+                  className="p-2 transition-opacity hover:opacity-100"
+                  style={{ color: "var(--mm-muted)", opacity: 0.65 }}>
             <Mic size={15} />
           </button>
 
-          <button onClick={() => setShowAi(true)} title="AI"
-                  className="p-2 transition-colors hover:opacity-80"
-                  style={{ color: "var(--mm-gold)" }}>
+          <button onClick={() => setShowAi(true)} title="AI Chat"
+                  className="p-2 transition-opacity hover:opacity-100"
+                  style={{ color: "var(--mm-gold)", opacity: 0.9 }}>
             <Zap size={15} />
           </button>
 
           <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
-                  className="p-2 transition-colors hover:opacity-80 text-xs"
-                  style={{ color: "var(--mm-muted)" }}>
+                  className="p-2 transition-opacity hover:opacity-100"
+                  style={{ color: "var(--mm-muted)", opacity: 0.65, fontSize: 15 }}>
             {theme === "dark" ? "☀" : "🌙"}
           </button>
         </header>
@@ -216,37 +249,49 @@ export default function AppShell() {
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden flex items-center justify-around px-2 py-2 mm-bottom-nav flex-shrink-0"
-             style={{ background: "var(--mm-surface)", borderTop: "1px solid var(--mm-border)" }}>
+             style={{
+               background: "rgba(17,17,20,0.95)",
+               backdropFilter: "blur(12px)",
+               borderTop: "1px solid var(--mm-border)",
+             }}>
           {BOTTOM_NAV.map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} end={to === "/"}
                      className="flex flex-col items-center gap-0.5 p-2"
                      style={({ isActive }) => ({ color: isActive ? "var(--mm-gold)" : "var(--mm-muted)" })}>
-              <Icon size={17} />
-              <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>{label}</span>
+              <Icon size={18} />
+              <span style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase",
+                             fontFamily: "'Outfit', sans-serif" }}>{label}</span>
             </NavLink>
           ))}
           <button onClick={() => setShowQuickAdd(true)}
                   className="flex flex-col items-center gap-0.5 p-2"
                   style={{ color: "var(--mm-gold)" }}>
-            <Plus size={17} />
-            <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase" }}>Add</span>
+            <Plus size={18} />
+            <span style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase",
+                           fontFamily: "'Outfit', sans-serif" }}>Add</span>
           </button>
         </nav>
       </div>
 
-      {/* ── FLOATING DOCK ───────────────────────────────────────────────── */}
-      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-center gap-1 px-4 py-2 z-50"
-           style={{ background: "rgba(19,19,19,0.97)", border: "1px solid var(--mm-border-gold)",
-                    backdropFilter: "blur(24px)", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}>
-        <DockBtn icon={Plus} label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
-        <DockBtn icon={Search} label="Search" onClick={() => setShowSearch(true)} />
-        <DockBtn icon={Mic} label="Voice" onClick={() => setShowVoice(true)} />
-        <DockBtn icon={Zap} label="AI" onClick={() => setShowAi(true)} gold />
+      {/* ── FLOATING DOCK ────────────────────────────────────────── */}
+      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-center gap-1 px-5 py-2.5 z-50"
+           style={{
+             background: "rgba(17,17,20,0.96)",
+             border: "1px solid var(--mm-border-gold)",
+             borderRadius: 32,
+             backdropFilter: "blur(24px)",
+             WebkitBackdropFilter: "blur(24px)",
+             boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.08)",
+           }}>
+        <DockBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
+        <DockBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
+        <DockBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
+        <DockBtn icon={Zap}    label="AI"        onClick={() => setShowAi(true)} gold />
         <div className="w-px h-4 mx-2" style={{ background: "var(--mm-border)" }} />
         <SyncDot />
       </div>
 
-      {/* ── MODALS ──────────────────────────────────────────────────────── */}
+      {/* ── MODALS ──────────────────────────────────────────────── */}
       {showQuickAdd && <QuickAdd onClose={() => setShowQuickAdd(false)} />}
       {showSearch   && <GlobalSearch onClose={() => setShowSearch(false)} />}
       {showAi       && <AiChat onClose={() => setShowAi(false)} />}
@@ -261,16 +306,24 @@ function SyncDot() {
   const color = !state.online ? "#E05252" : state.pending > 0 ? "#E0A052" : "#52C77A";
   return (
     <div title={state.pending > 0 ? `${state.pending} pending` : "Synced"}
-         style={{ width: 7, height: 7, background: color,
-                  boxShadow: `0 0 6px ${color}66` }} />
+         style={{
+           width: 8, height: 8, borderRadius: "50%",
+           background: color,
+           boxShadow: `0 0 8px ${color}88`,
+         }} />
   );
 }
 
 function DockBtn({ icon: Icon, label, onClick, gold }) {
   return (
     <button onClick={onClick} title={label}
-            className="p-2 transition-colors hover:opacity-80"
-            style={{ color: gold ? "var(--mm-gold)" : "var(--mm-muted)" }}>
+            className="p-2.5 transition-all hover:opacity-100 hover:scale-110"
+            style={{
+              color: gold ? "var(--mm-gold)" : "var(--mm-muted)",
+              opacity: gold ? 0.95 : 0.65,
+              borderRadius: 12,
+              transition: "opacity 0.15s, transform 0.15s cubic-bezier(0.34,1.56,0.64,1)",
+            }}>
       <Icon size={15} />
     </button>
   );

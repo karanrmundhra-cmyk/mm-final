@@ -14,7 +14,7 @@ const FREQS = [
 ];
 const EMPTY = { activity:"", name:"", group:"", details:"", frequency:"Daily", priority:"Medium", status:"Active" };
 
-const PRIORITY_COLORS = { High:"#E05252", Medium:"#E6C479", Low:"#52C77A" };
+const PRIORITY_COLORS = { High:"#E05252", Medium:"#D4AF37", Low:"#52C77A" };
 const STATUS_COLORS   = { Active:"#52C77A", Paused:"#E0A052", Done:"var(--mm-muted)", Completed:"var(--mm-muted)" };
 
 export default function Routines() {

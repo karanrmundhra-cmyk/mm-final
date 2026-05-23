@@ -61,12 +61,13 @@ export default function QuickAdd({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4"
-         style={{ background:"rgba(0,0,0,0.75)", backdropFilter:"blur(6px)" }}
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 p-4"
+         style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)" }}
          onClick={e => e.target === e.currentTarget && onClose()}>
 
-      <div className="w-full max-w-md overflow-hidden animate-slide-up"
-           style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)" }}>
+      <div className="w-full max-w-md overflow-hidden animate-scale-in"
+           style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                    borderRadius:32, boxShadow:"0 24px 80px rgba(0,0,0,0.8)" }}>
 
         <div className="flex items-center justify-between px-5 py-4"
              style={{ borderBottom:"1px solid var(--mm-border)" }}>

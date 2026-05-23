@@ -14,7 +14,7 @@ const STATUS_COLORS = {
   "In Progress": "#4F8EF7",
   "Completed":   "#52C77A",
   "Done":        "#52C77A",
-  "Follow-Up":   "#E6C479",
+  "Follow-Up":   "#D4AF37",
   "Delegate":    "#A855F7",
   "On Hold":     "#E0A052",
 };
