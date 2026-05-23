@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, Loader, Mail, Phone, Building2, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import Skeleton from "@/components/Skeleton";
 
 const EMPTY = { name:"", role:"", company:"", email:"", phone:"", group:"", notes:"" };
 
@@ -46,13 +47,14 @@ export default function People() {
       await api.post("/people",newRow);
       toast.success("Contact added");
       setNewRow({...EMPTY}); setAdding(false); load();
-    } catch {}
+    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add contact"); }
   };
 
   const update = async (id, patch) => {
     setPeople(ps => ps.map(p => p.id===id ? {...p,...patch} : p));
     if (selected?.id===id) setSelected(s => s ? {...s,...patch} : s);
-    try { await api.patch(`/people/${id}`,patch); } catch {}
+    try { await api.patch(`/people/${id}`,patch); }
+    catch { toast.error("Failed to save changes"); }
   };
 
   const del = async (id) => {
@@ -61,7 +63,7 @@ export default function People() {
       toast.success("Moved to trash");
       if (selected?.id===id) setSelected(null);
       load();
-    } catch {}
+    } catch { toast.error("Failed to delete contact"); }
   };
 
   const visible = people.filter(p => {
@@ -73,11 +75,7 @@ export default function People() {
     return true;
   });
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
+  if (loading) return <Skeleton.TwoCol rows={6} />;
 
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden">

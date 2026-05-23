@@ -65,7 +65,7 @@ export default function Notes() {
       const { data } = await api.post("/notes",{ title:newTitle, content:"", tags:[] });
       toast.success("Note created");
       setNewTitle(""); await load(); setSelected(data);
-    } catch {}
+    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to create note"); }
   };
 
   const saveContent = async () => {
@@ -75,14 +75,16 @@ export default function Notes() {
       await api.patch(`/notes/${selected.id}`,{ content:editContent });
       setNotes(ns => ns.map(n => n.id===selected.id ? {...n,content:editContent} : n));
       setSelected(s => s ? {...s,content:editContent} : s);
-    } catch {}
+      toast.success("Saved");
+    } catch { toast.error("Failed to save — please try again"); }
     setSaving(false);
   };
 
   const update = async (id, patch) => {
     setNotes(ns => ns.map(n => n.id===id ? {...n,...patch} : n));
     if (selected?.id===id) setSelected(s => s ? {...s,...patch} : s);
-    try { await api.patch(`/notes/${id}`,patch); } catch {}
+    try { await api.patch(`/notes/${id}`,patch); }
+    catch { /* optimistic */ }
   };
 
   const del = async (id) => {
@@ -91,7 +93,7 @@ export default function Notes() {
       toast.success("Moved to trash");
       if (selected?.id===id) setSelected(null);
       load();
-    } catch {}
+    } catch { toast.error("Failed to delete note"); }
   };
 
   const unlockNote = (note, pin) => {
@@ -112,11 +114,7 @@ export default function Notes() {
     return new Date(b.updated_at||b.created_at||0) - new Date(a.updated_at||a.created_at||0);
   });
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
+  if (loading) return <Skeleton.TwoCol rows={6} />;
 
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden">

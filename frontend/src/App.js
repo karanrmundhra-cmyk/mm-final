@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { ProjectProvider } from "@/lib/projects";
 import AppShell from "@/components/AppShell";
 import SplashScreen from "@/components/SplashScreen";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Tasks from "@/pages/Tasks";
@@ -20,6 +21,7 @@ import People from "@/pages/People";
 import Vault from "@/pages/Vault";
 import RecycleBin from "@/pages/RecycleBin";
 import Invite from "@/pages/Invite";
+import Calendar from "@/pages/Calendar";
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -28,6 +30,9 @@ function RequireAuth({ children }) {
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   return children;
 }
+
+/* Wrap every page in its own ErrorBoundary so one crash stays isolated */
+const W = ({ C }) => <ErrorBoundary><C /></ErrorBoundary>;
 
 function Root() {
   const [booting, setBooting] = useState(true);
@@ -41,22 +46,22 @@ function Root() {
       <Route path="/login" element={<Login />} />
       <Route path="/invite/:token" element={<Invite />} />
       <Route path="/" element={<RequireAuth><AppShell /></RequireAuth>}>
-        <Route index element={<Dashboard />} />
-        <Route path="tasks" element={<Tasks />} />
-        <Route path="routines" element={<Routines />} />
-        <Route path="cash-flow" element={<CashFlow />} />
-        <Route path="cashflow" element={<Navigate to="/cash-flow" replace />} />
-        <Route path="notes" element={<Notes />} />
-        <Route path="reminders" element={<Reminders />} />
-        <Route path="calendar" element={<Navigate to="/reminders" replace />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="people" element={<People />} />
-        <Route path="vault" element={<Vault />} />
-        <Route path="trash" element={<RecycleBin />} />
-        <Route path="loans" element={<Navigate to="/cash-flow" replace />} />
-        <Route path="investments" element={<Navigate to="/cash-flow" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route index                 element={<W C={Dashboard} />} />
+        <Route path="tasks"          element={<W C={Tasks} />} />
+        <Route path="routines"       element={<W C={Routines} />} />
+        <Route path="cash-flow"      element={<W C={CashFlow} />} />
+        <Route path="cashflow"       element={<Navigate to="/cash-flow" replace />} />
+        <Route path="notes"          element={<W C={Notes} />} />
+        <Route path="reminders"      element={<W C={Reminders} />} />
+        <Route path="calendar"       element={<W C={Calendar} />} />
+        <Route path="reports"        element={<W C={Reports} />} />
+        <Route path="settings"       element={<W C={Settings} />} />
+        <Route path="people"         element={<W C={People} />} />
+        <Route path="vault"          element={<W C={Vault} />} />
+        <Route path="trash"          element={<W C={RecycleBin} />} />
+        <Route path="loans"          element={<Navigate to="/cash-flow" replace />} />
+        <Route path="investments"    element={<Navigate to="/cash-flow" replace />} />
+        <Route path="*"              element={<Navigate to="/" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -79,10 +84,13 @@ export default function App() {
         offset={24}
         toastOptions={{
           style: {
-            background: "linear-gradient(180deg,rgba(26,21,10,.95),rgba(14,13,10,.95))",
-            border: "1px solid rgba(201,169,97,.35)",
-            color: "#E4C98C",
+            background: "rgba(17,17,20,0.97)",
+            border: "1px solid rgba(212,175,55,0.3)",
+            color: "#F0EDE8",
             backdropFilter: "blur(16px)",
+            borderRadius: "16px",
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: "13px",
           },
         }}
       />

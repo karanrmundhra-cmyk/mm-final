@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, CheckSquare, RefreshCw, DollarSign, FileText,
   Bell, BarChart2, Settings, Users, Vault, Trash2, LogOut,
-  ChevronLeft, ChevronRight, Search, Plus, Mic, Zap
+  ChevronLeft, ChevronRight, Search, Plus, Mic, Zap, Calendar,
+  Download, Keyboard
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -15,14 +16,15 @@ import ProjectSelector from "@/components/ProjectSelector";
 import VoiceCapture from "@/components/VoiceCapture";
 
 const NAV = [
-  { to: "/",          icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/tasks",     icon: CheckSquare,     label: "Tasks" },
-  { to: "/routines",  icon: RefreshCw,       label: "Routines" },
-  { to: "/cash-flow", icon: DollarSign,      label: "Cash Flow" },
-  { to: "/notes",     icon: FileText,        label: "Notes" },
-  { to: "/reminders", icon: Bell,            label: "Reminders" },
-  { to: "/people",    icon: Users,           label: "People" },
-  { to: "/vault",     icon: Vault,           label: "Vault" },
+  { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
+  { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
+  { to: "/routines",  icon: RefreshCw,       label: "Routines",   key: "3" },
+  { to: "/cash-flow", icon: DollarSign,      label: "Cash Flow",  key: "4" },
+  { to: "/notes",     icon: FileText,        label: "Notes",      key: "5" },
+  { to: "/reminders", icon: Bell,            label: "Reminders",  key: "6" },
+  { to: "/calendar",  icon: Calendar,        label: "Calendar",   key: "7" },
+  { to: "/people",    icon: Users,           label: "People",     key: "8" },
+  { to: "/vault",     icon: Vault,           label: "Vault",      key: "9" },
   { to: "/reports",   icon: BarChart2,       label: "Reports" },
   { to: "/settings",  icon: Settings,        label: "Settings" },
   { to: "/trash",     icon: Trash2,          label: "Trash" },
@@ -32,13 +34,17 @@ const BOTTOM_NAV = NAV.slice(0, 5);
 
 export default function AppShell() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("mm_sidebar_collapsed") === "1");
   const [pendingReview, setPendingReview] = useState(0);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showAi, setShowAi] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("mm_theme") || "dark");
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showInstall, setShowInstall] = useState(false);
 
   useEffect(() => {
     document.documentElement.className = theme === "light" ? "light" : "";
@@ -49,13 +55,42 @@ export default function AppShell() {
     api.get("/pending-review/count").then(r => setPendingReview(r.data.count)).catch(() => {});
   }, []);
 
+  /* PWA install prompt — #7 */
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setInstallPrompt(e); setShowInstall(true); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setInstallPrompt(null);
+    setShowInstall(false);
+  };
+
+  /* Keyboard shortcuts — #11 */
   useEffect(() => {
     const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setShowSearch(true); }
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
+      const ctrl = e.metaKey || e.ctrlKey;
+
+      if (ctrl && e.key === "k") { e.preventDefault(); setShowSearch(true); return; }
+      if (ctrl && e.key === "n") { e.preventDefault(); setShowQuickAdd(true); return; }
+      if (ctrl && e.key === "/") { e.preventDefault(); setShowShortcuts(s => !s); return; }
+      if (e.key === "Escape")    { setShowQuickAdd(false); setShowSearch(false); setShowAi(false); setShowVoice(false); setShowShortcuts(false); return; }
+
+      /* Cmd/Ctrl + 1-9 → navigate */
+      if (ctrl) {
+        const idx = parseInt(e.key, 10) - 1;
+        const route = NAV.filter(n => n.key)[idx];
+        if (route) { e.preventDefault(); navigate(route.to); }
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [navigate]);
 
   const toggleCollapse = () => {
     const next = !collapsed;
@@ -240,6 +275,12 @@ export default function AppShell() {
                   style={{ color: "var(--mm-muted)", opacity: 0.65, fontSize: 15 }}>
             {theme === "dark" ? "☀" : "🌙"}
           </button>
+
+          <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts (⌘/)"
+                  className="p-2 transition-opacity hover:opacity-100"
+                  style={{ color: "var(--mm-muted)", opacity: 0.65 }}>
+            <Keyboard size={14} />
+          </button>
         </header>
 
         {/* Page */}
@@ -292,10 +333,34 @@ export default function AppShell() {
       </div>
 
       {/* ── MODALS ──────────────────────────────────────────────── */}
-      {showQuickAdd && <QuickAdd onClose={() => setShowQuickAdd(false)} />}
-      {showSearch   && <GlobalSearch onClose={() => setShowSearch(false)} />}
-      {showAi       && <AiChat onClose={() => setShowAi(false)} />}
-      {showVoice    && <VoiceCapture onClose={() => setShowVoice(false)} />}
+      {showQuickAdd  && <QuickAdd onClose={() => setShowQuickAdd(false)} />}
+      {showSearch    && <GlobalSearch onClose={() => setShowSearch(false)} />}
+      {showAi        && <AiChat onClose={() => setShowAi(false)} />}
+      {showVoice     && <VoiceCapture onClose={() => setShowVoice(false)} />}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+
+      {/* ── PWA Install banner ── */}
+      {showInstall && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 animate-slide-up"
+             style={{ maxWidth: 360, width: "calc(100% - 32px)" }}>
+          <div className="flex items-center gap-3 px-4 py-3"
+               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                        borderRadius:20, boxShadow:"var(--elev-3)" }}>
+            <Download size={16} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium" style={{ color:"var(--mm-text)" }}>Install Mind Matters</p>
+              <p className="text-xs" style={{ color:"var(--mm-muted)" }}>Add to home screen for quick access</p>
+            </div>
+            <button onClick={handleInstall} className="mm-btn-gold px-3 py-1.5 text-xs flex-shrink-0">
+              Install
+            </button>
+            <button onClick={() => setShowInstall(false)}
+                    className="mm-icon-btn" style={{ flexShrink:0 }}>
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -326,5 +391,58 @@ function DockBtn({ icon: Icon, label, onClick, gold }) {
             }}>
       <Icon size={15} />
     </button>
+  );
+}
+
+const SHORTCUTS = [
+  { keys: ["⌘", "K"],   desc: "Global search" },
+  { keys: ["⌘", "N"],   desc: "Quick add" },
+  { keys: ["⌘", "1-9"], desc: "Navigate to section" },
+  { keys: ["⌘", "/"],   desc: "Toggle this panel" },
+  { keys: ["Esc"],       desc: "Close any modal" },
+  { keys: ["Enter"],     desc: "Submit / save form" },
+];
+
+function ShortcutsModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+         style={{ background:"rgba(0,0,0,0.7)", backdropFilter:"blur(12px)" }}
+         onClick={e => e.target===e.currentTarget && onClose()}>
+      <div className="w-full max-w-sm animate-scale-in"
+           style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                    borderRadius:28, boxShadow:"var(--elev-modal)", padding:28 }}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="mm-font-display text-lg" style={{ color:"var(--mm-text)", fontWeight:400 }}>
+            Keyboard Shortcuts
+          </h2>
+          <button onClick={onClose} className="mm-icon-btn">×</button>
+        </div>
+        <div className="space-y-2">
+          {SHORTCUTS.map((s, i) => (
+            <div key={i} className="flex items-center justify-between py-1.5">
+              <span className="text-sm" style={{ color:"var(--mm-muted)" }}>{s.desc}</span>
+              <div className="flex items-center gap-1">
+                {s.keys.map((k, j) => (
+                  <kbd key={j} className="text-xs px-2 py-1"
+                       style={{ background:"var(--mm-surface-3)", color:"var(--mm-text)",
+                                border:"1px solid var(--mm-border)", borderRadius:8,
+                                fontFamily:"monospace", minWidth:28, textAlign:"center" }}>
+                    {k}
+                  </kbd>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 pt-4" style={{ borderTop:"1px solid var(--mm-border)" }}>
+          <p className="text-xs text-center" style={{ color:"var(--mm-muted)" }}>
+            Use <kbd className="px-1.5 py-0.5 text-xs"
+                     style={{ background:"var(--mm-surface-3)", borderRadius:6, border:"1px solid var(--mm-border)" }}>
+              ⌘ /
+            </kbd> to toggle anytime
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

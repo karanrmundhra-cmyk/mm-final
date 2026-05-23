@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, Loader, Upload, FileText, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import Skeleton from "@/components/Skeleton";
 
 const CATS = ["Legal","Finance","Personal","Property","Medical","Insurance","Other"];
 const EMPTY = { title:"", category:"Other", expiry_date:"", notes:"", tags:[] };
@@ -34,7 +35,7 @@ export default function Vault() {
       await api.post("/vault",newRow);
       toast.success("Document saved");
       setNewRow({...EMPTY}); setAdding(false); load();
-    } catch {}
+    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to save document"); }
   };
 
   const handleUpload = async (docId, e) => {
@@ -50,18 +51,15 @@ export default function Vault() {
   };
 
   const del = async (id) => {
-    try { await api.delete(`/vault/${id}`); toast.success("Moved to trash"); load(); } catch {}
+    try { await api.delete(`/vault/${id}`); toast.success("Moved to trash"); load(); }
+    catch { toast.error("Failed to delete document"); }
   };
 
   const visible  = docs.filter(d => !filter.category || d.category===filter.category);
   const expired  = docs.filter(d => { const n=daysUntil(d.expiry_date); return n!==null && n<0; });
   const expiring = docs.filter(d => { const n=daysUntil(d.expiry_date); return n!==null && n<=30 && n>=0; });
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
+  if (loading) return <Skeleton.Page rows={6} />;
 
   return (
     <div className="px-5 py-6 max-w-5xl mx-auto">

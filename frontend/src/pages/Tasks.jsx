@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { isOverdue } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import Skeleton from "@/components/Skeleton";
 
 const STATUSES = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
 const EMPTY = { task:"", name:"", date:"", status:"Pending", group:"", details:"", flagged: false };
@@ -71,12 +72,15 @@ export default function Tasks() {
       await api.post("/tasks", newRow);
       toast.success("Task added");
       setNewRow({ ...EMPTY }); load();
-    } catch {}
+    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add task"); }
   };
+
+  const [selected, setSelected] = useState(new Set());
 
   const update = async (id, patch) => {
     setTasks(ts => ts.map(t => t.id === id ? { ...t, ...patch } : t));
-    try { await api.patch(`/tasks/${id}`, patch); } catch {}
+    try { await api.patch(`/tasks/${id}`, patch); }
+    catch { /* optimistic — silently reverts on next load */ }
   };
 
   const toggle = (task) => {
@@ -85,7 +89,27 @@ export default function Tasks() {
   };
 
   const del = async (id) => {
-    try { await api.delete(`/tasks/${id}`); toast.success("Moved to trash"); load(); } catch {}
+    try { await api.delete(`/tasks/${id}`); toast.success("Moved to trash"); load(); }
+    catch { toast.error("Failed to delete task"); }
+  };
+
+  /* Bulk actions — #9 */
+  const toggleSelect = (id) => setSelected(s => { const n = new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+  const selectAll    = () => setSelected(new Set(visible.map(t => t.id)));
+  const clearSel     = () => setSelected(new Set());
+
+  const bulkComplete = async () => {
+    const ids = [...selected];
+    await Promise.all(ids.map(id => api.patch(`/tasks/${id}`, { status:"Completed" }).catch(()=>{})));
+    toast.success(`${ids.length} tasks completed`);
+    clearSel(); load();
+  };
+
+  const bulkDelete = async () => {
+    const ids = [...selected];
+    await Promise.all(ids.map(id => api.delete(`/tasks/${id}`).catch(()=>{})));
+    toast.success(`${ids.length} tasks moved to trash`);
+    clearSel(); load();
   };
 
   const visible = tasks.filter(t => {
@@ -102,7 +126,7 @@ export default function Tasks() {
 
   const pending = visible.filter(t => !["Completed","Done"].includes(t.status)).length;
 
-  if (loading) return <LoadingPage />;
+  if (loading) return <Skeleton.Page rows={7} />;
 
   return (
     <div className="px-5 py-6 max-w-6xl mx-auto">
@@ -128,6 +152,26 @@ export default function Tasks() {
           </select>
         </div>
       </div>
+
+      {/* ── Bulk action bar ── */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-4 animate-slide-up"
+             style={{ background:"rgba(212,175,55,0.08)", border:"1px solid var(--mm-border-gold)", borderRadius:16 }}>
+          <span className="text-sm font-medium" style={{ color:"var(--mm-gold)" }}>
+            {selected.size} selected
+          </span>
+          <button onClick={bulkComplete} className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5">
+            <Check size={11} /> Mark complete
+          </button>
+          <button onClick={bulkDelete}
+                  className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"
+                  style={{ color:"#E05252", borderColor:"#E0505033" }}>
+            <Trash2 size={11} /> Delete all
+          </button>
+          <button onClick={selectAll} className="mm-btn-ghost px-3 py-1.5 text-xs">Select all</button>
+          <button onClick={clearSel}  className="mm-icon-btn ml-auto" style={{ fontSize:16 }}>×</button>
+        </div>
+      )}
 
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">
@@ -171,12 +215,15 @@ export default function Tasks() {
                               borderColor:"var(--mm-border)", minWidth:720 }}>
 
                   <div className="flex items-center gap-1.5">
+                    <input type="checkbox" checked={selected.has(t.id)}
+                           onChange={() => toggleSelect(t.id)}
+                           title="Select"
+                           style={{ width:13, height:13, accentColor:"var(--mm-gold)", cursor:"pointer", flexShrink:0 }} />
                     <button onClick={() => toggle(t)}
                             title={done ? "Mark pending" : "Mark complete"}
                             className={`mm-check ${done ? "done" : ""}`}>
                       {done && <Check size={10} style={{ color:"#52C77A" }} />}
                     </button>
-                    <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{idx+1}</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 min-w-0">
@@ -249,10 +296,3 @@ export default function Tasks() {
   );
 }
 
-function LoadingPage() {
-  return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
-}

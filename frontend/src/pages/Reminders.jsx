@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import Skeleton from "@/components/Skeleton";
 
 const RECURRENCES = [
   "None","Daily","Weekly","Monthly","Weekdays","Weekends","Bi-weekly",
@@ -53,15 +54,18 @@ export default function Reminders() {
 
   const addManual = async () => {
     if (!newRow.title.trim() || !newRow.fire_at) return;
-    try { await api.post("/reminders",{ ...newRow }); toast.success("Reminder set"); setNewRow({...EMPTY}); load(); } catch {}
+    try { await api.post("/reminders",{ ...newRow }); toast.success("Reminder set"); setNewRow({...EMPTY}); load(); }
+    catch (e) { toast.error(e?.response?.data?.detail || "Failed to set reminder"); }
   };
 
   const dismiss = async (id) => {
-    try { await api.patch(`/reminders/${id}`,{ dismissed:true }); toast.success("Dismissed"); load(); } catch {}
+    try { await api.patch(`/reminders/${id}`,{ dismissed:true }); toast.success("Dismissed"); load(); }
+    catch { toast.error("Failed to dismiss"); }
   };
 
   const del = async (id) => {
-    try { await api.delete(`/reminders/${id}`); toast.success("Moved to trash"); load(); } catch {}
+    try { await api.delete(`/reminders/${id}`); toast.success("Moved to trash"); load(); }
+    catch { toast.error("Failed to delete reminder"); }
   };
 
   const visible = reminders.filter(r => {
@@ -76,11 +80,7 @@ export default function Reminders() {
   const upcoming = reminders.filter(r => !r.dismissed && new Date(r.fire_at) > new Date()).length;
   const overdue  = reminders.filter(r => !r.dismissed && new Date(r.fire_at) <= new Date()).length;
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
+  if (loading) return <Skeleton.Page rows={5} />;
 
   return (
     <div className="px-5 py-6 max-w-3xl mx-auto">

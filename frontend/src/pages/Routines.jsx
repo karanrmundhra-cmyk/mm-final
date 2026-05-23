@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import Skeleton from "@/components/Skeleton";
 
 const STATUSES   = ["Active","Paused","Done","Completed"];
 const PRIORITIES = ["Low","Medium","High"];
@@ -75,21 +76,25 @@ export default function Routines() {
 
   const addManual = async () => {
     if (!newRow.activity.trim()) return;
-    try { await api.post("/routines",newRow); toast.success("Routine added"); setNewRow({...EMPTY}); load(); } catch {}
+    try { await api.post("/routines",newRow); toast.success("Routine added"); setNewRow({...EMPTY}); load(); }
+    catch (e) { toast.error(e?.response?.data?.detail || "Failed to add routine"); }
   };
 
   const update = async (id, patch) => {
     setRoutines(rs => rs.map(r => r.id===id ? {...r,...patch} : r));
-    try { await api.patch(`/routines/${id}`,patch); } catch {}
+    try { await api.patch(`/routines/${id}`,patch); }
+    catch { /* optimistic */ }
   };
 
   const logDone = async (id, done) => {
     setLogs(l => ({...l,[id]:done}));
-    try { await api.post(`/routines/${id}/log`,{ date:today,done }); } catch {}
+    try { await api.post(`/routines/${id}/log`,{ date:today,done }); }
+    catch { toast.error("Failed to save log"); }
   };
 
   const del = async (id) => {
-    try { await api.delete(`/routines/${id}`); toast.success("Moved to trash"); load(); } catch {}
+    try { await api.delete(`/routines/${id}`); toast.success("Moved to trash"); load(); }
+    catch { toast.error("Failed to delete routine"); }
   };
 
   const bulkDelete = async () => {
@@ -111,17 +116,19 @@ export default function Routines() {
   });
 
   const doneToday = Object.values(logs).filter(Boolean).length;
+  const totalToday = visible.filter(r => r.status === "Active").length;
+  const completionPct = totalToday > 0 ? Math.round((doneToday/totalToday)*100) : 0;
 
-  if (loading) return <LoadingPage />;
+  if (loading) return <Skeleton.Page rows={6} />;
 
   return (
     <div className="px-5 py-6 max-w-6xl mx-auto">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="mm-page-title">Routines</h1>
-          <p className="mm-page-sub">{visible.length} routines · {doneToday} done today</p>
+          <p className="mm-page-sub">{visible.length} routines · {doneToday}/{totalToday} done today</p>
         </div>
         <div className="flex gap-2 items-center">
           {selected.size > 0 && (
@@ -145,6 +152,34 @@ export default function Routines() {
           </select>
         </div>
       </div>
+
+      {/* ── Today's progress bar ── */}
+      {totalToday > 0 && (
+        <div className="mm-card p-4 mb-4 flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="mm-label">Today's Progress</span>
+              <span className="text-sm font-medium" style={{ color: completionPct===100 ? "#52C77A" : "var(--mm-gold)" }}>
+                {completionPct === 100 ? "🔥 Complete!" : `${doneToday} / ${totalToday}`}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background:"var(--mm-surface-3)" }}>
+              <div className="h-full transition-all duration-700"
+                   style={{
+                     width:`${completionPct}%`,
+                     background: completionPct===100
+                       ? "linear-gradient(90deg,#52C77A,#4AE870)"
+                       : "linear-gradient(90deg,var(--mm-gold-dark),var(--mm-gold))",
+                     borderRadius:"inherit",
+                     boxShadow: completionPct===100 ? "0 0 8px rgba(82,199,122,0.4)" : "0 0 8px rgba(212,175,55,0.3)",
+                   }} />
+            </div>
+          </div>
+          {completionPct === 100 && (
+            <span style={{ fontSize:28 }}>🔥</span>
+          )}
+        </div>
+      )}
 
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">
@@ -203,6 +238,14 @@ export default function Routines() {
                     {r.flagged && <Flag size={11} style={{ color:"var(--mm-gold)", flexShrink:0 }} />}
                     <input value={r.activity} onChange={e => update(r.id,{activity:e.target.value})}
                            className="mm-input-ghost text-sm min-w-0 flex-1" />
+                    {r.streak > 0 && (
+                      <span title={`${r.streak}-day streak`}
+                            className="text-xs flex-shrink-0 px-1.5 py-0.5"
+                            style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)",
+                                     borderRadius:8, fontSize:10 }}>
+                        🔥{r.streak}
+                      </span>
+                    )}
                     {r.confidence && r.confidence !== "high" &&
                       <ConfidenceBadge level={r.confidence} size="xs" />}
                   </div>
@@ -274,10 +317,3 @@ export default function Routines() {
   );
 }
 
-function LoadingPage() {
-  return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
-}

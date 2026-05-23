@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { formatAmount } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
+import Skeleton from "@/components/Skeleton";
 
 const CATS  = ["Income","Expense","Asset","Liability"];
 const EMPTY = { vendor:"", details:"", amount:"", category:"Expense", mode:"", head:"", currency:"INR",
@@ -90,22 +91,28 @@ export default function CashFlow() {
 
   const exportCsv = () => window.open(`${api.defaults.baseURL}/export/cashflow.csv`,"_blank");
 
-  const visible = txns.filter(t => !filter.category || t.category === filter.category);
-  const net = (totals.Income||0) - (totals.Expense||0);
+  const visible  = txns.filter(t => !filter.category || t.category === filter.category);
+  const net      = (totals.Income||0) - (totals.Expense||0);
+  const netWorth = (totals.Asset||0) - (totals.Liability||0);
 
-  if (loading) return <LoadingPage />;
+  if (loading) return <Skeleton.Page rows={8} />;
 
   return (
     <div className="px-5 py-6 max-w-6xl mx-auto">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="mm-page-title">Cash Flow</h1>
           <p className="mm-page-sub">
             Net&nbsp;
             <span style={{ color: net >= 0 ? "#52C77A" : "#E05252" }}>
               ₹{formatAmount(Math.abs(net))}
+            </span>
+            &nbsp;·&nbsp;
+            Net Worth&nbsp;
+            <span style={{ color: netWorth >= 0 ? "#4F8EF7" : "#E05252" }}>
+              ₹{formatAmount(Math.abs(netWorth))}
             </span>
           </p>
         </div>
@@ -118,6 +125,34 @@ export default function CashFlow() {
                   className="mm-btn-ghost flex items-center gap-1.5">
             <Download size={12} /> Export
           </button>
+        </div>
+      </div>
+
+      {/* ── Net Worth card ── */}
+      <div className="mm-card p-4 mb-5 flex items-center gap-6"
+           style={{ background:"linear-gradient(135deg, rgba(79,142,247,0.08) 0%, rgba(17,17,20,0) 100%)",
+                    borderColor:"rgba(79,142,247,0.2)" }}>
+        <div>
+          <p className="mm-label mb-1">Net Worth</p>
+          <p className="mm-font-display text-3xl font-light"
+             style={{ color: netWorth >= 0 ? "#4F8EF7" : "#E05252" }}>
+            {netWorth >= 0 ? "" : "−"}₹{formatAmount(Math.abs(netWorth))}
+          </p>
+          <p className="text-xs mt-1" style={{ color:"var(--mm-muted)" }}>Assets − Liabilities</p>
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-3">
+          <div className="mm-card p-3" style={{ borderColor:"rgba(82,199,122,0.2)", background:"rgba(82,199,122,0.05)" }}>
+            <p className="mm-label mb-1">Assets</p>
+            <p className="text-lg mm-font-display font-light" style={{ color:"#52C77A" }}>
+              ₹{formatAmount(totals.Asset||0)}
+            </p>
+          </div>
+          <div className="mm-card p-3" style={{ borderColor:"rgba(224,160,82,0.2)", background:"rgba(224,160,82,0.05)" }}>
+            <p className="mm-label mb-1">Liabilities</p>
+            <p className="text-lg mm-font-display font-light" style={{ color:"#E0A052" }}>
+              ₹{formatAmount(totals.Liability||0)}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -253,10 +288,3 @@ export default function CashFlow() {
   );
 }
 
-function LoadingPage() {
-  return (
-    <div className="flex items-center justify-center py-24">
-      <Loader size={18} className="animate-spin" style={{ color:"var(--mm-gold)" }} />
-    </div>
-  );
-}
