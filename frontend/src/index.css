@@ -1,35 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── BRAND BOOK: MIND MATTERS NOIR ─────────────────────────────────────────
+   Primary:    #E6C479  (Refined Gold)
+   Background: #131313  (Deep Charcoal)
+   Surface:    #131313 / #1A1A1A
+   Text:       #E2E2E2  (Soft White)
+   Borders:    rgba(255,255,255,0.08) default | rgba(230,196,121,0.4) active
+   Radius:     0px (architectural sharp corners)
+   Display:    EB Garamond
+   Body:       Inter
+   Labels:     ALL CAPS, tracking-widest
+──────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --mm-bg: #0A0A0A;
-  --mm-surface: #111111;
-  --mm-surface-2: #181612;
-  --mm-border: #1E1C17;
-  --mm-text: #F0EBE1;
-  --mm-muted: #8A8070;
-  --mm-gold: #C9A961;
-  --mm-gold-light: #E4C98C;
-  --mm-gold-dark: #A88840;
-  --mm-error: #E05252;
-  --mm-success: #52C77A;
-  --mm-warning: #E0A052;
+  --mm-bg:          #131313;
+  --mm-surface:     #131313;
+  --mm-surface-2:   #1A1A1A;
+  --mm-surface-3:   #222222;
+  --mm-border:      rgba(255,255,255,0.08);
+  --mm-border-gold: rgba(230,196,121,0.4);
+  --mm-text:        #E2E2E2;
+  --mm-muted:       rgba(226,226,226,0.45);
+  --mm-gold:        #E6C479;
+  --mm-gold-light:  #F0D89A;
+  --mm-gold-dark:   #C9A961;
+  --mm-error:       #E05252;
+  --mm-success:     #52C77A;
+  --mm-warning:     #E0A052;
+  --mm-glow:        radial-gradient(circle at center, rgba(230,196,121,0.12) 0%, transparent 70%);
 }
 
 .light {
-  --mm-bg: #F8F5F0;
-  --mm-surface: #FFFFFF;
-  --mm-surface-2: #F0ECE5;
-  --mm-border: #DDD8CF;
-  --mm-text: #0F0F0F;
-  --mm-muted: #6B6257;
-  --mm-gold: #A88840;
-  --mm-gold-light: #C9A961;
+  --mm-bg:        #F5F2EE;
+  --mm-surface:   #FFFFFF;
+  --mm-surface-2: #EDE9E3;
+  --mm-surface-3: #E3DED7;
+  --mm-border:    rgba(0,0,0,0.1);
+  --mm-border-gold: rgba(180,140,60,0.4);
+  --mm-text:      #131313;
+  --mm-muted:     rgba(19,19,19,0.45);
+  --mm-gold:      #C9A961;
+  --mm-gold-light:#E6C479;
+  --mm-gold-dark: #A88840;
 }
 
+/* ── RESET ────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -37,88 +56,148 @@ html, body {
   color: var(--mm-text);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.mm-font-display { font-family: 'Outfit', sans-serif; }
-.mm-font-serif  { font-family: 'Cormorant Garamond', serif; }
-.mm-font-body   { font-family: 'Inter', sans-serif; }
+/* ── TYPOGRAPHY ───────────────────────────────────────────────────────────── */
+.mm-font-display { font-family: 'EB Garamond', Georgia, serif; }
+.mm-font-serif   { font-family: 'EB Garamond', Georgia, serif; }
+.mm-font-body    { font-family: 'Inter', sans-serif; }
+
+/* Label caps — brand book standard */
+.mm-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mm-muted);
+}
 
 /* Gold gradient text */
 .mm-gold-text {
-  background: linear-gradient(135deg, var(--mm-gold-light) 0%, var(--mm-gold) 100%);
+  background: linear-gradient(135deg, var(--mm-gold-light) 0%, var(--mm-gold) 50%, var(--mm-gold-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Surface card */
+/* ── CARD — brand book: transparent bg, gold or subtle border ─────────────── */
 .mm-card {
-  background: var(--mm-surface);
+  background: var(--mm-surface-2);
   border: 1px solid var(--mm-border);
-  border-radius: 8px;
+  border-radius: 0;
+  transition: border-color 0.2s ease;
+}
+.mm-card:hover {
+  border-color: rgba(230,196,121,0.25);
 }
 
-/* Gold ring on focus */
-.mm-focus-ring:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--mm-gold);
+.mm-card-gold {
+  background: transparent;
+  border: 1px solid var(--mm-border-gold);
+  border-radius: 0;
 }
 
-/* Ghost input — looks like text until hovered/focused */
+/* ── GHOST INPUT ─────────────────────────────────────────────────────────── */
 .mm-input-ghost {
   background: transparent;
   border: none;
   color: var(--mm-text);
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
   font-size: inherit;
   width: 100%;
   padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: 0;
   transition: background 0.15s;
 }
-.mm-input-ghost:hover  { background: rgba(201, 169, 97, 0.06); }
-.mm-input-ghost:focus  { outline: none; background: rgba(201, 169, 97, 0.1); }
+.mm-input-ghost:hover  { background: rgba(230,196,121,0.05); }
+.mm-input-ghost:focus  { outline: none; background: rgba(230,196,121,0.08); }
 
-/* Table wrap (horizontal scroll on mobile) */
+/* select option color fix */
+.mm-input-ghost option { background: #1A1A1A; color: #E2E2E2; }
+
+/* ── TABLE ───────────────────────────────────────────────────────────────── */
 .mm-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-/* Sticky first column */
 .mm-frozen-col {
   position: sticky; left: 0; z-index: 1;
-  background: var(--mm-surface);
+  background: var(--mm-surface-2);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* ── SCROLLBAR ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--mm-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--mm-gold-dark); }
+::-webkit-scrollbar-thumb { background: rgba(230,196,121,0.2); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: rgba(230,196,121,0.5); }
 
-/* Animations */
-@keyframes fadeIn   { from { opacity: 0 } to { opacity: 1 } }
-@keyframes slideUp  { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-@keyframes slideRight { from { transform: translateX(-8px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
-@keyframes pulse-gold { 0%,100% { box-shadow: 0 0 0 0 rgba(201,169,97,0.4) } 50% { box-shadow: 0 0 0 6px rgba(201,169,97,0) } }
+/* ── GOLD GLOW ACCENT ────────────────────────────────────────────────────── */
+.mm-glow {
+  background: var(--mm-glow);
+}
 
-.animate-fade-in   { animation: fadeIn 0.2s ease-out; }
-.animate-slide-up  { animation: slideUp 0.25s ease-out; }
-.animate-slide-right { animation: slideRight 0.2s ease-out; }
-.animate-pulse-gold { animation: pulse-gold 2s infinite; }
+/* ── ANIMATIONS ──────────────────────────────────────────────────────────── */
+@keyframes fadeIn    { from { opacity: 0 }                              to { opacity: 1 } }
+@keyframes slideUp   { from { transform: translateY(8px); opacity: 0 }  to { transform: translateY(0); opacity: 1 } }
+@keyframes slideRight{ from { transform: translateX(-8px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+@keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(230,196,121,0.3) } 50% { box-shadow: 0 0 12px 2px rgba(230,196,121,0.15) } }
 
-/* Confidence badges */
+.animate-fade-in    { animation: fadeIn 0.2s ease-out; }
+.animate-slide-up   { animation: slideUp 0.25s ease-out; }
+.animate-slide-right{ animation: slideRight 0.2s ease-out; }
+.animate-pulse-gold { animation: glowPulse 2.5s ease-in-out infinite; }
+
+/* ── CONFIDENCE BADGES ───────────────────────────────────────────────────── */
 .badge-high   { color: #52C77A; }
-.badge-medium { color: #E0A052; }
+.badge-medium { color: #E6C479; }
 .badge-low    { color: #E05252; }
 
-/* Completed row */
-.mm-row-completed { opacity: 0.6; }
+/* ── STATES ──────────────────────────────────────────────────────────────── */
+.mm-row-completed { opacity: 0.45; }
+.mm-focus-hide    { display: none !important; }
 
-/* Focus mode */
-.mm-focus-hide { display: none !important; }
-
-/* Bottom nav safe area */
-.mm-bottom-nav {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+/* ── GOLD DIVIDER ────────────────────────────────────────────────────────── */
+.mm-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mm-border-gold), transparent);
 }
+
+/* ── BUTTON BASE ─────────────────────────────────────────────────────────── */
+.mm-btn-gold {
+  background: var(--mm-gold);
+  color: #131313;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 0;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.mm-btn-gold:hover { opacity: 0.85; }
+
+.mm-btn-ghost {
+  background: transparent;
+  color: var(--mm-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid var(--mm-border);
+  border-radius: 0;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.mm-btn-ghost:hover { border-color: var(--mm-border-gold); color: var(--mm-gold); }
+
+/* ── SAFE AREA ───────────────────────────────────────────────────────────── */
+.mm-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+/* ── SELECT APPEARANCE ───────────────────────────────────────────────────── */
+select { appearance: none; -webkit-appearance: none; }
