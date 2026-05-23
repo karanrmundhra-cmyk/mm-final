@@ -103,7 +103,8 @@ export default function AppShell() {
             return (
               <NavLink
                 key={to} to={to} end={to === "/"}
-                className="flex items-center gap-3 px-2 py-2 transition-all duration-150 group relative"
+                title={label}
+                className="flex items-center gap-3 px-2 py-2 transition-all duration-150 relative"
                 style={({ isActive }) => ({
                   color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
                   background: isActive ? "rgba(230,196,121,0.06)" : "transparent",
@@ -114,17 +115,20 @@ export default function AppShell() {
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-xs tracking-[0.12em] uppercase"
-                          style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500,
-                                   color: "inherit" }}>
+                          style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500, color: "inherit" }}>
                       {label}
                     </span>
                     {hasBadge && (
-                      <span className="text-xs px-1.5 py-0.5 rounded-full"
+                      <span className="text-xs px-1.5 py-0.5"
                             style={{ background: "#E0505022", color: "#E05252", fontSize: 10 }}>
                         {pendingReview}
                       </span>
                     )}
                   </>
+                )}
+                {collapsed && hasBadge && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5"
+                        style={{ background: "#E05252", borderRadius: 0 }} />
                 )}
               </NavLink>
             );

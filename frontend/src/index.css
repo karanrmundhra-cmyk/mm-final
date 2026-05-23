@@ -196,6 +196,81 @@ html, body {
 }
 .mm-btn-ghost:hover { border-color: var(--mm-border-gold); color: var(--mm-gold); }
 
+/* ── TABLE ROW HOVER ─────────────────────────────────────────────────────── */
+.mm-row:hover { background: rgba(230,196,121,0.04); }
+
+/* ── ICON BUTTON ─────────────────────────────────────────────────────────── */
+.mm-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px; color: var(--mm-muted); opacity: 0.65; border-radius: 0;
+  transition: opacity 0.15s, color 0.15s; cursor: pointer;
+}
+.mm-icon-btn:hover { opacity: 1; }
+.mm-icon-btn.danger:hover { color: var(--mm-error); opacity: 1; }
+.mm-icon-btn.active { color: var(--mm-gold); opacity: 1; }
+
+/* ── STATUS SELECT ───────────────────────────────────────────────────────── */
+.mm-status-select {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  background: transparent; border: none; outline: none; cursor: pointer; padding: 0;
+}
+
+/* ── FILTER SELECT ───────────────────────────────────────────────────────── */
+.mm-filter-select {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 10px; border: 1px solid var(--mm-border); color: var(--mm-muted);
+  background: var(--mm-surface-2); outline: none; border-radius: 0; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mm-filter-select:focus { border-color: rgba(230,196,121,0.35); }
+
+/* ── FILTER TAB ──────────────────────────────────────────────────────────── */
+.mm-filter-tab {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 5px 10px; border: 1px solid var(--mm-border); color: var(--mm-muted);
+  background: transparent; cursor: pointer; border-radius: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.mm-filter-tab:hover { border-color: var(--mm-border-gold); color: var(--mm-gold); }
+.mm-filter-tab.active { border-color: var(--mm-gold); color: var(--mm-gold); }
+
+/* ── AI INPUT ────────────────────────────────────────────────────────────── */
+.mm-ai-input {
+  flex: 1; padding: 10px 16px; font-size: 13px; font-family: 'Inter', sans-serif;
+  background: var(--mm-surface); border: 1px solid var(--mm-border);
+  color: var(--mm-text); outline: none; border-radius: 0; transition: border-color 0.15s;
+}
+.mm-ai-input:focus { border-color: rgba(230,196,121,0.35); }
+.mm-ai-input::placeholder { color: var(--mm-muted); }
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.mm-empty { display: flex; flex-direction: column; align-items: center; padding: 72px 24px; gap: 12px; text-align: center; }
+.mm-empty-title { font-family: 'EB Garamond', Georgia, serif; font-size: 22px; font-weight: 400; color: var(--mm-text); }
+.mm-empty-desc { font-size: 12px; color: var(--mm-muted); max-width: 260px; line-height: 1.7; }
+
+/* ── CHECK SQUARE ────────────────────────────────────────────────────────── */
+.mm-check {
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--mm-border); flex-shrink: 0; cursor: pointer; border-radius: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mm-check:hover { border-color: rgba(82,199,122,0.5); }
+.mm-check.done { border-color: #52C77A; background: rgba(82,199,122,0.12); }
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
+.mm-page-title { font-family: 'EB Garamond', Georgia, serif; font-size: 26px; font-weight: 400; color: var(--mm-text); letter-spacing: -0.01em; }
+.mm-page-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mm-muted); margin-top: 3px; }
+
+/* ── FORM INPUT ──────────────────────────────────────────────────────────── */
+.mm-form-input {
+  padding: 8px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+  background: var(--mm-surface-2); border: 1px solid var(--mm-border);
+  color: var(--mm-text); outline: none; border-radius: 0; width: 100%;
+  transition: border-color 0.15s;
+}
+.mm-form-input:focus { border-color: rgba(230,196,121,0.35); }
+.mm-form-input::placeholder { color: var(--mm-muted); }
+
 /* ── SAFE AREA ───────────────────────────────────────────────────────────── */
 .mm-bottom-nav { padding-bottom: env(safe-area-inset-bottom, 0); }
 
