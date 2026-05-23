@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Loader, Mail, Phone, Building2, ChevronRight } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Plus, Trash2, Loader, Mail, Phone, Building2, ChevronRight,
+  Upload, Download, Check, X, AlertTriangle, Users
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import Skeleton from "@/components/Skeleton";
@@ -18,6 +21,14 @@ export default function People() {
   const [adding,       setAdding]      = useState(false);
   const [editing,      setEditing]     = useState(false);
   const [editData,     setEditData]    = useState({});
+
+  /* ── Import state ── */
+  const [importPreview,   setImportPreview]   = useState(null);   // { source, total, new, duplicates, contacts }
+  const [importLoading,   setImportLoading]   = useState(false);
+  const [importSaving,    setImportSaving]    = useState(false);
+  const [skipDupes,       setSkipDupes]       = useState(true);
+  const [selectedContacts,setSelectedContacts]= useState(new Set());
+  const importRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -66,6 +77,61 @@ export default function People() {
     } catch { toast.error("Failed to delete contact"); }
   };
 
+  /* ── Import handlers ── */
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";   // reset so same file can be re-selected
+    setImportLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const { data } = await api.post("/people/import/preview", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setImportPreview(data);
+      // Pre-select all non-duplicate contacts
+      setSelectedContacts(new Set(
+        data.contacts
+          .map((c, i) => i)
+          .filter(i => !data.contacts[i]._duplicate)
+      ));
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Could not parse file");
+    }
+    setImportLoading(false);
+  };
+
+  const confirmImport = async () => {
+    if (!importPreview) return;
+    setImportSaving(true);
+    const contacts = importPreview.contacts.filter((_, i) => selectedContacts.has(i));
+    try {
+      const { data } = await api.post("/people/import/confirm", {
+        contacts,
+        skip_duplicates: false,   // selection already handled client-side
+      });
+      toast.success(`${data.created} contacts imported${data.skipped ? `, ${data.skipped} skipped` : ""}`);
+      setImportPreview(null);
+      load();
+    } catch {
+      toast.error("Import failed");
+    }
+    setImportSaving(false);
+  };
+
+  const toggleContact = (i) =>
+    setSelectedContacts(s => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; });
+  const selectAllNew = () =>
+    setSelectedContacts(new Set(importPreview.contacts.map((_,i)=>i).filter(i => !importPreview.contacts[i]._duplicate)));
+  const selectAll = () =>
+    setSelectedContacts(new Set(importPreview.contacts.map((_,i)=>i)));
+  const clearAll  = () => setSelectedContacts(new Set());
+
+  /* ── Export handlers ── */
+  const exportVcf = () => window.open(`${api.defaults.baseURL}/export/contacts.vcf`, "_blank");
+  const exportCsv = () => window.open(`${api.defaults.baseURL}/export/contacts.csv`, "_blank");
+
   const visible = people.filter(p => {
     if (filter.group && p.group !== filter.group) return false;
     if (filter.search) {
@@ -87,10 +153,25 @@ export default function People() {
         <div className="px-4 py-4 border-b" style={{ borderColor:"var(--mm-border)" }}>
           <div className="flex items-center justify-between mb-3">
             <h1 className="mm-page-title" style={{ fontSize:20 }}>People</h1>
-            <button onClick={() => setAdding(true)} title="Add contact"
-                    className="mm-btn-gold p-2">
-              <Plus size={13} />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Hidden file input for import */}
+              <input ref={importRef} type="file" accept=".vcf,.vcard,.csv"
+                     className="hidden" onChange={handleImportFile} />
+              <button
+                onClick={() => importRef.current?.click()}
+                disabled={importLoading}
+                title="Import contacts (vCard or CSV)"
+                className="mm-btn-ghost px-2.5 py-1.5 flex items-center gap-1.5 text-xs">
+                {importLoading
+                  ? <Loader size={11} className="animate-spin" />
+                  : <Upload size={11} />}
+                Import
+              </button>
+              <button onClick={() => setAdding(true)} title="Add contact"
+                      className="mm-btn-gold p-2">
+                <Plus size={13} />
+              </button>
+            </div>
           </div>
           <input value={filter.search} onChange={e => setFilter(f=>({...f,search:e.target.value}))}
                  placeholder="Search contacts…"
@@ -272,9 +353,129 @@ export default function People() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <div className="mm-divider" style={{ width:48 }} />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <Users size={32} style={{ color:"var(--mm-border)", opacity:0.5 }} />
           <p className="mm-label">Select a contact to view details</p>
+          <div className="flex gap-2">
+            <button onClick={exportVcf}
+                    className="mm-btn-ghost px-3 py-1.5 flex items-center gap-1.5 text-xs"
+                    title="Download all contacts as vCard (Apple / Google / Outlook compatible)">
+              <Download size={11} /> Export vCard
+            </button>
+            <button onClick={exportCsv}
+                    className="mm-btn-ghost px-3 py-1.5 flex items-center gap-1.5 text-xs"
+                    title="Download as CSV (Google Contacts compatible)">
+              <Download size={11} /> Export CSV
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import preview modal ── */}
+      {importPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background:"rgba(0,0,0,0.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}>
+          <div className="w-full max-w-2xl animate-scale-in flex flex-col"
+               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                        borderRadius:32, boxShadow:"var(--elev-modal)", maxHeight:"85vh" }}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-7 pt-6 pb-4 flex-shrink-0"
+                 style={{ borderBottom:"1px solid var(--mm-border)" }}>
+              <div>
+                <h2 className="mm-font-display text-lg" style={{ color:"var(--mm-text)", fontWeight:400 }}>
+                  Review Import
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color:"var(--mm-muted)" }}>
+                  {importPreview.source} · {importPreview.total} contacts found ·{" "}
+                  <span style={{ color:"#52C77A" }}>{importPreview.new} new</span>
+                  {importPreview.duplicates > 0 && (
+                    <span style={{ color:"var(--mm-gold)" }}> · {importPreview.duplicates} already exist</span>
+                  )}
+                </p>
+              </div>
+              <button onClick={() => setImportPreview(null)} className="mm-icon-btn" style={{ fontSize:20 }}>×</button>
+            </div>
+
+            {/* Selection controls */}
+            <div className="flex items-center gap-3 px-7 py-3 flex-shrink-0"
+                 style={{ borderBottom:"1px solid var(--mm-border)" }}>
+              <span className="text-xs" style={{ color:"var(--mm-muted)" }}>
+                {selectedContacts.size} selected
+              </span>
+              <button onClick={selectAllNew} className="mm-btn-ghost px-2.5 py-1 text-xs">New only</button>
+              <button onClick={selectAll}    className="mm-btn-ghost px-2.5 py-1 text-xs">Select all</button>
+              <button onClick={clearAll}     className="mm-btn-ghost px-2.5 py-1 text-xs">Clear</button>
+            </div>
+
+            {/* Contact list */}
+            <div className="flex-1 overflow-y-auto px-7 py-3">
+              {importPreview.contacts.map((c, i) => (
+                <label key={i}
+                       className="flex items-start gap-3 py-2.5 cursor-pointer border-b"
+                       style={{ borderColor:"var(--mm-border)" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedContacts.has(i)}
+                    onChange={() => toggleContact(i)}
+                    style={{ marginTop:3, accentColor:"var(--mm-gold)", width:13, height:13, flexShrink:0 }} />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium" style={{ color:"var(--mm-text)" }}>
+                        {c.name}
+                      </span>
+                      {c._duplicate && (
+                        <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full"
+                              style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
+                          <AlertTriangle size={9} /> {c._dup_reason}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 mt-0.5">
+                      {c.email && (
+                        <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{c.email}</span>
+                      )}
+                      {c.phone && (
+                        <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{c.phone}</span>
+                      )}
+                      {c.relationship && (
+                        <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{c.relationship}</span>
+                      )}
+                      {c.location && (
+                        <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{c.location}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedContacts.has(i)
+                    ? <Check size={13} style={{ color:"#52C77A", flexShrink:0, marginTop:2 }} />
+                    : <div style={{ width:13, flexShrink:0 }} />}
+                </label>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center gap-3 px-7 py-5 flex-shrink-0"
+                 style={{ borderTop:"1px solid var(--mm-border)" }}>
+              <button
+                onClick={confirmImport}
+                disabled={selectedContacts.size === 0 || importSaving}
+                className="mm-btn-gold flex items-center gap-2 px-5 disabled:opacity-40">
+                {importSaving
+                  ? <><Loader size={12} className="animate-spin" /> Importing…</>
+                  : <><Check size={12} /> Import {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""}</>}
+              </button>
+              <button onClick={() => setImportPreview(null)} className="mm-btn-ghost px-5">
+                Cancel
+              </button>
+              {importPreview.duplicates > 0 && (
+                <p className="text-xs ml-auto" style={{ color:"var(--mm-muted)" }}>
+                  Duplicates are unchecked by default
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

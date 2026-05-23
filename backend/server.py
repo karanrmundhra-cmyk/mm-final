@@ -2061,6 +2061,304 @@ async def _del_attachment(coll: str, item_id: str, att_id: str, user_id: str):
                               {"$set": {"attachments": atts, "updated_at": now_iso()}})
     return {"ok": True}
 
+# ─────────────────────── CONTACT SYNC (import / export) ───────────────────────
+
+def _parse_vcf(content: str) -> list:
+    """Parse a vCard (.vcf) file and return a list of contact dicts."""
+    contacts = []
+    # Split into individual VCARD blocks
+    blocks = re.split(r"BEGIN:VCARD", content, flags=re.IGNORECASE)
+    for block in blocks:
+        if not block.strip():
+            continue
+        c = {"name": "", "email": "", "phone": "", "notes": "",
+             "location": "", "relationship": "", "tags": []}
+        lines = block.replace("\r\n ", "").replace("\r\n\t", "").split("\r\n")
+        if not lines:
+            lines = block.replace("\n ", "").replace("\n\t", "").split("\n")
+
+        for raw in lines:
+            raw = raw.strip()
+            if not raw or raw.upper().startswith("END:") or raw.upper().startswith("VERSION:"):
+                continue
+
+            # Split key (with optional params) from value
+            if ":" not in raw:
+                continue
+            key_part, _, value = raw.partition(":")
+            value = value.strip()
+            key_upper = key_part.upper().split(";")[0]
+
+            if key_upper == "FN":
+                c["name"] = value
+            elif key_upper == "N" and not c["name"]:
+                # N:Family;Given;Additional;Prefix;Suffix
+                parts = value.split(";")
+                given  = parts[1].strip() if len(parts) > 1 else ""
+                family = parts[0].strip() if parts else ""
+                c["name"] = f"{given} {family}".strip()
+            elif key_upper in ("EMAIL", "EMAIL;TYPE=INTERNET", "EMAIL;TYPE=HOME",
+                               "EMAIL;TYPE=WORK", "EMAIL;PREF") or "EMAIL" in key_upper:
+                if not c["email"]:
+                    c["email"] = value
+            elif "TEL" in key_upper:
+                if not c["phone"]:
+                    c["phone"] = value
+            elif key_upper == "ORG":
+                # ORG:Company;Dept → use as relationship/notes
+                org = value.split(";")[0].strip()
+                if org and not c["relationship"]:
+                    c["relationship"] = org
+            elif key_upper == "TITLE":
+                if value:
+                    c["notes"] = (c["notes"] + " " + value).strip()
+            elif key_upper == "NOTE":
+                if value:
+                    c["notes"] = (c["notes"] + " " + value).strip()
+            elif key_upper in ("ADR", "ADR;TYPE=HOME", "ADR;TYPE=WORK") or "ADR" in key_upper:
+                # ADR:PO Box;Extended;Street;City;Region;PostCode;Country
+                parts = [p.strip() for p in value.split(";") if p.strip()]
+                if parts and not c["location"]:
+                    c["location"] = ", ".join(parts[-3:])  # city, region, country
+            elif key_upper == "CATEGORIES":
+                c["tags"] = [t.strip() for t in value.split(",") if t.strip()]
+
+        if c["name"]:
+            contacts.append(c)
+    return contacts
+
+
+def _parse_contacts_csv(content: str) -> list:
+    """Parse a CSV of contacts. Handles Google Contacts format and simple flat CSVs."""
+    import csv, io
+    contacts = []
+    reader = csv.DictReader(io.StringIO(content))
+    if not reader.fieldnames:
+        return contacts
+
+    fields = [f.lower() for f in reader.fieldnames]
+
+    # Column name aliases
+    def _get(row, *keys):
+        for k in keys:
+            for f in row:
+                if f.lower().strip() == k.lower():
+                    v = row[f]
+                    if v and str(v).strip() and str(v).strip() not in ("N/A","-"):
+                        return str(v).strip()
+        return ""
+
+    def _get_prefix(row, prefix):
+        """Find first column that starts with prefix (e.g. 'E-mail 1 - Value')."""
+        for f in row:
+            if f.lower().startswith(prefix.lower()):
+                v = row[f]
+                if v and str(v).strip():
+                    return str(v).strip()
+        return ""
+
+    for row in reader:
+        # Name: try full name first, then Given Name + Family Name
+        name = (_get(row, "name", "full name", "display name") or
+                ((_get(row, "given name", "first name") + " " +
+                  _get(row, "family name", "last name")).strip()))
+        if not name:
+            continue
+        email = (_get(row, "e-mail address", "email", "email address") or
+                 _get_prefix(row, "e-mail") or _get_prefix(row, "email"))
+        phone = (_get(row, "mobile phone", "phone", "telephone", "cell phone", "primary phone") or
+                 _get_prefix(row, "phone") or _get_prefix(row, "mobile"))
+        notes = _get(row, "notes", "note", "description", "comments")
+        location = (_get(row, "location", "city", "address") or
+                    _get_prefix(row, "home address") or _get_prefix(row, "work address"))
+        relationship = _get(row, "relationship", "type", "category", "group membership", "group", "company", "organization", "org")
+        tags_raw = _get(row, "tags", "labels", "group membership")
+        tags = [t.strip().lstrip("* ") for t in tags_raw.split(":::") if t.strip()] if tags_raw else []
+
+        contacts.append({
+            "name": name, "email": email, "phone": phone,
+            "notes": notes, "location": location,
+            "relationship": relationship, "tags": tags,
+        })
+    return contacts
+
+
+@api.post("/people/import/preview")
+async def import_contacts_preview(
+    file: UploadFile = File(...),
+    u=Depends(get_current_user)
+):
+    """Parse a .vcf or .csv file and return contacts ready for review (no DB write yet)."""
+    data = await file.read()
+    fname = (file.filename or "").lower()
+    try:
+        content = data.decode("utf-8", errors="replace")
+    except Exception:
+        raise HTTPException(400, "Could not decode file — ensure it is UTF-8 encoded")
+
+    if fname.endswith(".vcf") or fname.endswith(".vcard") or "BEGIN:VCARD" in content[:200].upper():
+        parsed = _parse_vcf(content)
+        source = "vCard"
+    elif fname.endswith(".csv"):
+        parsed = _parse_contacts_csv(content)
+        source = "CSV"
+    else:
+        # Try vCard first, then CSV
+        if "BEGIN:VCARD" in content[:500].upper():
+            parsed = _parse_vcf(content)
+            source = "vCard"
+        else:
+            parsed = _parse_contacts_csv(content)
+            source = "CSV"
+
+    if not parsed:
+        raise HTTPException(400, "No contacts found in file. Ensure it is a valid vCard or Google Contacts CSV export.")
+
+    # Dedup check against existing people
+    existing = await db.people.find(
+        {"user_id": u["id"], "deleted": {"$ne": True}},
+        {"_id": 0, "name": 1, "email": 1}
+    ).to_list(2000)
+    existing_emails = {p["email"].lower() for p in existing if p.get("email")}
+    existing_names  = {p["name"].lower() for p in existing if p.get("name")}
+
+    for c in parsed:
+        email_dup = bool(c.get("email") and c["email"].lower() in existing_emails)
+        name_dup  = c["name"].lower() in existing_names
+        c["_duplicate"] = email_dup or name_dup
+        c["_dup_reason"] = ("email already exists" if email_dup
+                            else "name already exists" if name_dup else None)
+
+    return {
+        "source": source,
+        "total": len(parsed),
+        "new": sum(1 for c in parsed if not c["_duplicate"]),
+        "duplicates": sum(1 for c in parsed if c["_duplicate"]),
+        "contacts": parsed,
+    }
+
+
+@api.post("/people/import/confirm")
+async def import_contacts_confirm(body: dict, u=Depends(get_current_user)):
+    """Bulk-create contacts from a previously previewed import.
+    Accepts { contacts: [...], skip_duplicates: true }."""
+    contacts = body.get("contacts", [])
+    skip_dupes = body.get("skip_duplicates", True)
+    now = now_iso()
+    created = 0
+    skipped = 0
+
+    for c in contacts:
+        if skip_dupes and c.get("_duplicate"):
+            skipped += 1
+            continue
+        doc = {
+            "id": new_id(), "user_id": u["id"],
+            "name": c.get("name","").strip(),
+            "email": c.get("email","").strip(),
+            "phone": c.get("phone","").strip(),
+            "notes": c.get("notes","").strip(),
+            "location": c.get("location","").strip(),
+            "relationship": c.get("relationship","").strip(),
+            "tags": c.get("tags", []),
+            "last_interaction": None,
+            "deleted": False, "created_at": now, "updated_at": now,
+        }
+        if not doc["name"]:
+            skipped += 1
+            continue
+        await db.people.insert_one(doc)
+        created += 1
+
+    return {"created": created, "skipped": skipped}
+
+
+@api.get("/export/contacts.vcf")
+async def export_contacts_vcf(u=Depends(get_current_user)):
+    """Export all people as a vCard 3.0 file."""
+    people = await db.people.find(
+        {"user_id": u["id"], "deleted": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(5000)
+
+    lines = []
+    for p in people:
+        name = p.get("name","")
+        parts = name.rsplit(" ", 1)
+        given  = parts[0] if len(parts) > 1 else name
+        family = parts[1] if len(parts) > 1 else ""
+        lines.append("BEGIN:VCARD")
+        lines.append("VERSION:3.0")
+        lines.append(f"FN:{name}")
+        lines.append(f"N:{family};{given};;;")
+        if p.get("email"):
+            lines.append(f"EMAIL;TYPE=INTERNET:{p['email']}")
+        if p.get("phone"):
+            lines.append(f"TEL;TYPE=CELL:{p['phone']}")
+        if p.get("relationship"):
+            lines.append(f"ORG:{p['relationship']}")
+        if p.get("location"):
+            lines.append(f"ADR;TYPE=HOME:;;{p['location']};;;;")
+        if p.get("notes"):
+            lines.append(f"NOTE:{p['notes']}")
+        if p.get("tags"):
+            lines.append(f"CATEGORIES:{','.join(p['tags'])}")
+        lines.append("END:VCARD")
+        lines.append("")
+
+    vcf_content = "\r\n".join(lines)
+    return StreamingResponse(
+        io.BytesIO(vcf_content.encode("utf-8")),
+        media_type="text/vcard",
+        headers={"Content-Disposition": "attachment; filename=mind-matters-contacts.vcf"}
+    )
+
+
+@api.get("/export/contacts.csv")
+async def export_contacts_csv(u=Depends(get_current_user)):
+    """Export all people as a Google Contacts-compatible CSV."""
+    import csv
+    people = await db.people.find(
+        {"user_id": u["id"], "deleted": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(5000)
+
+    output = io.StringIO()
+    fieldnames = [
+        "Name","Given Name","Family Name",
+        "E-mail 1 - Type","E-mail 1 - Value",
+        "Phone 1 - Type","Phone 1 - Value",
+        "Organization 1 - Type","Organization 1 - Name",
+        "Address 1 - Type","Address 1 - Street",
+        "Group Membership","Notes",
+    ]
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for p in people:
+        name = p.get("name","")
+        parts = name.rsplit(" ", 1)
+        given  = parts[0] if len(parts) > 1 else name
+        family = parts[1] if len(parts) > 1 else ""
+        tags = " ::: ".join(p.get("tags",[])) if p.get("tags") else ""
+        writer.writerow({
+            "Name": name, "Given Name": given, "Family Name": family,
+            "E-mail 1 - Type": "Work", "E-mail 1 - Value": p.get("email",""),
+            "Phone 1 - Type": "Mobile", "Phone 1 - Value": p.get("phone",""),
+            "Organization 1 - Type": "Work", "Organization 1 - Name": p.get("relationship",""),
+            "Address 1 - Type": "Home", "Address 1 - Street": p.get("location",""),
+            "Group Membership": tags,
+            "Notes": p.get("notes",""),
+        })
+
+    output.seek(0)
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=mind-matters-contacts.csv"}
+    )
+
+
 # ─────────────────────── AUTO-LINK PEOPLE ───────────────────────
 async def _auto_link_people(user_id: str, text: str) -> List[str]:
     """Fuzzy-match names in text against people collection. Returns matched IDs."""
