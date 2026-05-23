@@ -20,7 +20,7 @@ import jwt as pyjwt
 import httpx
 import bcrypt
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+import google.generativeai as genai
 
 MONGO_URL   = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME     = os.environ.get("DB_NAME", "mind_matters")
@@ -91,10 +91,12 @@ async def _llm(system: str, user: str, session_id: str = None) -> str:
     if not LLM_KEY:
         return ""
     try:
-        sid = session_id or new_id()
-        chat = LlmChat(api_key=LLM_KEY, session_id=sid,
-                       system_prompt=system).with_model("gemini", "gemini-2.0-flash")
-        resp = await chat.send_message(UserMessage(text=user))
+        genai.configure(api_key=LLM_KEY)
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=system
+        )
+        resp = await asyncio.to_thread(model.generate_content, user)
         return resp.text if hasattr(resp, "text") else str(resp)
     except Exception as e:
         logger.warning(f"LLM error: {e}")
@@ -1446,12 +1448,12 @@ async def parse_voice(file: UploadFile = File(...), u=Depends(get_current_user))
         b64 = base64.b64encode(audio_data).decode()
         mime = file.content_type or "audio/webm"
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        system = f"""You receive audio transcriptions and extract structured items.
-Today is {today}. Return JSON: {{"transcript": "what was said", "items": [{{"type":"task/reminder/note/transaction","data":{{...}},"confidence":"high/medium/low"}}]}}"""
-        chat = LlmChat(api_key=LLM_KEY, session_id=new_id(), system_prompt=system).with_model("gemini","gemini-2.0-flash")
-        from emergentintegrations.llm.chat import UserMessage
-        msg = UserMessage(text="Transcribe and parse this audio", files=[{"data": b64, "mime_type": mime}])
-        resp = await chat.send_message(msg)
+        prompt = f"""Today is {today}. Transcribe this audio and extract structured items.
+Return JSON: {{"transcript": "what was said", "items": [{{"type":"task/reminder/note/transaction","data":{{...}},"confidence":"high/medium/low"}}]}}"""
+        genai.configure(api_key=LLM_KEY)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        audio_part = {"mime_type": mime, "data": b64}
+        resp = await asyncio.to_thread(model.generate_content, [prompt, audio_part])
         raw = resp.text if hasattr(resp, "text") else str(resp)
         result = json.loads(raw.strip().strip("```json").strip("```").strip())
         return result
