@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, RefreshCw, DollarSign, FileText,
   Bell, BarChart2, Settings, Users, Vault, Trash2, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap, Calendar,
-  Download, Keyboard
+  Download, Keyboard, FolderOpen
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -25,6 +25,7 @@ const NAV = [
   { to: "/calendar",  icon: Calendar,        label: "Calendar",   key: "7" },
   { to: "/people",    icon: Users,           label: "People",     key: "8" },
   { to: "/vault",     icon: Vault,           label: "Vault",      key: "9" },
+  { to: "/projects",  icon: FolderOpen,      label: "Projects" },
   { to: "/reports",   icon: BarChart2,       label: "Reports" },
   { to: "/settings",  icon: Settings,        label: "Settings" },
   { to: "/trash",     icon: Trash2,          label: "Trash" },

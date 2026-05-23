@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Loader, Download, Check, Trash2, BarChart2, RefreshCw, AlertTriangle } from "lucide-react";
+import DigestWidget from "@/components/DigestWidget";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { formatAmount } from "@/lib/utils";
@@ -121,10 +122,14 @@ export default function Reports() {
           {/* Briefing */}
           {tab === "Briefing" && (
             <div className="space-y-4">
+              {/* Weekly AI digest */}
+              <DigestWidget />
+
+              {/* Daily briefing */}
               {data.briefing ? (
                 <>
                   <div className="mm-card p-4">
-                    <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--mm-muted)" }}>Summary</p>
+                    <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--mm-muted)" }}>Today's Briefing</p>
                     <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "var(--mm-text)" }}>
                       {data.briefing.summary || data.briefing}
                     </p>
@@ -137,7 +142,7 @@ export default function Reports() {
                   ))}
                 </>
               ) : (
-                <EmptySection icon="📊" title="No briefing data" />
+                <EmptySection icon="📊" title="No briefing data yet" />
               )}
             </div>
           )}

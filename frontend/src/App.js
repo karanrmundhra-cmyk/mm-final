@@ -22,6 +22,7 @@ import Vault from "@/pages/Vault";
 import RecycleBin from "@/pages/RecycleBin";
 import Invite from "@/pages/Invite";
 import Calendar from "@/pages/Calendar";
+import Projects from "@/pages/Projects";
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -58,6 +59,7 @@ function Root() {
         <Route path="settings"       element={<W C={Settings} />} />
         <Route path="people"         element={<W C={People} />} />
         <Route path="vault"          element={<W C={Vault} />} />
+        <Route path="projects"       element={<W C={Projects} />} />
         <Route path="trash"          element={<W C={RecycleBin} />} />
         <Route path="loans"          element={<Navigate to="/cash-flow" replace />} />
         <Route path="investments"    element={<Navigate to="/cash-flow" replace />} />

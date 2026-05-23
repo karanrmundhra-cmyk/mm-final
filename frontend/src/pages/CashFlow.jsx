@@ -6,6 +6,7 @@ import { formatAmount } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
+import AnomalyWidget from "@/components/AnomalyWidget";
 
 const CATS  = ["Income","Expense","Asset","Liability"];
 const EMPTY = { vendor:"", details:"", amount:"", category:"Expense", mode:"", head:"", currency:"INR",
@@ -177,6 +178,9 @@ export default function CashFlow() {
           </button>
         ))}
       </div>
+
+      {/* ── Anomaly detection ── */}
+      <AnomalyWidget />
 
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">

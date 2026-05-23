@@ -525,6 +525,13 @@ async def create_task(body: TaskIn, u=Depends(get_current_user)):
     })
     await db.tasks.insert_one(doc)
     _clean(doc)
+    # Auto-link people by name matching
+    search_text = " ".join(filter(None, [doc.get("task",""), doc.get("name",""), doc.get("details","")]))
+    auto_linked = await _auto_link_people(u["id"], search_text)
+    if auto_linked:
+        merged = list(dict.fromkeys((doc.get("people_ids") or []) + auto_linked))
+        await db.tasks.update_one({"id": doc["id"]}, {"$set": {"people_ids": merged}})
+        doc["people_ids"] = merged
     await _log_activity(u["id"], body.project_id, u["id"], f"{u['first_name']} {u.get('last_name','')}".strip(),
                         "task_created", doc["id"], doc["task"])
     return doc
@@ -594,6 +601,13 @@ async def create_routine(body: RoutineIn, u=Depends(get_current_user)):
     })
     await db.routines.insert_one(doc)
     _clean(doc)
+    # Auto-link people by name matching
+    search_text = " ".join(filter(None, [doc.get("activity",""), doc.get("name",""), doc.get("details","")]))
+    auto_linked = await _auto_link_people(u["id"], search_text)
+    if auto_linked:
+        merged = list(dict.fromkeys((doc.get("people_ids") or []) + auto_linked))
+        await db.routines.update_one({"id": doc["id"]}, {"$set": {"people_ids": merged}})
+        doc["people_ids"] = merged
     return doc
 
 @api.patch("/routines/{rid}")
@@ -2046,6 +2060,274 @@ async def _del_attachment(coll: str, item_id: str, att_id: str, user_id: str):
     await db[coll].update_one({"id": item_id, "user_id": user_id},
                               {"$set": {"attachments": atts, "updated_at": now_iso()}})
     return {"ok": True}
+
+# ─────────────────────── AUTO-LINK PEOPLE ───────────────────────
+async def _auto_link_people(user_id: str, text: str) -> List[str]:
+    """Fuzzy-match names in text against people collection. Returns matched IDs."""
+    if not text:
+        return []
+    people = await db.people.find(
+        {"user_id": user_id, "deleted": {"$ne": True}},
+        {"_id": 0, "id": 1, "name": 1}
+    ).to_list(500)
+    matched = []
+    text_lower = text.lower()
+    for p in people:
+        name = p.get("name", "").strip()
+        if not name:
+            continue
+        name_lower = name.lower()
+        parts = name_lower.split()
+        # Full name match
+        if name_lower in text_lower:
+            matched.append(p["id"])
+        # First name match (≥4 chars to reduce false positives)
+        elif parts and len(parts[0]) >= 4 and parts[0] in text_lower.split():
+            matched.append(p["id"])
+    return list(dict.fromkeys(matched))  # deduplicate preserving order
+
+@api.post("/tasks/{tid}/auto-link")
+async def auto_link_task(tid: str, u=Depends(get_current_user)):
+    """Re-run people auto-linking for a task."""
+    task = await db.tasks.find_one({"id": tid, "user_id": u["id"]}, {"_id": 0})
+    if not task:
+        raise HTTPException(404, "Task not found")
+    search_text = " ".join(filter(None, [task.get("task",""), task.get("name",""), task.get("details","")]))
+    linked = await _auto_link_people(u["id"], search_text)
+    existing = task.get("people_ids", [])
+    merged = list(dict.fromkeys(existing + linked))
+    await db.tasks.update_one({"id": tid}, {"$set": {"people_ids": merged, "updated_at": now_iso()}})
+    return {"people_ids": merged, "newly_linked": [p for p in linked if p not in existing]}
+
+@api.post("/routines/{rid}/auto-link")
+async def auto_link_routine(rid: str, u=Depends(get_current_user)):
+    """Re-run people auto-linking for a routine."""
+    routine = await db.routines.find_one({"id": rid, "user_id": u["id"]}, {"_id": 0})
+    if not routine:
+        raise HTTPException(404, "Routine not found")
+    search_text = " ".join(filter(None, [routine.get("activity",""), routine.get("name",""), routine.get("details","")]))
+    linked = await _auto_link_people(u["id"], search_text)
+    existing = routine.get("people_ids", [])
+    merged = list(dict.fromkeys(existing + linked))
+    await db.routines.update_one({"id": rid}, {"$set": {"people_ids": merged, "updated_at": now_iso()}})
+    return {"people_ids": merged, "newly_linked": [p for p in linked if p not in existing]}
+
+# ─────────────────────── WEEKLY DIGEST ───────────────────────
+@api.get("/digest/preview")
+async def digest_preview(u=Depends(get_current_user)):
+    """Generate a weekly AI digest of tasks, finances, routines and vault."""
+    today = today_key()
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).date().isoformat()
+    month_start = today[:7] + "-01"
+
+    # Tasks
+    completed_tasks = await db.tasks.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "status": {"$in": ["Completed","Done"]},
+         "updated_at": {"$gte": week_ago}},
+        {"_id": 0, "task": 1}
+    ).limit(10).to_list(10)
+
+    pending_count = await db.tasks.count_documents(
+        {"user_id": u["id"], "deleted": {"$ne": True}, "status": {"$nin": ["Completed","Done"]}})
+
+    overdue_tasks = await db.tasks.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "status": {"$nin": ["Completed","Done"]},
+         "date": {"$lt": today, "$ne": None}},
+        {"_id": 0, "task": 1, "date": 1}
+    ).limit(5).to_list(5)
+
+    due_next_week = await db.tasks.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "status": {"$nin": ["Completed","Done"]},
+         "date": {"$gte": today, "$lte": (datetime.now(timezone.utc) + timedelta(days=7)).date().isoformat()}},
+        {"_id": 0, "task": 1, "date": 1}
+    ).limit(5).to_list(5)
+
+    # Finances
+    week_txns = await db.transactions.find(
+        {"user_id": u["id"], "deleted": {"$ne": True}, "date": {"$gte": week_ago}},
+        {"_id": 0, "amount": 1, "category": 1, "vendor": 1}
+    ).to_list(500)
+    income = sum(float(t.get("amount",0)) for t in week_txns if t.get("category") == "Income")
+    expense = sum(float(t.get("amount",0)) for t in week_txns if t.get("category") == "Expense")
+
+    # Vault expiring in 30 days
+    in_30 = (datetime.now(timezone.utc) + timedelta(days=30)).date().isoformat()
+    expiring_docs = await db.vault.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "expiry_date": {"$lte": in_30, "$gte": today}},
+        {"_id": 0, "name": 1, "expiry_date": 1}
+    ).limit(5).to_list(5)
+
+    # Routine streaks
+    routines = await db.routines.find(
+        {"user_id": u["id"], "deleted": {"$ne": True}, "status": "Active"},
+        {"_id": 0, "activity": 1, "streak": 1}
+    ).limit(20).to_list(20)
+    top_streaks = sorted(
+        [r for r in routines if (r.get("streak") or 0) > 0],
+        key=lambda r: r.get("streak", 0) or 0, reverse=True
+    )[:3]
+
+    context = (
+        f"User: {u['first_name']} {u.get('last_name','')}\n"
+        f"Period: {week_ago} → {today}\n\n"
+        f"Tasks completed this week: {len(completed_tasks)}"
+        + (f" ({', '.join(t['task'] for t in completed_tasks[:3])})" if completed_tasks else "")
+        + f"\nPending tasks: {pending_count}"
+        + f"\nOverdue: {len(overdue_tasks)}"
+        + (f" ({', '.join(t['task'] for t in overdue_tasks[:2])})" if overdue_tasks else "")
+        + f"\nDue next 7 days: {len(due_next_week)}"
+        + (f" ({', '.join(t['task'] for t in due_next_week[:2])})" if due_next_week else "")
+        + f"\n\nWeekly income: ₹{income:,.0f}"
+        + f"\nWeekly expenses: ₹{expense:,.0f}"
+        + f"\nNet: ₹{income-expense:,.0f}"
+        + f"\n\nDocuments expiring in 30 days: "
+        + (", ".join(f"{d['name']} ({d['expiry_date']})" for d in expiring_docs) or "None")
+        + f"\nTop routine streaks: "
+        + (", ".join(f"{r['activity']} 🔥{r.get('streak',0)}" for r in top_streaks) or "None")
+    )
+
+    system = (
+        f"You are the weekly digest writer for Mind Matters personal OS. "
+        f"Write a warm, insightful weekly summary for {u['first_name']}. "
+        f"Use markdown with 3 sections: ## 📋 Week in Review, ## ⚡ Action Items, ## 🔥 Keep Going. "
+        f"Be specific and encouraging. Max 200 words total."
+    )
+    summary = await _llm(system, f"Generate digest:\n{context}")
+    if not summary:
+        summary = (
+            f"## 📋 Week in Review\n{len(completed_tasks)} tasks completed. "
+            f"{pending_count} still pending.\n\n"
+            f"## ⚡ Action Items\n{len(overdue_tasks)} overdue tasks need attention.\n\n"
+            f"## 🔥 Keep Going\nKeep building your routines!"
+        )
+
+    return {
+        "summary": summary,
+        "stats": {
+            "completed": len(completed_tasks),
+            "pending": pending_count,
+            "overdue": len(overdue_tasks),
+            "due_next_week": len(due_next_week),
+            "income": income,
+            "expense": expense,
+            "expiring_docs": len(expiring_docs),
+            "top_streaks": [{"activity": r["activity"], "streak": r.get("streak",0)} for r in top_streaks],
+        },
+        "generated_at": now_iso(),
+        "period": {"from": week_ago, "to": today},
+    }
+
+@api.post("/digest/send")
+async def digest_send(u=Depends(get_current_user)):
+    """Generate digest and deliver it via Telegram if the user is linked."""
+    result = await digest_preview(u)
+    user = await db.users.find_one({"id": u["id"]}, {"_id": 0, "tg_chat_id": 1})
+    chat_id = (user or {}).get("tg_chat_id")
+    sent_tg = False
+    if chat_id and TG_TOKEN:
+        try:
+            from tg import tg_send
+            await tg_send(chat_id, f"📊 *Mind Matters Weekly Digest*\n\n{result['summary'][:3000]}")
+            sent_tg = True
+        except Exception as e:
+            logger.warning(f"Digest TG send failed: {e}")
+    await db.user_settings.update_one(
+        {"user_id": u["id"]}, {"$set": {"digest_last_sent": now_iso()}}, upsert=True
+    )
+    return {"ok": True, "sent_telegram": sent_tg, "summary": result["summary"]}
+
+# ─────────────────────── SPENDING ANOMALIES ───────────────────────
+@api.get("/cashflow/anomalies")
+async def cashflow_anomalies(u=Depends(get_current_user)):
+    """Detect spending anomalies by comparing this month to a 3-month baseline."""
+    today = today_key()
+    month_start = today[:7] + "-01"
+    three_mo_ago = (datetime.now(timezone.utc) - timedelta(days=93)).date().isoformat()
+
+    # This month's expenses
+    current_txns = await db.transactions.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "category": "Expense", "date": {"$gte": month_start}},
+        {"_id": 0, "amount": 1, "head": 1, "vendor": 1, "date": 1}
+    ).to_list(1000)
+
+    # Prior 3 months' expenses
+    prior_txns = await db.transactions.find(
+        {"user_id": u["id"], "deleted": {"$ne": True},
+         "category": "Expense",
+         "date": {"$gte": three_mo_ago, "$lt": month_start}},
+        {"_id": 0, "amount": 1, "head": 1, "vendor": 1, "date": 1}
+    ).to_list(3000)
+
+    def _group(txns: list) -> dict:
+        groups: dict = {}
+        for t in txns:
+            key = (t.get("head") or "").strip() or (t.get("vendor") or "").strip() or "Other"
+            groups[key] = groups.get(key, 0.0) + float(t.get("amount", 0))
+        return groups
+
+    current_by_cat = _group(current_txns)
+    prior_by_cat   = _group(prior_txns)
+
+    anomalies = []
+    # Check all categories that appear in current month
+    for cat, current_amt in current_by_cat.items():
+        prior_total = prior_by_cat.get(cat, 0.0)
+        prior_avg   = prior_total / 3.0
+
+        if prior_avg > 0:
+            pct = (current_amt - prior_avg) / prior_avg * 100
+            # Only flag if significant amount and significant change
+            if abs(pct) >= 40 and current_amt >= 1000:
+                anomalies.append({
+                    "category": cat,
+                    "current":  round(current_amt, 2),
+                    "avg_3mo":  round(prior_avg, 2),
+                    "change_pct": round(pct, 1),
+                    "severity": "high" if abs(pct) >= 100 else "medium",
+                    "direction": "up" if pct > 0 else "down",
+                })
+        elif current_amt >= 5000:
+            # Brand-new spending category this month
+            anomalies.append({
+                "category": cat,
+                "current":  round(current_amt, 2),
+                "avg_3mo":  0,
+                "change_pct": 100.0,
+                "severity": "info",
+                "direction": "new",
+            })
+
+    anomalies.sort(key=lambda a: abs(a["change_pct"]), reverse=True)
+    anomalies = anomalies[:10]
+
+    insight = ""
+    if anomalies:
+        anomaly_text = "; ".join(
+            f"{a['category']}: ₹{a['current']:,.0f} "
+            f"({'+' if a['change_pct'] >= 0 else ''}{a['change_pct']:.0f}% vs 3-mo avg)"
+            for a in anomalies[:5]
+        )
+        system = (
+            "You are a concise financial advisor. "
+            "Give a 1–2 sentence practical insight about these spending anomalies. "
+            "Be specific. Do not add disclaimers."
+        )
+        insight = await _llm(system, f"Spending anomalies this month: {anomaly_text}")
+
+    return {
+        "month": today[:7],
+        "anomalies": anomalies,
+        "insight": insight,
+        "summary": {
+            "total_current": round(sum(a["current"] for a in anomalies), 2),
+            "flagged_count": len(anomalies),
+        },
+    }
 
 # ─────────────────────── AUTO-PURGE (30-day trash) ───────────────────────
 async def _purge_old_trash():

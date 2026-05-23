@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatAmount, timeAgo } from "@/lib/utils";
+import DigestWidget from "@/components/DigestWidget";
 
 const QUICK_NAV = [
   { to:"/tasks",     icon:CheckSquare, label:"Tasks",     color:"#4F8EF7" },
@@ -256,6 +257,11 @@ export default function Dashboard() {
             );
           })}
         </div>
+      </Section>
+
+      {/* ── Weekly Digest ── */}
+      <Section id="digest" title="Weekly Digest">
+        <DigestWidget />
       </Section>
 
       {/* ── Daily quote ── */}
