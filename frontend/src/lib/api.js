@@ -1,8 +1,8 @@
 import axios from "axios";
 import { getCurrentProjectId } from "@/lib/projects";
 
-export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8001";
-export const API = `${BACKEND_URL}/api`;
+export const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace("/api","") || "http://localhost:8001";
+export const API = process.env.REACT_APP_API_URL || `${BACKEND_URL}/api`;
 
 export const api = axios.create({ baseURL: API });
 

@@ -419,13 +419,13 @@ async def login(body: LoginReq):
     return {"token": token, "user": user}
 
 @api.post("/auth/demo-login")
-async def demo_login(body: DemoLoginReq):
+async def demo_login(body: DemoLoginReq = None):
     email = "demo@mindmatters.app"
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:
         uid = new_id()
         now = now_iso()
-        user = {"id": uid, "email": email, "first_name": body.first_name or "Karan",
+        user = {"id": uid, "email": email, "first_name": (body.first_name if body else None) or "Karan",
                 "last_name": "Mundhra", "picture": "", "created_at": now, "updated_at": now,
                 "password_hash": _hash_password("demo123")}
         await db.users.insert_one(user)
