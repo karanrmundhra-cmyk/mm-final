@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import Skeleton from "@/components/Skeleton";
-import Vault from "@/pages/Vault";
 import OnboardingTip from "@/components/OnboardingTip";
 
 function renderMd(text) {
@@ -23,10 +22,8 @@ function renderMd(text) {
 }
 
 const EMPTY = { title:"", content:"", tags:[], pinned:false, locked:false };
-const PAGE_TABS = ["Notes", "Vault"];
 
 export default function Notes() {
-  const [activeTab, setActiveTab] = useState("Notes");
   const [notes,       setNotes]      = useState([]);
   const [loading,     setLoading]    = useState(true);
   const [aiText,      setAiText]     = useState("");
@@ -137,34 +134,7 @@ export default function Notes() {
   if (loading) return <Skeleton.Page rows={6} />;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-60px)] overflow-hidden">
-
-      {/* ── Tab bar ── */}
-      <div className="flex gap-1 flex-shrink-0 border-b px-4"
-           style={{ borderColor: "var(--mm-border)" }}>
-        {PAGE_TABS.map(t => (
-          <button key={t} onClick={() => setActiveTab(t)}
-                  className="px-4 py-2.5 text-sm font-medium transition-colors relative"
-                  style={{ color: activeTab === t ? "var(--mm-text)" : "var(--mm-muted)" }}>
-            {t}
-            {activeTab === t && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                   style={{ background: "var(--mm-gold)" }} />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Vault tab ── */}
-      {activeTab === "Vault" && (
-        <div className="flex-1 overflow-y-auto">
-          <Vault />
-        </div>
-      )}
-
-      {/* ── Notes tab ── */}
-      {activeTab === "Notes" && (
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-[calc(100vh-60px)] overflow-hidden">
 
       {/* ── Sidebar ── */}
       <div className="w-72 flex-shrink-0 flex flex-col border-r"
@@ -309,7 +279,7 @@ export default function Notes() {
                   {selected.locked ? <Lock size={14} /> : <Unlock size={14} />}
                 </button>
                 <button onClick={() => del(selected.id)} title="Move to trash"
-                        className="mm-icon-btn danger">
+                        className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -338,12 +308,12 @@ export default function Notes() {
             <>
               {previewMd ? (
                 <div className="flex-1 p-6 overflow-y-auto text-sm leading-relaxed"
-                     style={{ color:"var(--mm-text)", fontFamily:"'Inter', sans-serif" }}
+                     style={{ color:"var(--mm-text)", fontFamily:"'Outfit', sans-serif" }}
                      dangerouslySetInnerHTML={{ __html: renderMd(editContent) }} />
               ) : (
                 <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
                           className="flex-1 p-6 bg-transparent outline-none resize-none text-sm leading-relaxed"
-                          style={{ color:"var(--mm-text)", fontFamily:"'Inter', sans-serif" }}
+                          style={{ color:"var(--mm-text)", fontFamily:"'Outfit', sans-serif" }}
                           placeholder="Start writing…" />
               )}
               <div className="px-6 py-3 flex items-center gap-3 border-t"
@@ -369,8 +339,6 @@ export default function Notes() {
       {preview && (
         <EditablePreview title="Review Note" fields={preview.fields}
                          onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
-      )}
-      </div>
       )}
     </div>
   );

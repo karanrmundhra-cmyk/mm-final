@@ -2,11 +2,19 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CheckSquare, RefreshCw, DollarSign, FileText, Bell, BarChart2,
-  Settings, AlertTriangle, ChevronDown, ChevronUp, TrendingUp, Check,
+  Settings, AlertTriangle, ChevronDown, ChevronUp, Check,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { formatAmount, timeAgo } from "@/lib/utils";
+import { formatAmount } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 import DigestWidget from "@/components/DigestWidget";
+
+function timeGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 const QUICK_NAV = [
   { to:"/tasks",     icon:CheckSquare, label:"Tasks",     color:"#D4AF37" },
@@ -23,6 +31,7 @@ const NEWS_CATS = ["general","business","tech","india","world"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user }  = useAuth();
   const [data,         setData]         = useState(null);
   const [news,         setNews]         = useState([]);
   const [newsCategory, setNewsCategory] = useState("general");
@@ -100,7 +109,8 @@ export default function Dashboard() {
             className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
             style={{ borderColor:"var(--mm-border)" }}>
       <div className="w-2 h-2 flex-shrink-0"
-           style={{ background:dotColor, borderRadius:"50%", boxShadow:`0 0 6px ${dotColor}66` }} />
+           style={{ background:dotColor, borderRadius:"50%",
+                    boxShadow: dotColor === "var(--mm-gold)" ? "0 0 6px rgba(212,175,55,0.5)" : "none" }} />
       <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{main}</span>
       {sub && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{sub}</span>}
       {right && <span className="text-xs font-medium" style={{ color:rightColor||"var(--mm-muted)" }}>{right}</span>}
@@ -112,11 +122,16 @@ export default function Dashboard() {
 
       {/* ── Greeting ── */}
       <div>
-        <h1 className="mm-font-display" style={{ fontSize:32, fontWeight:400, color:"var(--mm-text)" }}>
-          {data?.greeting || "Good morning"}
+        <h1 className="mm-font-display" style={{ fontSize:36, fontWeight:300, color:"var(--mm-text)", lineHeight:1.15 }}>
+          {timeGreeting()},
+          <br />
+          <em style={{ color:"var(--mm-gold)", fontWeight:400 }}>
+            {user?.first_name}{user?.last_name ? ` ${user.last_name}` : ""}
+          </em>
+          <span style={{ color:"var(--mm-muted)" }}>.</span>
         </h1>
-        <p className="mt-1" style={{ fontSize:11, color:"var(--mm-muted)", letterSpacing:"0.15em" }}>
-          {data?.date || now.toLocaleDateString("en-IN",{ weekday:"long", year:"numeric", month:"long", day:"numeric" })}
+        <p className="mt-2" style={{ fontSize:11, color:"var(--mm-muted)", letterSpacing:"0.15em" }}>
+          {now.toLocaleDateString("en-IN",{ weekday:"long", year:"numeric", month:"long", day:"numeric" })}
           {" · "}
           {now.toLocaleTimeString("en-IN",{ hour:"2-digit", minute:"2-digit" })}
         </p>
@@ -165,7 +180,10 @@ export default function Dashboard() {
               <div key={t.id} className="mm-row flex items-center gap-3 px-4 py-3 border-b"
                    style={{ borderColor:"var(--mm-border)" }}>
                 <button onClick={() => completeTask(t.id)}
-                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors hover:border-green-500"
+                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{ borderColor:"var(--mm-border)" }}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor="var(--mm-gold)"}
+                        onMouseLeave={e=>e.currentTarget.style.borderColor="var(--mm-border)"}
                         style={{ borderColor:"var(--mm-border)", flexShrink:0 }}
                         title="Mark complete">
                   <Check size={10} style={{ color:"var(--mm-border)", opacity:0.5 }} />
@@ -189,7 +207,10 @@ export default function Dashboard() {
               <div key={t.id} className="mm-row flex items-center gap-3 px-4 py-3 border-b"
                    style={{ borderColor:"var(--mm-border)" }}>
                 <button onClick={() => completeTask(t.id)}
-                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors hover:border-green-500"
+                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{ borderColor:"var(--mm-border)" }}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor="var(--mm-gold)"}
+                        onMouseLeave={e=>e.currentTarget.style.borderColor="var(--mm-border)"}
                         style={{ borderColor:"var(--mm-border)", flexShrink:0 }}
                         title="Mark complete">
                   <Check size={10} style={{ color:"var(--mm-border)", opacity:0.5 }} />

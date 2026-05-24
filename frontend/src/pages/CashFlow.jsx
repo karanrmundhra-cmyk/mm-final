@@ -75,7 +75,7 @@ export default function CashFlow() {
       await api.post("/transactions",{ ...newRow, amount:parseFloat(newRow.amount)||0 });
       toast.success("Transaction added");
       setNewRow({ ...EMPTY }); load();
-    } catch {}
+    } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add transaction"); }
   };
 
   const update = async (id, patch) => {
@@ -291,7 +291,7 @@ export default function CashFlow() {
                     <Scissors size={12} />
                   </button>
                   <button onClick={() => del(t.id)} title="Move to trash"
-                          className="mm-icon-btn danger">
+                          className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
                     <Trash2 size={12} />
                   </button>
                 </div>

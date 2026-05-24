@@ -230,7 +230,7 @@ export default function Reminders() {
                   </>
                 )}
                 <button onClick={() => del(r.id)} title="Move to trash"
-                        className="mm-icon-btn danger mt-1">
+                        className="mm-icon-btn mt-1" style={{ color:"var(--mm-muted)" }}>
                   <Trash2 size={12} />
                 </button>
               </div>

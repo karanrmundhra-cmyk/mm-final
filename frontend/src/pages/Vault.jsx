@@ -139,7 +139,7 @@ export default function Vault() {
                                        : "var(--mm-border)" }}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-                       style={{ background:"var(--mm-surface-3)", border:"1px solid var(--mm-border)" }}>
+                       style={{ background:"var(--mm-surface-3)", border:"1px solid var(--mm-border)", borderRadius:12 }}>
                     <FileText size={16} style={{ color:"var(--mm-muted)" }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -157,7 +157,8 @@ export default function Vault() {
                           <input type="file" className="hidden" onChange={e => handleUpload(d.id,e)} />
                         </label>
                         <button onClick={() => del(d.id)} title="Move to trash"
-                                className="mm-icon-btn danger">
+                                className="mm-icon-btn"
+                                style={{ color:"var(--mm-muted)" }}>
                           <Trash2 size={12} />
                         </button>
                       </div>

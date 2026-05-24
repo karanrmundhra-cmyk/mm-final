@@ -99,8 +99,8 @@ export default function EditablePreview({ title = "Review before saving", fields
             <Edit3 size={13} />
           </button>
           <button onClick={() => setShowDiscard(true)} title="Discard"
-                  className="mm-icon-btn danger"
-                  style={{ padding:"10px 14px" }}>
+                  className="mm-icon-btn"
+                  style={{ padding:"10px 14px", color:"var(--mm-muted)" }}>
             <Trash2 size={13} />
           </button>
         </div>

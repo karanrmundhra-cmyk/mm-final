@@ -277,7 +277,7 @@ export default function Routines() {
                     </button>
                     <button onClick={() => del(r.id)}
                             title="Move to trash"
-                            className="mm-icon-btn danger">
+                            className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
                       <Trash2 size={12} />
                     </button>
                   </div>

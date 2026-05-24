@@ -100,7 +100,7 @@ export default function QuickAdd({ onClose }) {
             placeholder={PLACEHOLDERS[type]}
             rows={3}
             className="mm-form-input resize-none"
-            style={{ fontFamily:"'Inter', sans-serif" }}
+            style={{ fontFamily:"'Outfit', sans-serif" }}
           />
 
           <button onClick={parse} disabled={!text.trim()||loading}

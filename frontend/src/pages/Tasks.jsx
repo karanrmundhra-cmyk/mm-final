@@ -295,7 +295,8 @@ export default function Tasks() {
                     </button>
                     <button onClick={() => del(t.id)}
                             title="Move to trash"
-                            className="mm-icon-btn danger">
+                            className="mm-icon-btn"
+                            style={{ color:"var(--mm-muted)" }}>
                       <Trash2 size={12} />
                     </button>
                     <GripVertical size={12} style={{ color:"var(--mm-muted)", opacity:0.35, cursor:"grab" }} />
