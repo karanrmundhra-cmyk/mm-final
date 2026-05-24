@@ -33,7 +33,7 @@ export default function Login() {
         toast.success("Reset link sent to your email");
       } else if (mode === "reset") {
         await api.post("/auth/reset", { code: form.code, new_password: form.new_password });
-        toast.success("Password reset. Please log in.");
+        toast.success("Password reset. Please sign in.");
         setMode("login");
       }
     } catch (err) {
@@ -53,32 +53,94 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4"
+    <div className="min-h-screen flex items-center justify-center px-4 py-10"
          style={{ background: "var(--mm-bg)" }}>
-      <div className="w-full max-w-sm">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-               style={{ background: "var(--mm-gold)22" }}>
-            <span className="text-2xl">MM</span>
+
+      {/* Card */}
+      <div className="w-full max-w-sm rounded-3xl overflow-hidden"
+           style={{
+             background: "var(--mm-surface)",
+             border: "1px solid var(--mm-border)",
+             boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.06)",
+           }}>
+
+        {/* ── Logo area ── */}
+        <div className="flex flex-col items-center pt-10 pb-6 px-8">
+
+          {/* RKM circular logo */}
+          <div style={{
+            width: 110,
+            height: 110,
+            borderRadius: "50%",
+            overflow: "hidden",
+            marginBottom: 22,
+            boxShadow: "0 0 32px rgba(212,175,55,0.2)",
+          }}>
+            <img
+              src="/rkm-logo.png"
+              alt="Mind Matters"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center 35%",
+              }}
+            />
           </div>
-          <h1 className="text-2xl font-semibold mm-font-display" style={{ color: "var(--mm-text)" }}>
+
+          {/* Wordmark */}
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontSize: 34,
+            fontWeight: 400,
+            color: "var(--mm-text)",
+            letterSpacing: "0.03em",
+            lineHeight: 1,
+            marginBottom: 6,
+          }}>
             Mind Matters
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--mm-muted)" }}>
-            {mode === "login" && "Welcome back"}
-            {mode === "signup" && "Create your account"}
-            {mode === "forgot" && "Reset your password"}
-            {mode === "reset" && "Enter new password"}
+
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 10,
+            letterSpacing: "0.28em",
+            color: "var(--mm-muted)",
+            textTransform: "uppercase",
+            marginBottom: 20,
+          }}>
+            Personal Operating System
+          </p>
+
+          {/* Divider */}
+          <div style={{
+            width: 40,
+            height: 1,
+            background: "linear-gradient(90deg, transparent, var(--mm-gold), transparent)",
+            marginBottom: 20,
+          }} />
+
+          {/* Mode label */}
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            color: "var(--mm-muted)",
+            textTransform: "uppercase",
+          }}>
+            {mode === "login"  && "Sign In"}
+            {mode === "signup" && "Create Account"}
+            {mode === "forgot" && "Reset Password"}
+            {mode === "reset"  && "New Password"}
           </p>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl p-6" style={{ background: "var(--mm-surface)", border: "1px solid var(--mm-border)" }}>
+        {/* ── Form area ── */}
+        <div className="px-8 pb-8">
           {resetSent && mode === "forgot" ? (
-            <div className="text-center py-4">
-              <p className="text-sm mb-4" style={{ color: "var(--mm-text)" }}>
-                Check your email for a reset link. Enter your code below.
+            <div className="text-center py-4 space-y-3">
+              <p className="text-sm" style={{ color: "var(--mm-text)" }}>
+                Check your email for a reset link.
               </p>
               <button onClick={() => setMode("reset")}
                       className="text-sm" style={{ color: "var(--mm-gold)" }}>
@@ -87,111 +149,186 @@ export default function Login() {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
+
               {mode === "signup" && (
-                <div>
-                  <label className="text-xs block mb-1.5" style={{ color: "var(--mm-muted)" }}>Full Name</label>
+                <Field label="FULL NAME">
                   <input value={form.name} onChange={e => set("name", e.target.value)} required
                          placeholder="Karan Mundhra"
-                         className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                         style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }} />
-                </div>
+                         style={inputStyle} />
+                </Field>
               )}
 
               {(mode === "login" || mode === "signup" || mode === "forgot") && (
-                <div>
-                  <label className="text-xs block mb-1.5" style={{ color: "var(--mm-muted)" }}>Email</label>
-                  <input value={form.email} onChange={e => set("email", e.target.value)} required type="email"
-                         placeholder="you@example.com"
-                         className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                         style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }} />
-                </div>
+                <Field label="EMAIL">
+                  <input value={form.email} onChange={e => set("email", e.target.value)}
+                         required type="email" placeholder="you@example.com"
+                         style={inputStyle} />
+                </Field>
               )}
 
               {(mode === "login" || mode === "signup") && (
-                <div>
-                  <label className="text-xs block mb-1.5" style={{ color: "var(--mm-muted)" }}>Password</label>
-                  <input value={form.password} onChange={e => set("password", e.target.value)} required type="password"
-                         placeholder="••••••••"
-                         className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                         style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }} />
-                </div>
+                <Field label="PASSWORD">
+                  <input value={form.password} onChange={e => set("password", e.target.value)}
+                         required type="password" placeholder="••••••••"
+                         style={inputStyle} />
+                </Field>
               )}
 
               {mode === "reset" && (
                 <>
-                  <div>
-                    <label className="text-xs block mb-1.5" style={{ color: "var(--mm-muted)" }}>Reset Code</label>
+                  <Field label="RESET CODE">
                     <input value={form.code} onChange={e => set("code", e.target.value)} required
-                           placeholder="Code from email"
-                           className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                           style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }} />
-                  </div>
-                  <div>
-                    <label className="text-xs block mb-1.5" style={{ color: "var(--mm-muted)" }}>New Password</label>
-                    <input value={form.new_password} onChange={e => set("new_password", e.target.value)} required type="password"
-                           placeholder="••••••••"
-                           className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                           style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }} />
-                  </div>
+                           placeholder="Code from your email"
+                           style={inputStyle} />
+                  </Field>
+                  <Field label="NEW PASSWORD">
+                    <input value={form.new_password} onChange={e => set("new_password", e.target.value)}
+                           required type="password" placeholder="••••••••"
+                           style={inputStyle} />
+                  </Field>
                 </>
               )}
 
+              {/* Submit */}
               <button type="submit" disabled={loading}
-                      className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                      style={{ background: "var(--mm-gold)", color: "#0A0A0A" }}>
+                      className="w-full flex items-center justify-center gap-2 disabled:opacity-60"
+                      style={{
+                        marginTop: 8,
+                        padding: "13px 0",
+                        borderRadius: 50,
+                        background: "linear-gradient(135deg, #e8c96a 0%, #D4AF37 50%, #b8942a 100%)",
+                        color: "#0A0A0A",
+                        fontFamily: "'Outfit', sans-serif",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        letterSpacing: "0.08em",
+                        border: "none",
+                        cursor: loading ? "not-allowed" : "pointer",
+                      }}>
                 {loading && <Loader size={14} className="animate-spin" />}
-                {mode === "login" && "Sign In"}
-                {mode === "signup" && "Create Account"}
-                {mode === "forgot" && "Send Reset Link"}
-                {mode === "reset" && "Reset Password"}
+                {!loading && (
+                  <>
+                    {mode === "login"  && "Sign In"}
+                    {mode === "signup" && "Create Account"}
+                    {mode === "forgot" && "Send Reset Link"}
+                    {mode === "reset"  && "Reset Password"}
+                  </>
+                )}
               </button>
 
+              {/* Demo */}
               {mode === "login" && (
                 <>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t" style={{ borderColor: "var(--mm-border)" }} />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="px-2" style={{ background: "var(--mm-surface)", color: "var(--mm-muted)" }}>or</span>
-                    </div>
+                  <div className="flex items-center gap-3 my-1">
+                    <div className="flex-1 h-px" style={{ background: "var(--mm-border)" }} />
+                    <span style={{ fontSize: 10, color: "var(--mm-muted)", letterSpacing: "0.15em" }}>OR</span>
+                    <div className="flex-1 h-px" style={{ background: "var(--mm-border)" }} />
                   </div>
                   <button type="button" onClick={demoLogin} disabled={loading}
-                          className="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-60 hover:bg-white/5 transition-colors"
-                          style={{ border: "1px solid var(--mm-border)", color: "var(--mm-muted)" }}>
+                          className="w-full disabled:opacity-60 transition-colors hover:bg-white/5"
+                          style={{
+                            padding: "12px 0",
+                            borderRadius: 50,
+                            border: "1px solid var(--mm-border)",
+                            color: "var(--mm-muted)",
+                            fontFamily: "'Outfit', sans-serif",
+                            fontSize: 12,
+                            letterSpacing: "0.08em",
+                            background: "transparent",
+                            cursor: "pointer",
+                          }}>
                     Try Demo Account
                   </button>
                 </>
               )}
             </form>
           )}
+
+          {/* Footer links */}
+          <div className="mt-5 text-center space-y-2">
+            {mode === "login" && (
+              <>
+                <button onClick={() => setMode("forgot")}
+                        style={{ fontSize: 11, color: "var(--mm-muted)", display: "block", width: "100%",
+                                 letterSpacing: "0.06em" }}>
+                  Forgot password?
+                </button>
+                <p style={{ fontSize: 11, color: "var(--mm-muted)" }}>
+                  New here?{" "}
+                  <button onClick={() => setMode("signup")}
+                          style={{ color: "var(--mm-gold)", textDecoration: "underline",
+                                   textUnderlineOffset: 2 }}>
+                    Create account
+                  </button>
+                </p>
+              </>
+            )}
+            {mode === "signup" && (
+              <button onClick={() => setMode("login")}
+                      style={{ fontSize: 11, color: "var(--mm-muted)" }}>
+                Already have an account?{" "}
+                <span style={{ color: "var(--mm-gold)" }}>Sign in</span>
+              </button>
+            )}
+            {(mode === "forgot" || mode === "reset") && (
+              <button onClick={() => setMode("login")}
+                      style={{ fontSize: 11, color: "var(--mm-muted)" }}>
+                ← Back to sign in
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Footer links */}
-        <div className="mt-4 text-center text-xs space-y-1.5">
-          {mode === "login" && (
-            <>
-              <button onClick={() => setMode("signup")} style={{ color: "var(--mm-gold)" }}>
-                Don't have an account? Sign up
-              </button>
-              <br />
-              <button onClick={() => setMode("forgot")} style={{ color: "var(--mm-muted)" }}>
-                Forgot password?
-              </button>
-            </>
-          )}
-          {mode === "signup" && (
-            <button onClick={() => setMode("login")} style={{ color: "var(--mm-gold)" }}>
-              Already have an account? Sign in
-            </button>
-          )}
-          {(mode === "forgot" || mode === "reset") && (
-            <button onClick={() => setMode("login")} style={{ color: "var(--mm-muted)" }}>
-              Back to sign in
-            </button>
-          )}
+        {/* ── Tagline footer ── */}
+        <div style={{
+          borderTop: "1px solid var(--mm-border)",
+          padding: "12px 0",
+          textAlign: "center",
+        }}>
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: 9,
+            letterSpacing: "0.26em",
+            color: "var(--mm-muted)",
+            textTransform: "uppercase",
+            opacity: 0.6,
+          }}>
+            Calm · Intelligent · In Control
+          </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Helpers ── */
+const inputStyle = {
+  width: "100%",
+  padding: "11px 14px",
+  borderRadius: 10,
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid var(--mm-border)",
+  color: "var(--mm-text)",
+  fontFamily: "'Outfit', sans-serif",
+  fontSize: 13,
+  outline: "none",
+};
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label style={{
+        display: "block",
+        marginBottom: 6,
+        fontFamily: "'Outfit', sans-serif",
+        fontSize: 9,
+        letterSpacing: "0.2em",
+        color: "var(--mm-muted)",
+        textTransform: "uppercase",
+      }}>
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

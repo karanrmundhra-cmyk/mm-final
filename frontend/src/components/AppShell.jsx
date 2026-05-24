@@ -141,18 +141,16 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* Diamond mark */}
-          <div className="flex-shrink-0 flex items-center justify-center"
+          {/* RKM circular logo */}
+          <div className="flex-shrink-0"
                style={{
                  width: 36, height: 36,
-                 background: "linear-gradient(135deg, var(--mm-gold-light) 0%, var(--mm-gold) 60%, var(--mm-gold-dark) 100%)",
-                 borderRadius: 10,
-                 boxShadow: "0 4px 16px rgba(212,175,55,0.35)",
+                 borderRadius: "50%",
+                 overflow: "hidden",
+                 boxShadow: "0 0 12px rgba(212,175,55,0.28)",
                }}>
-            <span style={{
-              color: "#0B0B0C", fontFamily: "'Cormorant Garamond', serif",
-              fontSize: 18, fontWeight: 600, lineHeight: 1,
-            }}>M</span>
+            <img src="/rkm-logo.png" alt="MM"
+                 style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%" }} />
           </div>
           {!collapsed && (
             <div className="min-w-0">
