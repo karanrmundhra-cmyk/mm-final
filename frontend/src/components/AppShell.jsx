@@ -4,8 +4,7 @@ import {
   LayoutDashboard, CheckSquare, RefreshCw, DollarSign, FileText,
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
-  Download, Keyboard,
-  CalendarDays, Users, Shield, FolderOpen, Trash2,
+  Download, Keyboard, FolderOpen,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -18,19 +17,15 @@ import ProjectSelector from "@/components/ProjectSelector";
 import VoiceCapture from "@/components/VoiceCapture";
 
 const NAV = [
-  { to: "/",           icon: LayoutDashboard, label: "Dashboard",  key: "1" },
-  { to: "/tasks",      icon: CheckSquare,     label: "Tasks",      key: "2" },
-  { to: "/routines",   icon: RefreshCw,       label: "Routines",   key: "3" },
-  { to: "/cash-flow",  icon: DollarSign,      label: "Cash Flow",  key: "4" },
-  { to: "/notes",      icon: FileText,        label: "Notes",      key: "5" },
-  { to: "/reminders",  icon: Bell,            label: "Reminders",  key: "6" },
-  { to: "/calendar",   icon: CalendarDays,    label: "Calendar",   key: "7" },
-  { to: "/people",     icon: Users,           label: "People",     key: "8" },
-  { to: "/vault",      icon: Shield,          label: "Vault",      key: "9" },
-  { to: "/projects",   icon: FolderOpen,      label: "Projects",   key: "" },
-  { to: "/reports",    icon: BarChart2,       label: "Reports",    key: "" },
-  { to: "/settings",   icon: Settings,        label: "Settings",   key: "" },
-  { to: "/trash",      icon: Trash2,          label: "Trash",      key: "" },
+  { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
+  { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
+  { to: "/routines",  icon: RefreshCw,       label: "Routines",   key: "3" },
+  { to: "/cash-flow", icon: DollarSign,      label: "Cash Flow",  key: "4" },
+  { to: "/notes",     icon: FileText,        label: "Notes",      key: "5" },
+  { to: "/reminders", icon: Bell,            label: "Reminders",  key: "6" },
+  { to: "/projects",  icon: FolderOpen,      label: "Projects",   key: "7" },
+  { to: "/reports",   icon: BarChart2,       label: "Reports",    key: "8" },
+  { to: "/settings",  icon: Settings,        label: "Settings",   key: "9" },
 ];
 
 const BOTTOM_NAV = NAV.slice(0, 5);
@@ -183,7 +178,7 @@ export default function AppShell() {
               <NavLink
                 key={to} to={to} end={to === "/"}
                 title={collapsed ? label : undefined}
-                className="flex items-center gap-3 px-3 py-2.5 transition-all duration-200 relative"
+                className="flex items-center gap-3 px-3 py-2 transition-all duration-200 relative"
                 style={({ isActive }) => ({
                   borderRadius: 14,
                   color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
@@ -400,13 +395,18 @@ export default function AppShell() {
 function SyncDot() {
   const [state, setState] = useState({ online: true, pending: 0 });
   useEffect(() => subscribeSync(setState), []);
-  const color = !state.online ? "rgba(240,237,232,0.3)" : state.pending > 0 ? "var(--mm-gold)" : "rgba(212,175,55,0.45)";
+  const color  = !state.online ? "rgba(240,237,232,0.3)"
+               : state.pending > 0 ? "var(--mm-gold)"
+               : "rgba(212,175,55,0.45)";
+  const shadow = !state.online ? "rgba(240,237,232,0.1)"
+               : state.pending > 0 ? "rgba(212,175,55,0.5)"
+               : "rgba(212,175,55,0.2)";
   return (
     <div title={state.pending > 0 ? `${state.pending} pending` : "Synced"}
          style={{
            width: 8, height: 8, borderRadius: "50%",
            background: color,
-           boxShadow: `0 0 8px ${color}88`,
+           boxShadow: `0 0 8px ${shadow}`,
          }} />
   );
 }
