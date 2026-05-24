@@ -125,7 +125,7 @@ export default function Reminders() {
           <h1 className="mm-page-title">Reminders</h1>
           <p className="mm-page-sub">
             {upcoming} upcoming
-            {overdue > 0 && <span style={{ color:"#E0A052" }}> · {overdue} due</span>}
+            {overdue > 0 && <span style={{ color:"var(--mm-gold)" }}> · {overdue} due</span>}
           </p>
         </div>
         <div className="flex gap-1">
@@ -175,7 +175,7 @@ export default function Reminders() {
                  style={{
                    borderColor:"var(--mm-border)",
                    opacity: r.dismissed ? 0.5 : 1,
-                   borderLeft: due ? "2px solid #E0A052" : "2px solid transparent",
+                   borderLeft: due ? "2px solid var(--mm-gold)" : "2px solid transparent",
                  }}>
 
               {/* Dismiss toggle */}
@@ -183,10 +183,10 @@ export default function Reminders() {
                       title={r.dismissed ? "Already dismissed" : "Dismiss"}
                       className={`mm-check mt-0.5 ${r.dismissed ? "done" : ""}`}
                       style={{
-                        borderColor: r.dismissed ? "#52C77A" : due ? "#E0A052" : "var(--mm-border)",
+                        borderColor: r.dismissed ? "var(--mm-gold)" : due ? "var(--mm-gold)" : "var(--mm-border)",
                       }}>
-                {r.dismissed && <Check size={10} style={{ color:"#52C77A" }} />}
-                {!r.dismissed && due && <Bell size={10} style={{ color:"#E0A052" }} />}
+                {r.dismissed && <Check size={10} style={{ color:"var(--mm-gold)" }} />}
+                {!r.dismissed && due && <Bell size={10} style={{ color:"var(--mm-gold)" }} />}
               </button>
 
               {/* Content */}
@@ -221,7 +221,7 @@ export default function Reminders() {
                 {fireDate && (
                   <>
                     <div className="text-xs font-medium"
-                         style={{ color:due ? "#E0A052" : "var(--mm-muted)" }}>
+                         style={{ color:due ? "var(--mm-gold)" : "var(--mm-muted)" }}>
                       {fireDate.toLocaleDateString("en-IN",{ day:"numeric", month:"short" })}
                     </div>
                     <div className="text-xs" style={{ color:"var(--mm-muted)" }}>

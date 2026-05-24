@@ -9,14 +9,14 @@ import { formatAmount, timeAgo } from "@/lib/utils";
 import DigestWidget from "@/components/DigestWidget";
 
 const QUICK_NAV = [
-  { to:"/tasks",     icon:CheckSquare, label:"Tasks",     color:"#4F8EF7" },
-  { to:"/routines",  icon:RefreshCw,   label:"Routines",  color:"#A855F7" },
-  { to:"/cash-flow", icon:DollarSign,  label:"Cash Flow", color:"#14B8A6" },
-  { to:"/notes",     icon:FileText,    label:"Notes",     color:"#EAB308" },
-  { to:"/reminders", icon:Bell,        label:"Reminders", color:"#22C55E" },
-  { to:"/people",    icon:null,        label:"People",    color:"#EC4899", emoji:"👥" },
-  { to:"/reports",   icon:BarChart2,   label:"Reports",   color:"#F97316" },
-  { to:"/settings",  icon:Settings,    label:"Settings",  color:"#8B8FA8" },
+  { to:"/tasks",     icon:CheckSquare, label:"Tasks",     color:"#D4AF37" },
+  { to:"/routines",  icon:RefreshCw,   label:"Routines",  color:"#D4AF37" },
+  { to:"/cash-flow", icon:DollarSign,  label:"Cash Flow", color:"#D4AF37" },
+  { to:"/notes",     icon:FileText,    label:"Notes",     color:"#D4AF37" },
+  { to:"/reminders", icon:Bell,        label:"Reminders", color:"#D4AF37" },
+  { to:"/people",    icon:null,        label:"People",    color:"#D4AF37", emoji:"👥" },
+  { to:"/reports",   icon:BarChart2,   label:"Reports",   color:"#D4AF37" },
+  { to:"/settings",  icon:Settings,    label:"Settings",  color:"#D4AF37" },
 ];
 
 const NEWS_CATS = ["general","business","tech","india","world"];
@@ -127,8 +127,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-3">
           {[
             { label:"Pending",   value:data.stats.pending,       color:"var(--mm-muted)" },
-            { label:"Overdue",   value:data.stats.overdue,       color:data.stats.overdue>0 ? "#E05252" : "var(--mm-muted)" },
-            { label:"Done Today",value:data.stats.done_today,    color:"#52C77A" },
+            { label:"Overdue",   value:data.stats.overdue,       color:data.stats.overdue>0 ? "var(--mm-text)" : "var(--mm-muted)" },
+            { label:"Done Today",value:data.stats.done_today,    color:"var(--mm-gold)" },
             { label:"Reminders", value:data.stats.reminders_due, color:"var(--mm-gold)" },
           ].map((s) => (
             <div key={s.label} className="mm-card p-4 text-center">
@@ -143,17 +143,17 @@ export default function Dashboard() {
       {data?.pending_review_count > 0 && (
         <button onClick={() => navigate("/reports")}
                 className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left"
-                style={{ background:"#E0A05211", border:"1px solid #E0A05244", borderRadius:16 }}>
-          <AlertTriangle size={15} style={{ color:"#E0A052", flexShrink:0 }} />
+                style={{ background:"rgba(212,175,55,0.06)", border:"1px solid var(--mm-border-gold)", borderRadius:16 }}>
+          <AlertTriangle size={15} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
           <div className="flex-1">
-            <span className="text-sm font-medium" style={{ color:"#E0A052" }}>
+            <span className="text-sm font-medium" style={{ color:"var(--mm-gold)" }}>
               {data.pending_review_count} item{data.pending_review_count!==1?"s":""} need review
             </span>
-            <p className="text-xs mt-0.5" style={{ color:"#E0A05288" }}>
+            <p className="text-xs mt-0.5" style={{ color:"var(--mm-muted)" }}>
               Low-confidence items, duplicates, failed imports
             </p>
           </div>
-          <span className="text-xs uppercase tracking-widest" style={{ color:"#E0A052" }}>Review →</span>
+          <span className="text-xs uppercase tracking-widest" style={{ color:"var(--mm-gold)" }}>Review →</span>
         </button>
       )}
 
@@ -171,10 +171,10 @@ export default function Dashboard() {
                   <Check size={10} style={{ color:"var(--mm-border)", opacity:0.5 }} />
                 </button>
                 <button onClick={() => navigate("/tasks")} className="flex-1 text-left flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:"#E05252", boxShadow:"0 0 6px #E0525266" }} />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:"var(--mm-muted)" }} />
                   <span className="text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
                 </button>
-                <span className="text-xs" style={{ color:"#E05252" }}>{t.date}</span>
+                <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{t.date}</span>
               </div>
             ))}
           </div>
@@ -239,9 +239,9 @@ export default function Dashboard() {
                       className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
                       style={{ borderColor:"var(--mm-border)" }}>
                 <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
-                     style={{ borderColor:r.done_today ? "#52C77A" : "var(--mm-border)",
-                              background:r.done_today ? "#52C77A22" : "transparent", borderRadius:"50%" }}>
-                  {r.done_today && <span style={{ color:"#52C77A", fontSize:9, fontWeight:700 }}>✓</span>}
+                     style={{ borderColor:r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
+                              background:r.done_today ? "rgba(212,175,55,0.12)" : "transparent", borderRadius:"50%" }}>
+                  {r.done_today && <span style={{ color:"var(--mm-gold)", fontSize:9, fontWeight:700 }}>✓</span>}
                 </div>
                 <span className="flex-1 text-sm" style={{ color:"var(--mm-text)", opacity:r.done_today?0.55:1 }}>
                   {r.activity}

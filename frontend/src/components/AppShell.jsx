@@ -197,7 +197,7 @@ export default function AppShell() {
                     </span>
                     {hasBadge && (
                       <span className="text-xs px-1.5 py-0.5"
-                            style={{ background: "#E0505022", color: "#E05252",
+                            style={{ background: "rgba(212,175,55,0.12)", color: "var(--mm-gold)",
                                      fontSize: 9, borderRadius: 8 }}>
                         {pendingReview}
                       </span>
@@ -206,7 +206,7 @@ export default function AppShell() {
                 )}
                 {collapsed && hasBadge && (
                   <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5"
-                        style={{ background: "#E05252", borderRadius: "50%" }} />
+                        style={{ background: "var(--mm-gold)", borderRadius: "50%" }} />
                 )}
               </NavLink>
             );
@@ -393,7 +393,7 @@ export default function AppShell() {
 function SyncDot() {
   const [state, setState] = useState({ online: true, pending: 0 });
   useEffect(() => subscribeSync(setState), []);
-  const color = !state.online ? "#E05252" : state.pending > 0 ? "#E0A052" : "#52C77A";
+  const color = !state.online ? "rgba(240,237,232,0.3)" : state.pending > 0 ? "var(--mm-gold)" : "rgba(212,175,55,0.45)";
   return (
     <div title={state.pending > 0 ? `${state.pending} pending` : "Synced"}
          style={{

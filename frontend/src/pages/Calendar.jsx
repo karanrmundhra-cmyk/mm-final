@@ -54,7 +54,7 @@ export default function Calendar({ embedded = false }) {
     if (!date) return [];
     const items = [];
     tasks.filter(t => t.date && isSameDay(new Date(t.date), date) && !["Completed","Done"].includes(t.status))
-         .forEach(t => items.push({ type:"task", label:t.task, color:"#4F8EF7" }));
+         .forEach(t => items.push({ type:"task", label:t.task, color:"var(--mm-muted)" }));
     reminders.filter(r => r.fire_at && !r.dismissed && isSameDay(new Date(r.fire_at), date))
              .forEach(r => items.push({ type:"reminder", label:r.title, color:"var(--mm-gold)" }));
     return items;
@@ -181,7 +181,7 @@ export default function Calendar({ embedded = false }) {
                 <button key={t.id} onClick={() => navigate("/tasks")}
                         className="mm-row w-full flex items-center gap-2.5 px-3 py-2.5 mb-1 text-left"
                         style={{ borderRadius:12, background:"rgba(79,142,247,0.08)" }}>
-                  <Check size={12} style={{ color:"#4F8EF7", flexShrink:0 }} />
+                  <Check size={12} style={{ color:"var(--mm-muted)", flexShrink:0 }} />
                   <span className="flex-1 text-sm truncate" style={{ color:"var(--mm-text)" }}>{t.task}</span>
                 </button>
               ))}
@@ -218,7 +218,7 @@ export default function Calendar({ embedded = false }) {
                 <button key={r.id} onClick={() => navigate("/routines")}
                         className="mm-row w-full flex items-center gap-2.5 px-3 py-2.5 mb-1 text-left"
                         style={{ borderRadius:12, background:"rgba(168,85,247,0.08)" }}>
-                  <RefreshCw size={12} style={{ color:"#A855F7", flexShrink:0 }} />
+                  <RefreshCw size={12} style={{ color:"var(--mm-muted)", flexShrink:0 }} />
                   <span className="flex-1 text-sm truncate" style={{ color:"var(--mm-text)" }}>{r.activity}</span>
                   <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{r.frequency}</span>
                 </button>

@@ -98,7 +98,7 @@ export default function DigestWidget() {
                   icon={<CheckSquare size={11} />}
                   label="Completed"
                   value={digest.stats.completed}
-                  color="#52C77A" />
+                  color="var(--mm-gold)" />
                 <MiniStat
                   icon={<CheckSquare size={11} />}
                   label="Pending"
@@ -108,7 +108,7 @@ export default function DigestWidget() {
                   icon={<TrendingUp size={11} />}
                   label="Net this week"
                   value={`₹${formatAmount(Math.abs(digest.stats.income - digest.stats.expense))}`}
-                  color={digest.stats.income >= digest.stats.expense ? "#52C77A" : "#E05252"} />
+                  color="var(--mm-gold)" />
               </div>
 
               {/* Top streaks */}
@@ -127,8 +127,8 @@ export default function DigestWidget() {
               {/* Expiring docs warning */}
               {digest.stats.expiring_docs > 0 && (
                 <div className="mb-4 px-3 py-2 rounded-xl text-xs"
-                     style={{ background: "rgba(224,82,82,0.08)",
-                              color: "#E05252", border: "1px solid rgba(224,82,82,0.2)" }}>
+                     style={{ background: "rgba(212,175,55,0.06)",
+                              color: "var(--mm-muted)", border: "1px solid var(--mm-border)" }}>
                   ⚠️ {digest.stats.expiring_docs} document{digest.stats.expiring_docs > 1 ? "s" : ""} expiring within 30 days
                 </div>
               )}

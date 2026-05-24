@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
 const TYPE_META = {
-  task:        { icon: CheckSquare, color: "#4F8EF7", label: "Task", route: "/tasks" },
-  routine:     { icon: RefreshCw,   color: "#A855F7", label: "Routine", route: "/routines" },
-  transaction: { icon: DollarSign,  color: "#14B8A6", label: "Transaction", route: "/cash-flow" },
-  note:        { icon: FileText,    color: "#EAB308", label: "Note", route: "/notes" },
-  reminder:    { icon: Bell,        color: "#22C55E", label: "Reminder", route: "/reminders" },
-  person:      { icon: Users,       color: "#EC4899", label: "Person", route: "/people" },
-  document:    { icon: Vault,       color: "#94A3B8", label: "Document", route: "/vault" },
+  task:        { icon: CheckSquare, color: "#D4AF37", label: "Task", route: "/tasks" },
+  routine:     { icon: RefreshCw,   color: "#D4AF37", label: "Routine", route: "/routines" },
+  transaction: { icon: DollarSign,  color: "#D4AF37", label: "Transaction", route: "/cash-flow" },
+  note:        { icon: FileText,    color: "#D4AF37", label: "Note", route: "/notes" },
+  reminder:    { icon: Bell,        color: "#D4AF37", label: "Reminder", route: "/reminders" },
+  person:      { icon: Users,       color: "#D4AF37", label: "Person", route: "/people" },
+  document:    { icon: Vault,       color: "#D4AF37", label: "Document", route: "/vault" },
 };
 
 function RefreshCw(props) {
@@ -131,8 +131,8 @@ export default function GlobalSearch({ onClose }) {
                         <button key={t.id} onClick={() => { navigate("/tasks"); onClose(); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
                           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                               style={{ background:"#4F8EF722" }}>
-                            <span style={{ color:"#4F8EF7", fontSize:12 }}>✓</span>
+                               style={{ background:"rgba(212,175,55,0.1)" }}>
+                            <span style={{ color:"var(--mm-gold)", fontSize:12 }}>✓</span>
                           </div>
                           <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
                           {t.name && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{t.name}</span>}
@@ -160,16 +160,16 @@ export default function GlobalSearch({ onClose }) {
                   )}
                   {suggestions.overdue?.length > 0 && (
                     <div>
-                      <p className="mm-label mb-2 px-1" style={{ color:"#E05252" }}>Overdue</p>
+                      <p className="mm-label mb-2 px-1">Overdue</p>
                       {suggestions.overdue.slice(0,2).map(t => (
                         <button key={t.id} onClick={() => { navigate("/tasks"); onClose(); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
                           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                               style={{ background:"#E0525222" }}>
-                            <span style={{ color:"#E05252", fontSize:12 }}>!</span>
+                               style={{ background:"var(--mm-surface-3)" }}>
+                            <span style={{ color:"var(--mm-muted)", fontSize:12 }}>!</span>
                           </div>
                           <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
-                          <span className="text-xs" style={{ color:"#E05252" }}>{t.date}</span>
+                          <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{t.date}</span>
                         </button>
                       ))}
                     </div>

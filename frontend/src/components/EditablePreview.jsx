@@ -41,7 +41,7 @@ export default function EditablePreview({ title = "Review before saving", fields
               {title}
             </h2>
             {hasLow && (
-              <p className="mm-label mt-1" style={{ color:"#E05252" }}>
+              <p className="mm-label mt-1" style={{ color:"var(--mm-muted)" }}>
                 Low confidence — please review
               </p>
             )}
@@ -123,8 +123,8 @@ export default function EditablePreview({ title = "Review before saving", fields
             <div className="flex gap-2">
               <button onClick={onDiscard}
                       className="flex-1 py-2.5 text-sm font-medium"
-                      style={{ background:"#E0505018", color:"#E05252",
-                               border:"1px solid #E0505033", cursor:"pointer", borderRadius:20 }}>
+                      style={{ background:"var(--mm-surface-3)", color:"var(--mm-muted)",
+                               border:"1px solid var(--mm-border)", cursor:"pointer", borderRadius:20 }}>
                 Yes, discard
               </button>
               <button onClick={() => setShowDiscard(false)}

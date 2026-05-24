@@ -6,11 +6,11 @@ import {
 } from "lucide-react";
 
 const ITEM_META = {
-  task:        { icon: CheckSquare, color: "#4F8EF7" },
-  routine:     { icon: RefreshCw,   color: "#A855F7" },
-  transaction: { icon: DollarSign,  color: "#14B8A6" },
-  note:        { icon: FileText,    color: "#EAB308" },
-  reminder:    { icon: Bell,        color: "#22C55E" },
+  task:        { icon: CheckSquare, color: "#D4AF37" },
+  routine:     { icon: RefreshCw,   color: "#D4AF37" },
+  transaction: { icon: DollarSign,  color: "#D4AF37" },
+  note:        { icon: FileText,    color: "#D4AF37" },
+  reminder:    { icon: Bell,        color: "#D4AF37" },
 };
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -296,7 +296,7 @@ export default function People() {
                       </button>
                       <button onClick={() => del(selected.id)}
                               className="mm-btn-ghost px-4"
-                              style={{ color:"#E05252", borderColor:"#E0505033" }}>
+                              style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
                         Delete
                       </button>
                     </div>
@@ -359,7 +359,7 @@ export default function People() {
                           <p className="text-xs" style={{ color:"var(--mm-muted)" }}>{item.type}</p>
                         </div>
                         {item.amount && (
-                          <span className="text-xs font-medium" style={{ color:"#14B8A6" }}>
+                          <span className="text-xs font-medium" style={{ color:"var(--mm-gold)" }}>
                             ₹{item.amount}
                           </span>
                         )}
@@ -407,7 +407,7 @@ export default function People() {
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color:"var(--mm-muted)" }}>
                   {importPreview.source} · {importPreview.total} contacts found ·{" "}
-                  <span style={{ color:"#52C77A" }}>{importPreview.new} new</span>
+                  <span style={{ color:"var(--mm-gold)" }}>{importPreview.new} new</span>
                   {importPreview.duplicates > 0 && (
                     <span style={{ color:"var(--mm-gold)" }}> · {importPreview.duplicates} already exist</span>
                   )}
@@ -468,7 +468,7 @@ export default function People() {
                   </div>
 
                   {selectedContacts.has(i)
-                    ? <Check size={13} style={{ color:"#52C77A", flexShrink:0, marginTop:2 }} />
+                    ? <Check size={13} style={{ color:"var(--mm-gold)", flexShrink:0, marginTop:2 }} />
                     : <div style={{ width:13, flexShrink:0 }} />}
                 </label>
               ))}

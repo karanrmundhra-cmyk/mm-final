@@ -30,15 +30,15 @@ export default function SwipeRow({ onDelete, onComplete, children }) {
       {/* Swipe-right: complete */}
       {onComplete && isRight && (
         <div className="absolute inset-y-0 left-0 flex items-center px-4 pointer-events-none"
-             style={{ background:"#52C77A", width: abs, minWidth:0, transition:"none" }}>
-          <Check size={14} style={{ color:"#fff", opacity: abs > 30 ? 1 : 0 }} />
+             style={{ background:"rgba(212,175,55,0.18)", width: abs, minWidth:0, transition:"none" }}>
+          <Check size={14} style={{ color:"var(--mm-gold)", opacity: abs > 30 ? 1 : 0 }} />
         </div>
       )}
       {/* Swipe-left: delete */}
       {onDelete && isLeft && (
         <div className="absolute inset-y-0 right-0 flex items-center justify-end px-4 pointer-events-none"
-             style={{ background:"#E05252", width: abs, minWidth:0, transition:"none" }}>
-          <Trash2 size={14} style={{ color:"#fff", opacity: abs > 30 ? 1 : 0 }} />
+             style={{ background:"rgba(240,237,232,0.06)", width: abs, minWidth:0, transition:"none" }}>
+          <Trash2 size={14} style={{ color:"var(--mm-muted)", opacity: abs > 30 ? 1 : 0 }} />
         </div>
       )}
       <div style={{ transform:`translateX(${offset}px)`, transition: tracking.current ? "none" : "transform 0.22s ease",

@@ -33,9 +33,9 @@ export default function AnomalyWidget() {
   const topAnomaly = anomalies[0];
 
   const sevColor = {
-    high:   "#E05252",
-    medium: "#D4AF37",
-    info:   "#4F8EF7",
+    high:   "var(--mm-text)",
+    medium: "var(--mm-gold)",
+    info:   "var(--mm-gold)",
   };
 
   return (
@@ -81,7 +81,7 @@ export default function AnomalyWidget() {
                   {a.direction === "up"
                     ? <TrendingUp size={14} style={{ color: sevColor[a.severity] }} />
                     : a.direction === "down"
-                    ? <TrendingDown size={14} style={{ color: "#52C77A" }} />
+                    ? <TrendingDown size={14} style={{ color: "var(--mm-gold)" }} />
                     : <AlertTriangle size={14} style={{ color: sevColor[a.severity] }} />}
                 </div>
 
@@ -97,7 +97,7 @@ export default function AnomalyWidget() {
 
                 <div className="flex-shrink-0 text-right">
                   <span className="text-sm font-medium"
-                        style={{ color: a.direction === "down" ? "#52C77A" : sevColor[a.severity] }}>
+                        style={{ color: a.direction === "down" ? "var(--mm-gold)" : sevColor[a.severity] }}>
                     {a.direction === "new" ? "New" : `${a.change_pct > 0 ? "+" : ""}${a.change_pct.toFixed(0)}%`}
                   </span>
                   {a.direction !== "new" && (

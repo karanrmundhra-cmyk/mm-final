@@ -109,7 +109,7 @@ export default function Reports() {
               ) : (data.inbox || []).map((item, i) => (
                 <div key={i} className="mm-card px-4 py-3 flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                       style={{ background: item.type === "task" ? "#4F8EF7" : "var(--mm-gold)" }} />
+                       style={{ background: "var(--mm-gold)" }} />
                   <div className="flex-1">
                     <p className="text-sm" style={{ color: "var(--mm-text)" }}>{item.label || item.task || item.title}</p>
                     <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{item.date} · {item.type}</p>
@@ -156,7 +156,7 @@ export default function Reports() {
                     {(data.synopsis.totals || []).map(t => (
                       <div key={t.category} className="mm-card p-4 text-center">
                         <p className="text-xs mb-1" style={{ color: "var(--mm-muted)" }}>{t.category}</p>
-                        <p className="text-lg font-semibold" style={{ color: t.category === "Income" ? "#52C77A" : t.category === "Expense" ? "#E05252" : "var(--mm-text)" }}>
+                        <p className="text-lg font-semibold" style={{ color: t.category === "Income" ? "var(--mm-gold)" : t.category === "Expense" ? "var(--mm-muted)" : "var(--mm-text)" }}>
                           ₹{formatAmount(t.total || 0)}
                         </p>
                       </div>
@@ -170,7 +170,7 @@ export default function Reports() {
                           <div key={i} className="flex items-center gap-3">
                             <span className="text-xs w-16 flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{m.month}</span>
                             <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--mm-surface-2)" }}>
-                              <div className="h-full rounded-full" style={{ width: `${Math.min(100, (m.income / (data.synopsis.max_income || 1)) * 100)}%`, background: "#52C77A" }} />
+                              <div className="h-full rounded-full" style={{ width: `${Math.min(100, (m.income / (data.synopsis.max_income || 1)) * 100)}%`, background: "var(--mm-gold)" }} />
                             </div>
                             <span className="text-xs w-20 text-right" style={{ color: "var(--mm-text)" }}>₹{formatAmount(m.income)}</span>
                           </div>
@@ -209,16 +209,16 @@ export default function Reports() {
             <div className="space-y-3">
               {pendingLoading ? <LoadingBlock /> : pendingItems.length === 0 ? (
                 <div className="flex flex-col items-center py-16 gap-3 text-center">
-                  <Check size={40} style={{ color: "#52C77A" }} />
+                  <Check size={40} style={{ color: "var(--mm-gold)" }} />
                   <h3 className="text-base font-semibold" style={{ color: "var(--mm-text)" }}>All clear</h3>
                   <p className="text-sm" style={{ color: "var(--mm-muted)" }}>No items need review.</p>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl mb-2"
-                       style={{ background: "#E0A05211", border: "1px solid #E0A05244" }}>
-                    <AlertTriangle size={14} style={{ color: "#E0A052" }} />
-                    <p className="text-xs" style={{ color: "#E0A052" }}>
+                       style={{ background: "rgba(212,175,55,0.06)", border: "1px solid var(--mm-border-gold)" }}>
+                    <AlertTriangle size={14} style={{ color: "var(--mm-gold)" }} />
+                    <p className="text-xs" style={{ color: "var(--mm-gold)" }}>
                       {pendingItems.length} item{pendingItems.length !== 1 ? "s" : ""} need review — low-confidence AI parses, duplicates, or failed imports.
                     </p>
                   </div>
@@ -232,7 +232,7 @@ export default function Reports() {
                               {item._type || item.type}
                             </span>
                             <span className="text-xs px-1.5 py-0.5 rounded-full"
-                                  style={{ background: "#E0525222", color: "#E05252" }}>
+                                  style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)" }}>
                               {item.confidence || "low"} confidence
                             </span>
                           </div>
@@ -246,12 +246,12 @@ export default function Reports() {
                         <div className="flex gap-1.5 flex-shrink-0">
                           <button onClick={() => approve(item.id)}
                                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs"
-                                  style={{ background: "#52C77A22", color: "#52C77A", border: "1px solid #52C77A33" }}>
+                                  style={{ background: "rgba(212,175,55,0.08)", color: "var(--mm-gold)", border: "1px solid var(--mm-border-gold)" }}>
                             <Check size={11} /> Approve
                           </button>
                           <button onClick={() => discard(item.id)}
                                   className="p-1.5 rounded-lg"
-                                  style={{ color: "#E05252" }}>
+                                  style={{ color: "var(--mm-muted)" }}>
                             <Trash2 size={12} />
                           </button>
                         </div>

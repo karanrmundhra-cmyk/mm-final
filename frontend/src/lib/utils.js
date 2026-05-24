@@ -35,9 +35,9 @@ export function isOverdue(dateStr, status) {
 }
 
 export function confidenceColor(level) {
-  if (level === "high") return "#52C77A";
-  if (level === "medium") return "#E0A052";
-  return "#E05252";
+  if (level === "high") return "var(--mm-gold)";
+  if (level === "medium") return "var(--mm-muted)";
+  return "var(--mm-muted)";
 }
 
 export function confidenceIcon(level) {

@@ -81,20 +81,20 @@ export default function Vault() {
         <div className="space-y-1.5 mb-5">
           {expired.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
-                 style={{ background:"#E0525211", border:"1px solid #E0525233",
-                          borderLeft:"3px solid #E05252", borderRadius:12 }}>
-              <AlertTriangle size={13} style={{ color:"#E05252", flexShrink:0 }} />
-              <span className="text-sm" style={{ color:"#E05252" }}>
+                 style={{ background:"rgba(212,175,55,0.04)", border:"1px solid var(--mm-border)",
+                          borderLeft:"3px solid var(--mm-border)", borderRadius:12 }}>
+              <AlertTriangle size={13} style={{ color:"var(--mm-muted)", flexShrink:0 }} />
+              <span className="text-sm" style={{ color:"var(--mm-muted)" }}>
                 <strong>{d.title}</strong> — expired {Math.abs(daysUntil(d.expiry_date))} days ago
               </span>
             </div>
           ))}
           {expiring.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
-                 style={{ background:"#E0A05211", border:"1px solid #E0A05233",
-                          borderLeft:"3px solid #E0A052", borderRadius:12 }}>
-              <AlertTriangle size={13} style={{ color:"#E0A052", flexShrink:0 }} />
-              <span className="text-sm" style={{ color:"#E0A052" }}>
+                 style={{ background:"rgba(212,175,55,0.06)", border:"1px solid var(--mm-border-gold)",
+                          borderLeft:"3px solid var(--mm-gold)", borderRadius:12 }}>
+              <AlertTriangle size={13} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
+              <span className="text-sm" style={{ color:"var(--mm-gold)" }}>
                 <strong>{d.title}</strong> — expires in {daysUntil(d.expiry_date)} days
               </span>
             </div>
@@ -134,8 +134,8 @@ export default function Vault() {
             const isExpiring = days !== null && days <= 30 && days >= 0;
             return (
               <div key={d.id} className="mm-card p-4"
-                   style={{ borderColor: isExpired  ? "#E0525244"
-                                       : isExpiring ? "#E0A05244"
+                   style={{ borderColor: isExpired  ? "var(--mm-border)"
+                                       : isExpiring ? "var(--mm-border-gold)"
                                        : "var(--mm-border)" }}>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 flex items-center justify-center flex-shrink-0"
@@ -167,7 +167,7 @@ export default function Vault() {
                     )}
                     {d.expiry_date && (
                       <p className="text-xs mt-1.5 font-medium"
-                         style={{ color: isExpired?"#E05252" : isExpiring?"#E0A052" : "var(--mm-muted)" }}>
+                         style={{ color: isExpired?"var(--mm-muted)" : isExpiring?"var(--mm-gold)" : "var(--mm-muted)" }}>
                         {isExpired
                           ? `Expired ${Math.abs(days)}d ago`
                           : `Expires in ${days}d`} — {d.expiry_date}

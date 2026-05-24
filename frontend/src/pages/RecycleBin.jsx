@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 
 const TYPE_LABELS = { task: "Task", routine: "Routine", transaction: "Transaction", note: "Note", reminder: "Reminder", person: "Person", document: "Document" };
-const TYPE_COLORS = { task: "#4F8EF7", routine: "#A855F7", transaction: "#14B8A6", note: "#EAB308", reminder: "#22C55E", person: "#EC4899", document: "#F97316" };
+const TYPE_COLORS = { task: "#D4AF37", routine: "#D4AF37", transaction: "#D4AF37", note: "#D4AF37", reminder: "#D4AF37", person: "#D4AF37", document: "#D4AF37" };
 
 export default function RecycleBin() {
   const [items, setItems] = useState([]);
@@ -69,7 +69,7 @@ export default function RecycleBin() {
         {items.length > 0 && (
           <button onClick={() => setConfirmClear(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs"
-                  style={{ background: "#E0525222", color: "#E05252", border: "1px solid #E0525233" }}>
+                  style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)", border: "1px solid var(--mm-border)" }}>
             <Trash2 size={12} /> Empty Trash
           </button>
         )}
@@ -86,7 +86,7 @@ export default function RecycleBin() {
           {types.map(t => (
             <button key={t} onClick={() => setFilter(f => f === t ? "" : t)}
                     className="px-3 py-1 rounded-full text-xs capitalize"
-                    style={{ background: filter === t ? (TYPE_COLORS[t] || "var(--mm-gold)") : "var(--mm-surface-2)", color: filter === t ? "#fff" : "var(--mm-muted)", border: "1px solid var(--mm-border)" }}>
+                    style={{ background: filter === t ? "var(--mm-gold)" : "var(--mm-surface-2)", color: filter === t ? "#0A0A0A" : "var(--mm-muted)", border: "1px solid var(--mm-border)" }}>
               {TYPE_LABELS[t] || t}
             </button>
           ))}
@@ -121,13 +121,13 @@ export default function RecycleBin() {
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button onClick={() => restore(item)}
                           className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs hover:bg-white/10"
-                          style={{ color: "#52C77A", border: "1px solid #52C77A33" }}
+                          style={{ color: "var(--mm-gold)", border: "1px solid var(--mm-border-gold)" }}
                           title="Restore">
                     <RotateCcw size={11} /> Restore
                   </button>
                   <button onClick={() => deletePermanent(item)}
                           className="p-1.5 rounded-lg hover:bg-white/10"
-                          style={{ color: "#E05252" }}
+                          style={{ color: "var(--mm-muted)" }}
                           title="Delete forever">
                     <Trash2 size={12} />
                   </button>
@@ -143,7 +143,7 @@ export default function RecycleBin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)" }}>
           <div className="rounded-2xl p-6 w-full max-w-sm animate-fade-in text-center"
                style={{ background: "var(--mm-surface)", border: "1px solid var(--mm-border)" }}>
-            <AlertTriangle size={32} className="mx-auto mb-3" style={{ color: "#E05252" }} />
+            <AlertTriangle size={32} className="mx-auto mb-3" style={{ color: "var(--mm-muted)" }} />
             <h2 className="text-base font-semibold mb-2" style={{ color: "var(--mm-text)" }}>Empty Trash?</h2>
             <p className="text-sm mb-4" style={{ color: "var(--mm-muted)" }}>
               This will permanently delete all {items.length} items. This cannot be undone.
@@ -151,7 +151,7 @@ export default function RecycleBin() {
             <div className="flex gap-2">
               <button onClick={clearAll}
                       className="flex-1 py-2 rounded-lg text-sm font-medium"
-                      style={{ background: "#E05252", color: "#fff" }}>
+                      style={{ background: "var(--mm-surface-3)", color: "var(--mm-text)", border: "1px solid var(--mm-border)" }}>
                 Delete All
               </button>
               <button onClick={() => setConfirmClear(false)}

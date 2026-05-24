@@ -168,9 +168,9 @@ html, body {
 .animate-pulse-gold { animation: glowPulse 2.5s ease-in-out infinite; }
 
 /* ── CONFIDENCE BADGES ─────────────────────────────────────────────────── */
-.badge-high   { color: #52C77A; }
-.badge-medium { color: #D4AF37; }
-.badge-low    { color: #E05252; }
+.badge-high   { color: var(--mm-gold); }
+.badge-medium { color: var(--mm-muted); }
+.badge-low    { color: var(--mm-muted); opacity: 0.7; }
 
 /* ── STATES ────────────────────────────────────────────────────────────── */
 .mm-row-completed { opacity: 0.4; }
@@ -277,12 +277,12 @@ html, body {
   transition: border-color 0.2s var(--spring), background 0.2s var(--spring),
               transform 0.2s var(--spring), box-shadow 0.2s;
 }
-.mm-check:hover { border-color: rgba(82,199,122,0.5); transform: scale(1.1); }
+.mm-check:hover { border-color: rgba(212,175,55,0.5); transform: scale(1.1); }
 .mm-check.done  {
-  border-color: #52C77A;
-  background: rgba(82,199,122,0.15);
+  border-color: var(--mm-gold);
+  background: rgba(212,175,55,0.15);
   animation: checkSnap 0.4s var(--spring);
-  box-shadow: 0 0 10px rgba(82,199,122,0.25);
+  box-shadow: 0 0 10px rgba(212,175,55,0.2);
 }
 
 /* ── PAGE HEADER ───────────────────────────────────────────────────────── */

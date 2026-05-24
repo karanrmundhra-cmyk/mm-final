@@ -178,8 +178,8 @@ export default function Settings() {
             </p>
             {tgStatus?.linked ? (
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ background: "#52C77A" }} />
-                <span className="text-sm" style={{ color: "#52C77A" }}>Connected as @{tgStatus.username}</span>
+                <div className="w-2 h-2 rounded-full" style={{ background: "var(--mm-gold)" }} />
+                <span className="text-sm" style={{ color: "var(--mm-gold)" }}>Connected as @{tgStatus.username}</span>
               </div>
             ) : tgCode ? (
               <div className="space-y-3">
@@ -191,7 +191,7 @@ export default function Settings() {
                      style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)", color: "var(--mm-text)" }}>
                   <span className="flex-1">/start {tgCode}</span>
                   <button onClick={copyCode} className="p-1 rounded"
-                          style={{ color: copied ? "#52C77A" : "var(--mm-muted)" }}>
+                          style={{ color: copied ? "var(--mm-gold)" : "var(--mm-muted)" }}>
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>
                 </div>

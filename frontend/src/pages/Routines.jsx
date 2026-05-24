@@ -15,8 +15,8 @@ const FREQS = [
 ];
 const EMPTY = { activity:"", name:"", group:"", details:"", frequency:"Daily", priority:"Medium", status:"Active" };
 
-const PRIORITY_COLORS = { High:"#E05252", Medium:"#D4AF37", Low:"#52C77A" };
-const STATUS_COLORS   = { Active:"#52C77A", Paused:"#E0A052", Done:"var(--mm-muted)", Completed:"var(--mm-muted)" };
+const PRIORITY_COLORS = { High:"var(--mm-text)", Medium:"var(--mm-gold)", Low:"var(--mm-muted)" };
+const STATUS_COLORS   = { Active:"var(--mm-gold)", Paused:"var(--mm-muted)", Done:"var(--mm-muted)", Completed:"var(--mm-muted)" };
 
 export default function Routines() {
   const [routines, setRoutines] = useState([]);
@@ -134,7 +134,7 @@ export default function Routines() {
           {selected.size > 0 && (
             <button onClick={bulkDelete} title="Delete selected"
                     className="mm-filter-select"
-                    style={{ color:"#E05252", borderColor:"#E0505033" }}>
+                    style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
               Delete {selected.size}
             </button>
           )}
@@ -159,7 +159,7 @@ export default function Routines() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1.5">
               <span className="mm-label">Today's Progress</span>
-              <span className="text-sm font-medium" style={{ color: completionPct===100 ? "#52C77A" : "var(--mm-gold)" }}>
+              <span className="text-sm font-medium" style={{ color: "var(--mm-gold)" }}>
                 {completionPct === 100 ? "🔥 Complete!" : `${doneToday} / ${totalToday}`}
               </span>
             </div>
@@ -167,11 +167,9 @@ export default function Routines() {
               <div className="h-full transition-all duration-700"
                    style={{
                      width:`${completionPct}%`,
-                     background: completionPct===100
-                       ? "linear-gradient(90deg,#52C77A,#4AE870)"
-                       : "linear-gradient(90deg,var(--mm-gold-dark),var(--mm-gold))",
+                     background: "linear-gradient(90deg,var(--mm-gold-dark),var(--mm-gold))",
                      borderRadius:"inherit",
-                     boxShadow: completionPct===100 ? "0 0 8px rgba(82,199,122,0.4)" : "0 0 8px rgba(212,175,55,0.3)",
+                     boxShadow: "0 0 8px rgba(212,175,55,0.3)",
                    }} />
             </div>
           </div>
@@ -230,7 +228,7 @@ export default function Routines() {
                     <button onClick={() => logDone(r.id,!done)}
                             title={done ? "Mark undone" : "Mark done today"}
                             className={`mm-check ${done ? "done" : ""}`}>
-                      {done && <Check size={9} style={{ color:"#52C77A" }} />}
+                      {done && <Check size={9} style={{ color:"var(--mm-gold)" }} />}
                     </button>
                   </div>
 

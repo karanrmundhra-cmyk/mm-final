@@ -118,7 +118,7 @@ export default function VoiceCapture({ onClose }) {
                          boxShadow: "0 0 0 8px rgba(201,169,97,0.15)" }}>
                 <Mic size={32} style={{ color: "#0A0A0A" }} />
               </button>
-              {error && <p className="text-xs text-center" style={{ color: "#E05252" }}>{error}</p>}
+              {error && <p className="text-xs text-center" style={{ color: "var(--mm-muted)" }}>{error}</p>}
             </div>
           )}
 
@@ -126,7 +126,7 @@ export default function VoiceCapture({ onClose }) {
           {phase === "recording" && (
             <div className="flex flex-col items-center gap-5">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#E05252" }} />
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--mm-gold)" }} />
                 <span className="text-sm" style={{ color: "var(--mm-text)" }}>
                   Recording... {String(Math.floor(seconds / 60)).padStart(2,"0")}:{String(seconds % 60).padStart(2,"0")}
                 </span>
@@ -143,8 +143,8 @@ export default function VoiceCapture({ onClose }) {
               <button
                 onClick={stopRecording}
                 className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "#E0505022", border: "2px solid #E05252" }}>
-                <Square size={20} style={{ color: "#E05252" }} />
+                style={{ background: "rgba(212,175,55,0.1)", border: "2px solid var(--mm-border-gold)" }}>
+                <Square size={20} style={{ color: "var(--mm-gold)" }} />
               </button>
             </div>
           )}
@@ -191,7 +191,7 @@ export default function VoiceCapture({ onClose }) {
                   {error || "No items detected. Try recording again."}
                 </p>
               )}
-              {error && <p className="text-xs" style={{ color: "#E05252" }}>{error}</p>}
+              {error && <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{error}</p>}
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={confirmAll}

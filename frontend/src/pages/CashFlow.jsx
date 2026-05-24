@@ -14,7 +14,7 @@ const CATS  = ["Income","Expense","Asset","Liability"];
 const EMPTY = { vendor:"", details:"", amount:"", category:"Expense", mode:"", head:"", currency:"INR",
                 date: new Date().toISOString().slice(0,10) };
 
-const CAT_COLORS  = { Income:"#52C77A", Expense:"#E05252", Asset:"#4F8EF7", Liability:"#E0A052" };
+const CAT_COLORS  = { Income:"#D4AF37", Expense:"#888880", Asset:"#D4AF37", Liability:"#888880" };
 
 export default function CashFlow() {
   const [txns, setTxns]     = useState([]);
@@ -134,12 +134,12 @@ export default function CashFlow() {
           <h1 className="mm-page-title">Cash Flow</h1>
           <p className="mm-page-sub">
             Net&nbsp;
-            <span style={{ color: net >= 0 ? "#52C77A" : "#E05252" }}>
+            <span style={{ color: net >= 0 ? "var(--mm-gold)" : "var(--mm-muted)" }}>
               ₹{formatAmount(Math.abs(net))}
             </span>
             &nbsp;·&nbsp;
             Net Worth&nbsp;
-            <span style={{ color: netWorth >= 0 ? "#4F8EF7" : "#E05252" }}>
+            <span style={{ color: netWorth >= 0 ? "var(--mm-gold)" : "var(--mm-muted)" }}>
               ₹{formatAmount(Math.abs(netWorth))}
             </span>
           </p>
@@ -158,26 +158,26 @@ export default function CashFlow() {
 
       {/* ── Net Worth card ── */}
       <div className="mm-card p-4 mb-5 flex items-center gap-6"
-           style={{ background:"linear-gradient(135deg, rgba(79,142,247,0.08) 0%, rgba(17,17,20,0) 100%)",
-                    borderColor:"rgba(79,142,247,0.2)" }}>
+           style={{ background:"linear-gradient(135deg, rgba(212,175,55,0.06) 0%, rgba(17,17,20,0) 100%)",
+                    borderColor:"var(--mm-border-gold)" }}>
         <div>
           <p className="mm-label mb-1">Net Worth</p>
           <p className="mm-font-display text-3xl font-light"
-             style={{ color: netWorth >= 0 ? "#4F8EF7" : "#E05252" }}>
+             style={{ color: netWorth >= 0 ? "var(--mm-gold)" : "var(--mm-muted)" }}>
             {netWorth >= 0 ? "" : "−"}₹{formatAmount(Math.abs(netWorth))}
           </p>
           <p className="text-xs mt-1" style={{ color:"var(--mm-muted)" }}>Assets − Liabilities</p>
         </div>
         <div className="flex-1 grid grid-cols-2 gap-3">
-          <div className="mm-card p-3" style={{ borderColor:"rgba(82,199,122,0.2)", background:"rgba(82,199,122,0.05)" }}>
+          <div className="mm-card p-3" style={{ borderColor:"var(--mm-border-gold)", background:"rgba(212,175,55,0.05)" }}>
             <p className="mm-label mb-1">Assets</p>
-            <p className="text-lg mm-font-display font-light" style={{ color:"#52C77A" }}>
+            <p className="text-lg mm-font-display font-light" style={{ color:"var(--mm-gold)" }}>
               ₹{formatAmount(totals.Asset||0)}
             </p>
           </div>
-          <div className="mm-card p-3" style={{ borderColor:"rgba(224,160,82,0.2)", background:"rgba(224,160,82,0.05)" }}>
+          <div className="mm-card p-3" style={{ borderColor:"var(--mm-border)", background:"var(--mm-surface-3)" }}>
             <p className="mm-label mb-1">Liabilities</p>
-            <p className="text-lg mm-font-display font-light" style={{ color:"#E0A052" }}>
+            <p className="text-lg mm-font-display font-light" style={{ color:"var(--mm-muted)" }}>
               ₹{formatAmount(totals.Liability||0)}
             </p>
           </div>

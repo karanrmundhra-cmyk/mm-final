@@ -14,12 +14,12 @@ const EMPTY = { task:"", name:"", date:"", status:"Pending", group:"", details:"
 
 const STATUS_COLORS = {
   "Pending":     "var(--mm-muted)",
-  "In Progress": "#4F8EF7",
-  "Completed":   "#52C77A",
-  "Done":        "#52C77A",
-  "Follow-Up":   "#D4AF37",
-  "Delegate":    "#A855F7",
-  "On Hold":     "#E0A052",
+  "In Progress": "var(--mm-gold)",
+  "Completed":   "var(--mm-gold)",
+  "Done":        "var(--mm-gold)",
+  "Follow-Up":   "var(--mm-gold)",
+  "Delegate":    "var(--mm-muted)",
+  "On Hold":     "var(--mm-muted)",
 };
 
 export default function Tasks() {
@@ -189,7 +189,7 @@ export default function Tasks() {
           </button>
           <button onClick={bulkDelete}
                   className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"
-                  style={{ color:"#E05252", borderColor:"#E0505033" }}>
+                  style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
             <Trash2 size={11} /> Delete all
           </button>
           <button onClick={selectAll} className="mm-btn-ghost px-3 py-1.5 text-xs">Select all</button>
@@ -256,7 +256,7 @@ export default function Tasks() {
                     <button onClick={() => toggle(t)}
                             title={done ? "Mark pending" : "Mark complete"}
                             className={`mm-check ${done ? "done" : ""}`}>
-                      {done && <Check size={10} style={{ color:"#52C77A" }} />}
+                      {done && <Check size={10} style={{ color:"var(--mm-gold)" }} />}
                     </button>
                   </div>
 
@@ -273,7 +273,7 @@ export default function Tasks() {
                   <input type="date" value={t.date||""}
                          onChange={e => update(t.id,{date:e.target.value})}
                          className="mm-input-ghost text-xs"
-                         style={{ color: over ? "#E05252" : "var(--mm-text)" }} />
+                         style={{ color: over ? "var(--mm-muted)" : "var(--mm-text)" }} />
 
                   <input value={t.name||""} onChange={e => update(t.id,{name:e.target.value})}
                          className="mm-input-ghost text-xs" placeholder="—" />
