@@ -15,6 +15,11 @@ import Routines from "@/pages/Routines";
 import CashFlow from "@/pages/CashFlow";
 import Notes from "@/pages/Notes";
 import Reminders from "@/pages/Reminders";
+import Calendar from "@/pages/Calendar";
+import People from "@/pages/People";
+import Vault from "@/pages/Vault";
+import Projects from "@/pages/Projects";
+import RecycleBin from "@/pages/RecycleBin";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Invite from "@/pages/Invite";
@@ -48,14 +53,14 @@ function Root() {
         <Route path="cash-flow"      element={<W C={CashFlow} />} />
         <Route path="cashflow"       element={<Navigate to="/cash-flow" replace />} />
         <Route path="notes"          element={<W C={Notes} />} />
-        <Route path="vault"          element={<Navigate to="/notes" replace />} />
+        <Route path="vault"          element={<W C={Vault} />} />
         <Route path="reminders"      element={<W C={Reminders} />} />
-        <Route path="calendar"       element={<Navigate to="/reminders" replace />} />
+        <Route path="calendar"       element={<W C={Calendar} />} />
+        <Route path="people"         element={<W C={People} />} />
+        <Route path="projects"       element={<W C={Projects} />} />
+        <Route path="trash"          element={<W C={RecycleBin} />} />
         <Route path="reports"        element={<W C={Reports} />} />
         <Route path="settings"       element={<W C={Settings} />} />
-        <Route path="people"         element={<Navigate to="/settings" replace />} />
-        <Route path="trash"          element={<Navigate to="/settings" replace />} />
-        <Route path="projects"       element={<Navigate to="/" replace />} />
         <Route path="loans"          element={<Navigate to="/cash-flow" replace />} />
         <Route path="investments"    element={<Navigate to="/cash-flow" replace />} />
         <Route path="*"              element={<Navigate to="/" replace />} />

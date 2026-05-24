@@ -5,6 +5,7 @@ import {
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
   Download, Keyboard,
+  CalendarDays, Users, Shield, FolderOpen, Trash2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -17,14 +18,19 @@ import ProjectSelector from "@/components/ProjectSelector";
 import VoiceCapture from "@/components/VoiceCapture";
 
 const NAV = [
-  { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
-  { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
-  { to: "/routines",  icon: RefreshCw,       label: "Routines",   key: "3" },
-  { to: "/cash-flow", icon: DollarSign,      label: "Cash Flow",  key: "4" },
-  { to: "/notes",     icon: FileText,        label: "Notes",      key: "5" },
-  { to: "/reminders", icon: Bell,            label: "Reminders",  key: "6" },
-  { to: "/reports",   icon: BarChart2,       label: "Reports",    key: "7" },
-  { to: "/settings",  icon: Settings,        label: "Settings",   key: "8" },
+  { to: "/",           icon: LayoutDashboard, label: "Dashboard",  key: "1" },
+  { to: "/tasks",      icon: CheckSquare,     label: "Tasks",      key: "2" },
+  { to: "/routines",   icon: RefreshCw,       label: "Routines",   key: "3" },
+  { to: "/cash-flow",  icon: DollarSign,      label: "Cash Flow",  key: "4" },
+  { to: "/notes",      icon: FileText,        label: "Notes",      key: "5" },
+  { to: "/reminders",  icon: Bell,            label: "Reminders",  key: "6" },
+  { to: "/calendar",   icon: CalendarDays,    label: "Calendar",   key: "7" },
+  { to: "/people",     icon: Users,           label: "People",     key: "8" },
+  { to: "/vault",      icon: Shield,          label: "Vault",      key: "9" },
+  { to: "/projects",   icon: FolderOpen,      label: "Projects",   key: "" },
+  { to: "/reports",    icon: BarChart2,       label: "Reports",    key: "" },
+  { to: "/settings",   icon: Settings,        label: "Settings",   key: "" },
+  { to: "/trash",      icon: Trash2,          label: "Trash",      key: "" },
 ];
 
 const BOTTOM_NAV = NAV.slice(0, 5);

@@ -9,12 +9,12 @@ import Skeleton from "@/components/Skeleton";
 import { useNavigate } from "react-router-dom";
 
 const PROJECT_COLORS = [
-  "#C9A961","#D4AF37","#4F8EF7","#52C77A",
-  "#E05252","#A855F7","#E0A052","#64C8E8",
-  "#F77F4F","#C9A961","#8EC77A","#E864B8",
+  "#D4AF37","#C9A961","#B8960C","#E8CC6B",
+  "#F0EDE8","#A89880","#887060","#706050",
+  "#D4AF37","#C9A961","#A89880","#706050",
 ];
 
-const EMPTY = { name: "", color: "#C9A961", description: "" };
+const EMPTY = { name: "", color: "#D4AF37", description: "" };
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -266,8 +266,9 @@ export default function Projects() {
                       </button>
                       <button
                         onClick={() => deleteProject(p.id)}
-                        className="mm-icon-btn danger"
-                        title="Delete project">
+                        className="mm-icon-btn"
+                        title="Delete project"
+                        style={{ color: "var(--mm-muted)" }}>
                         <Trash2 size={12} />
                       </button>
                     </div>
