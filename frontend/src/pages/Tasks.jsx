@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Flag, Paperclip, Check, Loader } from "lucide-react";
+import { Plus, Trash2, Flag, Paperclip, Check, Loader, GripVertical } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { isOverdue } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
+import SwipeRow from "@/components/SwipeRow";
+import OnboardingTip from "@/components/OnboardingTip";
 
 const STATUSES = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
 const EMPTY = { task:"", name:"", date:"", status:"Pending", group:"", details:"", flagged: false };
@@ -75,7 +77,9 @@ export default function Tasks() {
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add task"); }
   };
 
-  const [selected, setSelected] = useState(new Set());
+  const [selected,   setSelected]   = useState(new Set());
+  const [dragId,     setDragId]     = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   const update = async (id, patch) => {
     setTasks(ts => ts.map(t => t.id === id ? { ...t, ...patch } : t));
@@ -110,6 +114,26 @@ export default function Tasks() {
     await Promise.all(ids.map(id => api.delete(`/tasks/${id}`).catch(()=>{})));
     toast.success(`${ids.length} tasks moved to trash`);
     clearSel(); load();
+  };
+
+  const onDragStart = (id) => setDragId(id);
+  const onDragOver  = (e, id) => { e.preventDefault(); setDragOverId(id); };
+  const onDrop      = async (e, targetId) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return; }
+    const from = visible.findIndex(t => t.id === dragId);
+    const to   = visible.findIndex(t => t.id === targetId);
+    if (from < 0 || to < 0) { setDragId(null); setDragOverId(null); return; }
+    const reordered = [...visible];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    setTasks(ts => {
+      const visIds = new Set(reordered.map(t => t.id));
+      return [...reordered, ...ts.filter(t => !visIds.has(t.id))];
+    });
+    setDragId(null); setDragOverId(null);
+    try { await api.post("/tasks/reorder", reordered.map((t,i) => ({ id: t.id, order_index: i+1 }))); }
+    catch {}
   };
 
   const visible = tasks.filter(t => {
@@ -173,6 +197,9 @@ export default function Tasks() {
         </div>
       )}
 
+      {/* ── Onboarding tip ── */}
+      <OnboardingTip page="tasks" />
+
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">
         <input value={aiText} onChange={e => setAiText(e.target.value)}
@@ -209,10 +236,17 @@ export default function Tasks() {
               const done = ["Completed","Done"].includes(t.status);
               const over = isOverdue(t.date, t.status);
               return (
-                <div key={t.id}
+                <SwipeRow key={t.id} onDelete={() => del(t.id)} onComplete={() => toggle(t)}>
+                <div
+                     draggable
+                     onDragStart={() => onDragStart(t.id)}
+                     onDragOver={e => onDragOver(e, t.id)}
+                     onDrop={e => onDrop(e, t.id)}
                      className={`mm-row grid items-center px-3 py-2 border-b ${done ? "mm-row-completed" : ""}`}
                      style={{ gridTemplateColumns:"44px 1fr 130px 120px 100px 110px 72px",
-                              borderColor:"var(--mm-border)", minWidth:720 }}>
+                              borderColor:"var(--mm-border)", minWidth:720,
+                              opacity: dragId === t.id ? 0.4 : 1,
+                              borderTop: dragOverId === t.id ? "2px solid var(--mm-gold)" : undefined }}>
 
                   <div className="flex items-center gap-1.5">
                     <input type="checkbox" checked={selected.has(t.id)}
@@ -264,8 +298,10 @@ export default function Tasks() {
                             className="mm-icon-btn danger">
                       <Trash2 size={12} />
                     </button>
+                    <GripVertical size={12} style={{ color:"var(--mm-muted)", opacity:0.35, cursor:"grab" }} />
                   </div>
                 </div>
+                </SwipeRow>
               );
             })}
           </div>

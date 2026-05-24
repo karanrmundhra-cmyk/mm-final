@@ -6,6 +6,8 @@ import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
 import Calendar from "@/pages/Calendar";
+import SwipeRow from "@/components/SwipeRow";
+import OnboardingTip from "@/components/OnboardingTip";
 
 const PAGE_TABS = ["Reminders", "Calendar"];
 
@@ -136,6 +138,9 @@ export default function Reminders() {
         </div>
       </div>
 
+      {/* ── Onboarding tip ── */}
+      <OnboardingTip page="reminders" />
+
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">
         <input value={aiText} onChange={e => setAiText(e.target.value)}
@@ -164,7 +169,8 @@ export default function Reminders() {
           const due      = r.fire_at && new Date(r.fire_at) <= new Date() && !r.dismissed;
           const fireDate = r.fire_at ? new Date(r.fire_at) : null;
           return (
-            <div key={r.id}
+            <SwipeRow key={r.id} onDelete={() => del(r.id)} onComplete={() => dismiss(r.id)}>
+            <div
                  className="mm-row flex items-start gap-3 px-4 py-3 border-b"
                  style={{
                    borderColor:"var(--mm-border)",
@@ -229,6 +235,7 @@ export default function Reminders() {
                 </button>
               </div>
             </div>
+            </SwipeRow>
           );
         })}
       </div>

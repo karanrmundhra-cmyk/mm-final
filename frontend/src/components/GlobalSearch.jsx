@@ -26,8 +26,13 @@ export default function GlobalSearch({ onClose }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [suggestions, setSuggestions] = useState(null);
   const navigate = useNavigate();
   const inputRef = useRef();
+
+  useEffect(() => {
+    api.get("/dashboard").then(r => setSuggestions(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -111,10 +116,75 @@ export default function GlobalSearch({ onClose }) {
             </div>
           )}
           {q.length < 2 && (
-            <div className="flex flex-col items-center py-12 gap-2" style={{ color: "var(--mm-muted)" }}>
-              <Search size={28} style={{ opacity: 0.3 }} />
-              <p className="text-sm">Search across all your items</p>
-              <p className="text-xs">Tasks · Notes · People · Transactions · Reminders</p>
+            <div className="p-4">
+              {!suggestions ? (
+                <div className="flex flex-col items-center py-8 gap-2" style={{ color:"var(--mm-muted)" }}>
+                  <Search size={24} style={{ opacity:0.3 }} />
+                  <p className="text-sm">Search tasks, notes, people, transactions</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {suggestions.due_today?.length > 0 && (
+                    <div>
+                      <p className="mm-label mb-2 px-1">Due Today</p>
+                      {suggestions.due_today.slice(0,3).map(t => (
+                        <button key={t.id} onClick={() => { navigate("/tasks"); onClose(); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                               style={{ background:"#4F8EF722" }}>
+                            <span style={{ color:"#4F8EF7", fontSize:12 }}>✓</span>
+                          </div>
+                          <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
+                          {t.name && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{t.name}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {suggestions.reminders?.length > 0 && (
+                    <div>
+                      <p className="mm-label mb-2 px-1">Upcoming Reminders</p>
+                      {suggestions.reminders.slice(0,3).map(r => (
+                        <button key={r.id} onClick={() => { navigate("/reminders"); onClose(); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                               style={{ background:"rgba(212,175,55,0.15)" }}>
+                            <span style={{ color:"var(--mm-gold)", fontSize:12 }}>🔔</span>
+                          </div>
+                          <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{r.title}</span>
+                          {r.fire_at && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>
+                            {new Date(r.fire_at).toLocaleTimeString("en-IN",{ hour:"2-digit", minute:"2-digit" })}
+                          </span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {suggestions.overdue?.length > 0 && (
+                    <div>
+                      <p className="mm-label mb-2 px-1" style={{ color:"#E05252" }}>Overdue</p>
+                      {suggestions.overdue.slice(0,2).map(t => (
+                        <button key={t.id} onClick={() => { navigate("/tasks"); onClose(); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                               style={{ background:"#E0525222" }}>
+                            <span style={{ color:"#E05252", fontSize:12 }}>!</span>
+                          </div>
+                          <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
+                          <span className="text-xs" style={{ color:"#E05252" }}>{t.date}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!suggestions.due_today?.length && !suggestions.reminders?.length && !suggestions.overdue?.length && (
+                    <div className="flex flex-col items-center py-8 gap-2" style={{ color:"var(--mm-muted)" }}>
+                      <Search size={24} style={{ opacity:0.3 }} />
+                      <p className="text-sm">Search tasks, notes, people, transactions</p>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t text-center" style={{ borderColor:"var(--mm-border)" }}>
+                    <p className="text-xs" style={{ color:"var(--mm-muted)" }}>Start typing to search everything</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {filtered.map((r, i) => {

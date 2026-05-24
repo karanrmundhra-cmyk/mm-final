@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Loader, Upload, Download } from "lucide-react";
+import { Plus, Trash2, Loader, Upload, Download, Scissors } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { formatAmount } from "@/lib/utils";
@@ -7,6 +7,8 @@ import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
 import AnomalyWidget from "@/components/AnomalyWidget";
+import Sparkline from "@/components/Sparkline";
+import OnboardingTip from "@/components/OnboardingTip";
 
 const CATS  = ["Income","Expense","Asset","Liability"];
 const EMPTY = { vendor:"", details:"", amount:"", category:"Expense", mode:"", head:"", currency:"INR",
@@ -23,15 +25,19 @@ export default function CashFlow() {
   const [preview, setPreview] = useState(null);
   const [newRow, setNewRow] = useState({ ...EMPTY });
   const [filter, setFilter] = useState({ category:"" });
+  const [monthly, setMonthly] = useState([]);
+  const [splitting, setSplitting] = useState(null);
 
   const load = useCallback(async () => {
     try {
-      const [txRes, totRes] = await Promise.all([
+      const [txRes, totRes, mRes] = await Promise.all([
         api.get("/transactions"),
         api.get("/cashflow/totals"),
+        api.get("/reports/cashflow-monthly", { params: { months: 7 } }),
       ]);
       setTxns(txRes.data);
       setTotals(totRes.data);
+      setMonthly(mRes.data);
     } catch {}
     setLoading(false);
   }, []);
@@ -79,6 +85,27 @@ export default function CashFlow() {
 
   const del = async (id) => {
     try { await api.delete(`/transactions/${id}`); toast.success("Moved to trash"); load(); } catch {}
+  };
+
+  const initSplit = (t) => setSplitting({
+    txn: t,
+    parts: [
+      { amount: (t.amount / 2).toFixed(0), category: t.category, vendor: t.vendor, details: "" },
+      { amount: (t.amount / 2).toFixed(0), category: "Expense",  vendor: t.vendor, details: "" },
+    ]
+  });
+
+  const confirmSplit = async () => {
+    if (!splitting) return;
+    try {
+      await Promise.all(splitting.parts.map(p =>
+        api.post("/transactions", { ...p, date: splitting.txn.date, amount: parseFloat(p.amount)||0 })
+      ));
+      await api.delete(`/transactions/${splitting.txn.id}`);
+      toast.success("Transaction split");
+      setSplitting(null);
+      load();
+    } catch { toast.error("Split failed"); }
   };
 
   const handleUpload = async (e) => {
@@ -159,28 +186,40 @@ export default function CashFlow() {
 
       {/* ── Category totals / filter ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        {CATS.map((cat) => (
-          <button key={cat}
-                  onClick={() => setFilter(f => ({ ...f, category: f.category===cat ? "" : cat }))}
-                  title={`Filter by ${cat}`}
-                  className="mm-card p-4 text-left transition-all"
-                  style={{
-                    background: filter.category===cat ? `${CAT_COLORS[cat]}12` : "var(--mm-surface-2)",
-                    borderColor: filter.category===cat ? `${CAT_COLORS[cat]}55` : "var(--mm-border)",
-                    boxShadow: filter.category===cat
-                      ? `0 4px 20px ${CAT_COLORS[cat]}22`
-                      : "var(--elev-1)",
-                  }}>
-            <div className="mm-label mb-2" style={{ color:"var(--mm-muted)" }}>{cat}</div>
-            <div className="text-xl font-light mm-font-display" style={{ color:CAT_COLORS[cat] }}>
-              ₹{formatAmount(totals[cat]||0)}
-            </div>
-          </button>
-        ))}
+        {CATS.map((cat) => {
+          const sparkValues = monthly.map(m => m[cat] || 0);
+          return (
+            <button key={cat}
+                    onClick={() => setFilter(f => ({ ...f, category: f.category===cat ? "" : cat }))}
+                    title={`Filter by ${cat}`}
+                    className="mm-card p-4 text-left transition-all"
+                    style={{
+                      background: filter.category===cat ? `${CAT_COLORS[cat]}12` : "var(--mm-surface-2)",
+                      borderColor: filter.category===cat ? `${CAT_COLORS[cat]}55` : "var(--mm-border)",
+                      boxShadow: filter.category===cat
+                        ? `0 4px 20px ${CAT_COLORS[cat]}22`
+                        : "var(--elev-1)",
+                    }}>
+              <div className="mm-label mb-2" style={{ color:"var(--mm-muted)" }}>{cat}</div>
+              <div className="text-xl font-light mm-font-display" style={{ color:CAT_COLORS[cat] }}>
+                ₹{formatAmount(totals[cat]||0)}
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <Sparkline values={sparkValues} color={CAT_COLORS[cat]} width={72} height={20} />
+                <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>
+                  {monthly.length ? monthly[monthly.length-1].month : ""}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Anomaly detection ── */}
       <AnomalyWidget />
+
+      {/* ── Onboarding tip ── */}
+      <OnboardingTip page="cashflow" />
 
       {/* ── AI bar ── */}
       <div className="flex gap-0 mb-5">
@@ -209,7 +248,7 @@ export default function CashFlow() {
         <div className="mm-card overflow-hidden mb-3">
           <div className="mm-table-wrap">
             <div className="hidden md:grid px-3 py-2 mm-label"
-                 style={{ gridTemplateColumns:"44px 120px 1fr 1fr 110px 130px 52px",
+                 style={{ gridTemplateColumns:"44px 120px 1fr 1fr 110px 130px 72px",
                           borderBottom:"1px solid var(--mm-border)" }}>
               <span>#</span><span>Date</span><span>Vendor</span>
               <span>Details</span><span>Category</span><span>Amount</span><span></span>
@@ -217,7 +256,7 @@ export default function CashFlow() {
             {visible.map((t,idx) => (
               <div key={t.id}
                    className="mm-row grid items-center px-3 py-2 border-b"
-                   style={{ gridTemplateColumns:"44px 120px 1fr 1fr 110px 130px 52px",
+                   style={{ gridTemplateColumns:"44px 120px 1fr 1fr 110px 130px 72px",
                             borderColor:"var(--mm-border)", minWidth:840 }}>
 
                 <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{idx+1}</span>
@@ -246,7 +285,11 @@ export default function CashFlow() {
                          style={{ color:CAT_COLORS[t.category] }} />
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-0.5">
+                  <button onClick={() => initSplit(t)} title="Split transaction"
+                          className="mm-icon-btn">
+                    <Scissors size={12} />
+                  </button>
                   <button onClick={() => del(t.id)} title="Move to trash"
                           className="mm-icon-btn danger">
                     <Trash2 size={12} />
@@ -287,6 +330,54 @@ export default function CashFlow() {
       {preview && (
         <EditablePreview title="Review Transaction" fields={preview.fields}
                          onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
+      )}
+
+      {splitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background:"rgba(0,0,0,0.8)", backdropFilter:"blur(12px)" }}>
+          <div className="w-full max-w-md animate-scale-in"
+               style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)",
+                        borderRadius:28, padding:28, boxShadow:"var(--elev-modal)" }}>
+            <h2 className="mm-font-display text-base mb-1" style={{ color:"var(--mm-text)", fontWeight:400 }}>
+              Split: {splitting.txn.vendor}
+            </h2>
+            <p className="text-xs mb-5" style={{ color:"var(--mm-muted)" }}>
+              Original: ₹{splitting.txn.amount} · Splits must add up to this amount
+            </p>
+            <div className="space-y-3 mb-5">
+              {splitting.parts.map((p, i) => (
+                <div key={i} className="mm-card p-3 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center" style={{ background:"var(--mm-surface-2)", border:"1px solid var(--mm-border)", borderRadius:8, padding:"0 10px" }}>
+                      <span className="text-xs mr-1" style={{ color:"var(--mm-muted)" }}>₹</span>
+                      <input type="number" value={p.amount}
+                             onChange={e => setSplitting(s => ({ ...s, parts: s.parts.map((pp,j) => j===i ? {...pp, amount: e.target.value} : pp) }))}
+                             className="flex-1 bg-transparent text-sm outline-none" style={{ color:"var(--mm-text)" }} />
+                    </div>
+                    <select value={p.category}
+                            onChange={e => setSplitting(s => ({ ...s, parts: s.parts.map((pp,j) => j===i ? {...pp, category: e.target.value} : pp) }))}
+                            className="mm-form-input" style={{ color:CAT_COLORS[p.category] }}>
+                      {CATS.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <input value={p.details} placeholder="Details (optional)"
+                         onChange={e => setSplitting(s => ({ ...s, parts: s.parts.map((pp,j) => j===i ? {...pp, details: e.target.value} : pp) }))}
+                         className="mm-form-input text-xs" />
+                </div>
+              ))}
+              {splitting.parts.length < 4 && (
+                <button onClick={() => setSplitting(s => ({ ...s, parts: [...s.parts, { amount:0, category:"Expense", vendor:s.txn.vendor, details:"" }] }))}
+                        className="mm-btn-ghost w-full text-xs py-1.5">
+                  + Add another part
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={confirmSplit} className="mm-btn-gold flex-1">Confirm Split</button>
+              <button onClick={() => setSplitting(null)} className="mm-btn-ghost px-5">Cancel</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

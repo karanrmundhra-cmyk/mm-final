@@ -1,8 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Trash2, Loader, Mail, Phone, Building2, ChevronRight,
-  Upload, Download, Check, X, AlertTriangle, Users
+  Upload, Download, Check, X, AlertTriangle, Users,
+  CheckSquare, RefreshCw, DollarSign, FileText, Bell, Clock
 } from "lucide-react";
+
+const ITEM_META = {
+  task:        { icon: CheckSquare, color: "#4F8EF7" },
+  routine:     { icon: RefreshCw,   color: "#A855F7" },
+  transaction: { icon: DollarSign,  color: "#14B8A6" },
+  note:        { icon: FileText,    color: "#EAB308" },
+  reminder:    { icon: Bell,        color: "#22C55E" },
+};
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import Skeleton from "@/components/Skeleton";
@@ -334,19 +343,29 @@ export default function People() {
               ) : items.length === 0 ? (
                 <p className="text-sm" style={{ color:"var(--mm-muted)" }}>No linked items.</p>
               ) : (
-                <div className="mm-card overflow-hidden">
-                  {items.map((item,i) => (
-                    <div key={i} className="mm-row flex items-center gap-3 px-4 py-2.5 border-b"
-                         style={{ borderColor:"var(--mm-border)" }}>
-                      <span className="text-xs px-1.5 py-0.5 mm-label"
-                            style={{ background:"var(--mm-surface-2)" }}>
-                        {item.type}
-                      </span>
-                      <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>
-                        {item.task||item.title||item.activity||item.vendor||"—"}
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-1">
+                  {items.map((item, i) => {
+                    const meta = ITEM_META[item.type] || { color: "#888" };
+                    const Icon = meta.icon || Clock;
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                           style={{ background:"var(--mm-surface-2)" }}>
+                        <div className="w-7 h-7 flex items-center justify-center rounded-lg flex-shrink-0"
+                             style={{ background:`${meta.color}22` }}>
+                          <Icon size={13} style={{ color:meta.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate" style={{ color:"var(--mm-text)" }}>{item.label}</p>
+                          <p className="text-xs" style={{ color:"var(--mm-muted)" }}>{item.type}</p>
+                        </div>
+                        {item.amount && (
+                          <span className="text-xs font-medium" style={{ color:"#14B8A6" }}>
+                            ₹{item.amount}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

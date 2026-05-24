@@ -6,6 +6,21 @@ import { timeAgo } from "@/lib/utils";
 import EditablePreview from "@/components/EditablePreview";
 import Skeleton from "@/components/Skeleton";
 import Vault from "@/pages/Vault";
+import OnboardingTip from "@/components/OnboardingTip";
+
+function renderMd(text) {
+  if (!text) return "";
+  return text
+    .replace(/^### (.+)$/gm, '<h3 style="font-size:14px;font-weight:600;color:var(--mm-text);margin:12px 0 4px">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-size:16px;font-weight:600;color:var(--mm-text);margin:14px 0 6px">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="font-size:20px;font-weight:400;font-family:Cormorant Garamond,serif;color:var(--mm-text);margin:16px 0 8px">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code style="background:var(--mm-surface-3);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+    .replace(/^[-*] (.+)$/gm, '<div style="display:flex;gap:6px;margin:2px 0"><span style="color:var(--mm-gold)">·</span><span>$1</span></div>')
+    .replace(/\n\n/g, '<div style="height:10px"></div>')
+    .replace(/\n/g, '<br/>');
+}
 
 const EMPTY = { title:"", content:"", tags:[], pinned:false, locked:false };
 const PAGE_TABS = ["Notes", "Vault"];
@@ -24,6 +39,7 @@ export default function Notes() {
   const [pinUnlock,   setPinUnlock]  = useState({});
   const [editContent, setEditContent]= useState("");
   const [saving,      setSaving]     = useState(false);
+  const [previewMd,   setPreviewMd]  = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -182,6 +198,7 @@ export default function Notes() {
 
         {/* AI bar */}
         <div className="px-3 py-2 border-b" style={{ borderColor:"var(--mm-border)" }}>
+          <OnboardingTip page="notes" />
           <div className="flex gap-0">
             <input value={aiText} onChange={e => setAiText(e.target.value)}
                    onKeyDown={e => e.key==="Enter" && parseAi()}
@@ -265,21 +282,37 @@ export default function Notes() {
                    className="flex-1 bg-transparent outline-none mm-font-display"
                    style={{ color:"var(--mm-text)", fontSize:18, fontWeight:400 }}
                    placeholder="Untitled" />
-            <div className="flex items-center gap-0.5">
-              <button onClick={() => update(selected.id,{pinned:!selected.pinned})}
-                      title={selected.pinned ? "Unpin" : "Pin note"}
-                      className={`mm-icon-btn ${selected.pinned ? "active" : ""}`}>
-                <Pin size={14} />
-              </button>
-              <button onClick={() => update(selected.id,{locked:!selected.locked})}
-                      title={selected.locked ? "Unlock" : "Lock with PIN"}
-                      className={`mm-icon-btn ${selected.locked ? "active" : ""}`}>
-                {selected.locked ? <Lock size={14} /> : <Unlock size={14} />}
-              </button>
-              <button onClick={() => del(selected.id)} title="Move to trash"
-                      className="mm-icon-btn danger">
-                <Trash2 size={14} />
-              </button>
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-0.5 mr-2 p-0.5 rounded-lg" style={{ background:"var(--mm-surface-2)" }}>
+                <button onClick={() => setPreviewMd(false)}
+                        className="px-2.5 py-1 text-xs rounded-md transition-colors"
+                        style={{ background: !previewMd ? "var(--mm-surface-3)" : "transparent",
+                                 color: !previewMd ? "var(--mm-text)" : "var(--mm-muted)" }}>
+                  Edit
+                </button>
+                <button onClick={() => setPreviewMd(true)}
+                        className="px-2.5 py-1 text-xs rounded-md transition-colors"
+                        style={{ background: previewMd ? "var(--mm-surface-3)" : "transparent",
+                                 color: previewMd ? "var(--mm-text)" : "var(--mm-muted)" }}>
+                  Preview
+                </button>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <button onClick={() => update(selected.id,{pinned:!selected.pinned})}
+                        title={selected.pinned ? "Unpin" : "Pin note"}
+                        className={`mm-icon-btn ${selected.pinned ? "active" : ""}`}>
+                  <Pin size={14} />
+                </button>
+                <button onClick={() => update(selected.id,{locked:!selected.locked})}
+                        title={selected.locked ? "Unlock" : "Lock with PIN"}
+                        className={`mm-icon-btn ${selected.locked ? "active" : ""}`}>
+                  {selected.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                </button>
+                <button onClick={() => del(selected.id)} title="Move to trash"
+                        className="mm-icon-btn danger">
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -303,10 +336,16 @@ export default function Notes() {
             </div>
           ) : (
             <>
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                        className="flex-1 p-6 bg-transparent outline-none resize-none text-sm leading-relaxed"
-                        style={{ color:"var(--mm-text)", fontFamily:"'Inter', sans-serif" }}
-                        placeholder="Start writing…" />
+              {previewMd ? (
+                <div className="flex-1 p-6 overflow-y-auto text-sm leading-relaxed"
+                     style={{ color:"var(--mm-text)", fontFamily:"'Inter', sans-serif" }}
+                     dangerouslySetInnerHTML={{ __html: renderMd(editContent) }} />
+              ) : (
+                <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                          className="flex-1 p-6 bg-transparent outline-none resize-none text-sm leading-relaxed"
+                          style={{ color:"var(--mm-text)", fontFamily:"'Inter', sans-serif" }}
+                          placeholder="Start writing…" />
+              )}
               <div className="px-6 py-3 flex items-center gap-3 border-t"
                    style={{ borderColor:"var(--mm-border)" }}>
                 <span className="mm-label">

@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import QuickAdd from "@/components/QuickAdd";
 import GlobalSearch from "@/components/GlobalSearch";
 import AiChat from "@/components/AiChat";
@@ -50,6 +51,36 @@ export default function AppShell() {
   useEffect(() => {
     api.get("/pending-review/count").then(r => setPendingReview(r.data.count)).catch(() => {});
   }, []);
+
+  // Live reminder polling
+  useEffect(() => {
+    const STORAGE_KEY = "mm_reminded";
+    const check = async () => {
+      try {
+        const { data } = await api.get("/reminders");
+        const now = new Date();
+        const shown = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        const newShown = [...shown];
+        data.forEach(r => {
+          if (!r.dismissed && r.fire_at && !shown.includes(r.id)) {
+            const t = new Date(r.fire_at);
+            if (t <= now && t >= new Date(now - 2 * 60000)) { // within last 2 min
+              toast(`🔔 ${r.title}`, {
+                description: r.notes || "Reminder",
+                duration: 8000,
+                action: { label: "View", onClick: () => navigate("/reminders") },
+              });
+              newShown.push(r.id);
+            }
+          }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newShown.slice(-50)));
+      } catch {}
+    };
+    check();
+    const iv = setInterval(check, 60000);
+    return () => clearInterval(iv);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* PWA install prompt — #7 */
   useEffect(() => {

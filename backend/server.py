@@ -998,11 +998,13 @@ async def person_items(pid: str, u=Depends(get_current_user)):
                              ("reminders","reminder")]:
         docs = await db[coll].find(
             {"user_id": u["id"], "people_ids": pid, "deleted": {"$ne": True}},
-            {"_id": 0, "id": 1, "task": 1, "activity": 1, "title": 1, "details": 1, "amount": 1}
+            {"_id": 0, "id": 1, "task": 1, "activity": 1, "title": 1, "details": 1,
+             "amount": 1, "date": 1, "fire_at": 1, "created_at": 1}
         ).to_list(100)
         for d in docs:
             label = d.get("task") or d.get("activity") or d.get("title") or ""
-            results.append({"type": item_type, "id": d["id"], "label": label})
+            results.append({"type": item_type, "id": d["id"], "label": label,
+                           "amount": d.get("amount"), "date": d.get("date") or d.get("fire_at","")})
     return results
 
 # ─────────────────────── VAULT ───────────────────────

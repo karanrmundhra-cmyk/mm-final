@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CheckSquare, RefreshCw, DollarSign, FileText, Bell, BarChart2,
-  Settings, AlertTriangle, ChevronDown, ChevronUp, TrendingUp,
+  Settings, AlertTriangle, ChevronDown, ChevronUp, TrendingUp, Check,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatAmount, timeAgo } from "@/lib/utils";
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [quote,        setQuote]        = useState(null);
   const [collapsed,    setCollapsed]    = useState({});
   const [now,          setNow]          = useState(new Date());
+  const [completedIds, setCompletedIds] = useState(new Set());
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60000);
@@ -63,6 +64,13 @@ export default function Dashboard() {
 
   const toggle  = (key) => setCollapsed(c => ({ ...c, [key]:!c[key] }));
   const isOpen  = (key) => !collapsed[key];
+
+  const completeTask = async (id) => {
+    try {
+      await api.patch(`/tasks/${id}`, { status: "Completed" });
+      setCompletedIds(s => new Set([...s, id]));
+    } catch {}
+  };
 
   const Section = ({ id, title, count, children }) => (
     <div className="mb-5">
@@ -151,11 +159,23 @@ export default function Dashboard() {
 
       {/* ── Overdue ── */}
       {data?.overdue?.length > 0 && (
-        <Section id="overdue" title="Overdue" count={data.overdue.length}>
+        <Section id="overdue" title="Overdue" count={data.overdue.filter(t => !completedIds.has(t.id)).length}>
           <div className="mm-card overflow-hidden">
-            {data.overdue.map(t => (
-              <ItemRow key={t.id} to="/tasks" dotColor="#E05252"
-                       main={t.task} right={t.date} rightColor="#E05252" />
+            {data.overdue.filter(t => !completedIds.has(t.id)).map(t => (
+              <div key={t.id} className="mm-row flex items-center gap-3 px-4 py-3 border-b"
+                   style={{ borderColor:"var(--mm-border)" }}>
+                <button onClick={() => completeTask(t.id)}
+                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors hover:border-green-500"
+                        style={{ borderColor:"var(--mm-border)", flexShrink:0 }}
+                        title="Mark complete">
+                  <Check size={10} style={{ color:"var(--mm-border)", opacity:0.5 }} />
+                </button>
+                <button onClick={() => navigate("/tasks")} className="flex-1 text-left flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:"#E05252", boxShadow:"0 0 6px #E0525266" }} />
+                  <span className="text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
+                </button>
+                <span className="text-xs" style={{ color:"#E05252" }}>{t.date}</span>
+              </div>
             ))}
           </div>
         </Section>
@@ -163,11 +183,23 @@ export default function Dashboard() {
 
       {/* ── Due today ── */}
       {data?.due_today?.length > 0 && (
-        <Section id="today" title="Due Today" count={data.due_today.length}>
+        <Section id="today" title="Due Today" count={data.due_today.filter(t => !completedIds.has(t.id)).length}>
           <div className="mm-card overflow-hidden">
-            {data.due_today.map(t => (
-              <ItemRow key={t.id} to="/tasks" dotColor="var(--mm-gold)"
-                       main={t.task} sub={t.name} />
+            {data.due_today.filter(t => !completedIds.has(t.id)).map(t => (
+              <div key={t.id} className="mm-row flex items-center gap-3 px-4 py-3 border-b"
+                   style={{ borderColor:"var(--mm-border)" }}>
+                <button onClick={() => completeTask(t.id)}
+                        className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors hover:border-green-500"
+                        style={{ borderColor:"var(--mm-border)", flexShrink:0 }}
+                        title="Mark complete">
+                  <Check size={10} style={{ color:"var(--mm-border)", opacity:0.5 }} />
+                </button>
+                <button onClick={() => navigate("/tasks")} className="flex-1 text-left flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background:"var(--mm-gold)", boxShadow:"0 0 6px var(--mm-gold)66" }} />
+                  <span className="text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
+                  {t.name && <span className="text-xs" style={{ color:"var(--mm-muted)" }}>{t.name}</span>}
+                </button>
+              </div>
             ))}
           </div>
         </Section>
