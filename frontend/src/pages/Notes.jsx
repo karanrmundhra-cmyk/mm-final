@@ -370,8 +370,8 @@ export default function Notes() {
         <EditablePreview title="Review Note" fields={preview.fields}
                          onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
       )}
-      </div> {/* end Notes tab flex */}
-      )} {/* end activeTab === "Notes" */}
+      </div>
+      )}
     </div>
   );
 }

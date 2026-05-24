@@ -265,9 +265,9 @@ export default function Reminders() {
         <EditablePreview title="Review Reminder" fields={preview.fields}
                          onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
       )}
-      </div> {/* max-w-3xl */}
-      </div> {/* overflow-y-auto */}
-      )} {/* end activeTab === "Reminders" */}
+      </div>
+      </div>
+      )}
     </div>
   );
 }
