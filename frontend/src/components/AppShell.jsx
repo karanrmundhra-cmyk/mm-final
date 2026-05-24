@@ -215,6 +215,7 @@ export default function AppShell() {
 
         {/* Footer */}
         <div className="flex-shrink-0 px-3 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
+          {/* User info — expanded only */}
           {!collapsed && (
             <div className="flex items-center gap-2.5 mb-3 px-1">
               <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
@@ -239,14 +240,41 @@ export default function AppShell() {
               </button>
             </div>
           )}
-          <div className="flex items-center justify-between px-1">
-            <SyncDot />
-            <button onClick={toggleCollapse}
-                    className="p-1.5 transition-colors"
-                    style={{ color: "var(--mm-muted)" }}>
-              {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
-            </button>
-          </div>
+
+          {/* Action buttons — 2-col grid when collapsed, row when expanded */}
+          {collapsed ? (
+            <div className="grid grid-cols-2 gap-0.5">
+              <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
+              <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
+              <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
+              <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
+              <div className="flex items-center justify-center py-2">
+                <SyncDot />
+              </div>
+              <button onClick={toggleCollapse}
+                      className="flex items-center justify-center py-2 transition-colors hover:opacity-100"
+                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-0.5">
+                <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
+                <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
+                <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
+                <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
+              </div>
+              <div className="flex items-center gap-2">
+                <SyncDot />
+                <button onClick={toggleCollapse}
+                        className="p-1.5 transition-colors hover:opacity-100"
+                        style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
+                  <ChevronLeft size={13} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -281,18 +309,6 @@ export default function AppShell() {
             <kbd className="hidden sm:inline text-xs px-1.5 py-0.5"
                  style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)",
                           fontSize: 9, borderRadius: 6 }}>⌘K</kbd>
-          </button>
-
-          <button onClick={() => setShowVoice(true)} title="Voice"
-                  className="p-2 transition-opacity hover:opacity-100"
-                  style={{ color: "var(--mm-muted)", opacity: 0.65 }}>
-            <Mic size={15} />
-          </button>
-
-          <button onClick={() => setShowAi(true)} title="AI Chat"
-                  className="p-2 transition-opacity hover:opacity-100"
-                  style={{ color: "var(--mm-gold)", opacity: 0.9 }}>
-            <Zap size={15} />
           </button>
 
           <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
@@ -337,24 +353,6 @@ export default function AppShell() {
                            fontFamily: "'Outfit', sans-serif" }}>Add</span>
           </button>
         </nav>
-      </div>
-
-      {/* ── FLOATING DOCK ────────────────────────────────────────── */}
-      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-center gap-1 px-5 py-2.5 z-50"
-           style={{
-             background: "rgba(17,17,20,0.96)",
-             border: "1px solid var(--mm-border-gold)",
-             borderRadius: 32,
-             backdropFilter: "blur(24px)",
-             WebkitBackdropFilter: "blur(24px)",
-             boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.08)",
-           }}>
-        <DockBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
-        <DockBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
-        <DockBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
-        <DockBtn icon={Zap}    label="AI"        onClick={() => setShowAi(true)} gold />
-        <div className="w-px h-4 mx-2" style={{ background: "var(--mm-border)" }} />
-        <SyncDot />
       </div>
 
       {/* ── MODALS ──────────────────────────────────────────────── */}
@@ -404,17 +402,19 @@ function SyncDot() {
   );
 }
 
-function DockBtn({ icon: Icon, label, onClick, gold }) {
+function SidebarBtn({ icon: Icon, label, onClick, gold }) {
   return (
     <button onClick={onClick} title={label}
-            className="p-2.5 transition-all hover:opacity-100 hover:scale-110"
+            className="flex items-center justify-center p-2 transition-all hover:opacity-100"
             style={{
               color: gold ? "var(--mm-gold)" : "var(--mm-muted)",
-              opacity: gold ? 0.95 : 0.65,
-              borderRadius: 12,
+              opacity: gold ? 0.9 : 0.55,
+              borderRadius: 10,
               transition: "opacity 0.15s, transform 0.15s cubic-bezier(0.34,1.56,0.64,1)",
-            }}>
-      <Icon size={15} />
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.12)"; e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.opacity = gold ? "0.9" : "0.55"; }}>
+      <Icon size={14} />
     </button>
   );
 }
