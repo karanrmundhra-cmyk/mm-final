@@ -3,6 +3,8 @@ import { Loader, Save, Copy, Check, ExternalLink, Download } from "lucide-react"
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import People from "@/pages/People";
+import RecycleBin from "@/pages/RecycleBin";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -15,7 +17,7 @@ export default function Settings() {
   const [tab, setTab] = useState("Profile");
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
 
-  const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account"];
+  const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account", "People", "Trash"];
 
   const load = useCallback(async () => {
     try {
@@ -269,6 +271,10 @@ export default function Settings() {
           </div>
         </div>
       )}
+
+      {tab === "People" && <People />}
+
+      {tab === "Trash" && <RecycleBin />}
 
     </div>
   );
