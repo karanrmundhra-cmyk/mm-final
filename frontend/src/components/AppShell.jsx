@@ -215,32 +215,6 @@ export default function AppShell() {
 
         {/* Footer */}
         <div className="flex-shrink-0 px-3 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
-          {/* User info — expanded only */}
-          {!collapsed && (
-            <div className="flex items-center gap-2.5 mb-3 px-1">
-              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                   style={{
-                     background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
-                     borderRadius: 10, color: "#0B0B0C",
-                   }}>
-                <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate" style={{ color: "var(--mm-text)" }}>
-                  {user?.first_name} {user?.last_name}
-                </div>
-                <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
-                  {user?.email}
-                </div>
-              </div>
-              <button onClick={logout} title="Sign out"
-                      className="p-1.5 transition-opacity hover:opacity-100"
-                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-                <LogOut size={13} />
-              </button>
-            </div>
-          )}
-
           {/* Action buttons — 2-col grid when collapsed, row when expanded */}
           {collapsed ? (
             <div className="grid grid-cols-2 gap-0.5">
@@ -258,22 +232,51 @@ export default function AppShell() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-0.5">
-                <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
-                <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
-                <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
+            <>
+              {/* Action row */}
+              <div className="flex items-center justify-between px-1 mb-3">
+                <div className="flex items-center gap-0.5">
+                  <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
+                  <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
+                  <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
+                  <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
+                </div>
+                <div className="flex items-center gap-2">
+                  <SyncDot />
+                  <button onClick={toggleCollapse}
+                          className="p-1.5 transition-colors hover:opacity-100"
+                          style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
+                    <ChevronLeft size={13} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <SyncDot />
-                <button onClick={toggleCollapse}
-                        className="p-1.5 transition-colors hover:opacity-100"
+
+              {/* User info */}
+              <div className="flex items-center gap-2.5 px-1 pt-2.5"
+                   style={{ borderTop: "1px solid var(--mm-border)" }}>
+                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                     style={{
+                       background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
+                       borderRadius: 10, color: "#0B0B0C",
+                     }}>
+                  <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium truncate"
+                       style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
+                    {user?.first_name} {user?.last_name}
+                  </div>
+                  <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
+                    {user?.email}
+                  </div>
+                </div>
+                <button onClick={logout} title="Sign out"
+                        className="p-1.5 transition-opacity hover:opacity-100"
                         style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-                  <ChevronLeft size={13} />
+                  <LogOut size={13} />
                 </button>
               </div>
-            </div>
+            </>
           )}
         </div>
       </aside>
