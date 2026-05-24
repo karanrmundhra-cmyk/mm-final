@@ -17,12 +17,7 @@ import Notes from "@/pages/Notes";
 import Reminders from "@/pages/Reminders";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
-import People from "@/pages/People";
-import Vault from "@/pages/Vault";
-import RecycleBin from "@/pages/RecycleBin";
 import Invite from "@/pages/Invite";
-import Calendar from "@/pages/Calendar";
-import Projects from "@/pages/Projects";
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -53,14 +48,14 @@ function Root() {
         <Route path="cash-flow"      element={<W C={CashFlow} />} />
         <Route path="cashflow"       element={<Navigate to="/cash-flow" replace />} />
         <Route path="notes"          element={<W C={Notes} />} />
+        <Route path="vault"          element={<Navigate to="/notes" replace />} />
         <Route path="reminders"      element={<W C={Reminders} />} />
-        <Route path="calendar"       element={<W C={Calendar} />} />
+        <Route path="calendar"       element={<Navigate to="/reminders" replace />} />
         <Route path="reports"        element={<W C={Reports} />} />
         <Route path="settings"       element={<W C={Settings} />} />
-        <Route path="people"         element={<W C={People} />} />
-        <Route path="vault"          element={<W C={Vault} />} />
-        <Route path="projects"       element={<W C={Projects} />} />
-        <Route path="trash"          element={<W C={RecycleBin} />} />
+        <Route path="people"         element={<Navigate to="/settings" replace />} />
+        <Route path="trash"          element={<Navigate to="/settings" replace />} />
+        <Route path="projects"       element={<Navigate to="/" replace />} />
         <Route path="loans"          element={<Navigate to="/cash-flow" replace />} />
         <Route path="investments"    element={<Navigate to="/cash-flow" replace />} />
         <Route path="*"              element={<Navigate to="/" replace />} />

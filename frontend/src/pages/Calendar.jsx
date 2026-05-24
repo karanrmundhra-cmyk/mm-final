@@ -11,7 +11,7 @@ function isSameDay(a, b) {
   return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
 }
 
-export default function Calendar() {
+export default function Calendar({ embedded = false }) {
   const navigate = useNavigate();
   const today = new Date();
   const [current, setCurrent] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -79,7 +79,7 @@ export default function Calendar() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-60px)] overflow-hidden">
+    <div className={`flex ${embedded ? "h-full" : "h-[calc(100vh-60px)]"} overflow-hidden`}>
 
       {/* ── Calendar grid ── */}
       <div className="flex-1 flex flex-col overflow-hidden px-5 py-6">

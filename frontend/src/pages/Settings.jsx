@@ -3,6 +3,8 @@ import { Loader, Save, Copy, Check, ExternalLink, Download } from "lucide-react"
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import People from "@/pages/People";
+import RecycleBin from "@/pages/RecycleBin";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -15,7 +17,7 @@ export default function Settings() {
   const [tab, setTab] = useState("Profile");
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
 
-  const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account"];
+  const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account", "People", "Trash"];
 
   const load = useCallback(async () => {
     try {
@@ -97,7 +99,7 @@ export default function Settings() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b" style={{ borderColor: "var(--mm-border)" }}>
+      <div className="flex gap-1 mb-6 border-b overflow-x-auto" style={{ borderColor: "var(--mm-border)" }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
                   className="px-4 py-2 text-sm font-medium transition-colors relative"
@@ -269,6 +271,12 @@ export default function Settings() {
           </div>
         </div>
       )}
+
+      {/* People */}
+      {tab === "People" && <People />}
+
+      {/* Trash */}
+      {tab === "Trash" && <RecycleBin />}
     </div>
   );
 }

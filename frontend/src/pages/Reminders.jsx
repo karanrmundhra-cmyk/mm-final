@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import EditablePreview from "@/components/EditablePreview";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
+import Calendar from "@/pages/Calendar";
+
+const PAGE_TABS = ["Reminders", "Calendar"];
 
 const RECURRENCES = [
   "None","Daily","Weekly","Monthly","Weekdays","Weekends","Bi-weekly",
@@ -14,6 +17,7 @@ const RECURRENCES = [
 const EMPTY = { title:"", notes:"", fire_at:"", recurrence:"None" };
 
 export default function Reminders() {
+  const [activeTab, setActiveTab] = useState("Reminders");
   const [reminders, setReminders] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [aiText,    setAiText]    = useState("");
@@ -83,7 +87,35 @@ export default function Reminders() {
   if (loading) return <Skeleton.Page rows={5} />;
 
   return (
-    <div className="px-5 py-6 max-w-3xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-60px)] overflow-hidden">
+
+      {/* ── Tab bar ── */}
+      <div className="flex gap-1 flex-shrink-0 border-b px-4"
+           style={{ borderColor: "var(--mm-border)" }}>
+        {PAGE_TABS.map(t => (
+          <button key={t} onClick={() => setActiveTab(t)}
+                  className="px-4 py-2.5 text-sm font-medium transition-colors relative"
+                  style={{ color: activeTab === t ? "var(--mm-text)" : "var(--mm-muted)" }}>
+            {t}
+            {activeTab === t && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                   style={{ background: "var(--mm-gold)" }} />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Calendar tab ── */}
+      {activeTab === "Calendar" && (
+        <div className="flex-1 overflow-hidden">
+          <Calendar embedded />
+        </div>
+      )}
+
+      {/* ── Reminders tab ── */}
+      {activeTab === "Reminders" && (
+      <div className="flex-1 overflow-y-auto">
+      <div className="px-5 py-6 max-w-3xl mx-auto">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
@@ -226,6 +258,9 @@ export default function Reminders() {
         <EditablePreview title="Review Reminder" fields={preview.fields}
                          onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
       )}
+      </div> {/* max-w-3xl */}
+      </div> {/* overflow-y-auto */}
+      )} {/* end activeTab === "Reminders" */}
     </div>
   );
 }
