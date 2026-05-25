@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
-  Download,
+  Download, LayoutGrid, X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -42,8 +42,9 @@ export default function AppShell() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickNote, setShowQuickNote] = useState(false);
   const [navBadges, setNavBadges] = useState({ tasks: 0, reminders: 0 });
-  const [installPrompt, setInstallPrompt] = useState(null);
-  const [showInstall, setShowInstall] = useState(false);
+  const [installPrompt,  setInstallPrompt]  = useState(null);
+  const [showInstall,    setShowInstall]    = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Allow Settings page to open the shortcuts modal via custom event
   useEffect(() => {
@@ -162,9 +163,11 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* Brand logo — object-fit:cover centred at the ring portion of the portrait PNG */}
-          <img src="/rkm-logo.png" alt="MM"
-               style={{ width: 46, height: 46, objectFit: "cover", objectPosition: "center 35%", flexShrink: 0 }} />
+          {/* Logo — crop portrait PNG so the circular monogram fills the 46×46 slot */}
+          <div style={{ width: 46, height: 46, overflow: "hidden", flexShrink: 0 }}>
+            <img src="/rkm-logo.png" alt="MM"
+                 style={{ display: "block", width: 46, height: "auto", marginTop: "-12px" }} />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
               <div style={{
@@ -235,9 +238,10 @@ export default function AppShell() {
           {collapsed ? (
             /* ── Collapsed: vertical column of icons + sign-out at bottom ── */
             <div className="flex flex-col items-center gap-1">
-              <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
-              <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
-              <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} />
+              <SidebarBtn icon={Plus}   label="Quick Add"   onClick={() => setShowQuickAdd(true)} />
+              <SidebarBtn icon={Search} label="Search"      onClick={() => setShowSearch(true)} />
+              <SidebarBtn icon={Mic}    label="Voice Note"  onClick={() => setShowVoice(true)} />
+              <SidebarBtn icon={Zap}    label="AI Chat"     onClick={() => setShowAi(true)} />
               <SyncBtn />
               <button onClick={toggleCollapse}
                       className="relative flex items-center justify-center p-2 transition-all group"
@@ -316,30 +320,75 @@ export default function AppShell() {
           <Outlet />
         </main>
 
-        {/* Mobile bottom nav */}
-        <nav className="md:hidden flex items-center justify-around px-2 py-2 mm-bottom-nav flex-shrink-0"
+        {/* ── Mobile bottom bar ── */}
+        <nav className="md:hidden flex items-center justify-around px-1 py-2 flex-shrink-0"
              style={{
-               background: "rgba(17,17,20,0.95)",
-               backdropFilter: "blur(12px)",
+               background: "rgba(12,12,15,0.97)",
+               backdropFilter: "blur(16px)",
                borderTop: "1px solid var(--mm-border)",
              }}>
-          {BOTTOM_NAV.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} end={to === "/"}
-                     className="flex flex-col items-center gap-0.5 p-2"
-                     style={({ isActive }) => ({ color: isActive ? "var(--mm-gold)" : "var(--mm-muted)" })}>
+          {[
+            { icon: LayoutGrid, label: "Pages",  action: () => setShowMobileMenu(true) },
+            { icon: Plus,       label: "Add",    action: () => setShowQuickAdd(true) },
+            { icon: Search,     label: "Search", action: () => setShowSearch(true) },
+            { icon: Mic,        label: "Voice",  action: () => setShowVoice(true) },
+            { icon: Zap,        label: "AI",     action: () => setShowAi(true) },
+            { icon: LogOut,     label: "Out",    action: logout },
+          ].map(({ icon: Icon, label, action }) => (
+            <button key={label} onClick={action}
+                    className="flex flex-col items-center gap-0.5 p-2"
+                    style={{ color: "var(--mm-muted)" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "var(--mm-gold)"}
+                    onMouseLeave={e => e.currentTarget.style.color = "var(--mm-muted)"}>
               <Icon size={18} />
-              <span style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase",
+              <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
                              fontFamily: "'Outfit', sans-serif" }}>{label}</span>
-            </NavLink>
+            </button>
           ))}
-          <button onClick={() => setShowQuickAdd(true)}
-                  className="flex flex-col items-center gap-0.5 p-2"
-                  style={{ color: "var(--mm-gold)" }}>
-            <Plus size={18} />
-            <span style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase",
-                           fontFamily: "'Outfit', sans-serif" }}>Add</span>
-          </button>
         </nav>
+
+        {/* Mobile page-picker overlay */}
+        {showMobileMenu && (
+          <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end"
+               style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}
+               onClick={() => setShowMobileMenu(false)}>
+            <div className="animate-slide-up px-4 pb-6 pt-5"
+                 style={{
+                   background: "var(--mm-surface)",
+                   borderRadius: "24px 24px 0 0",
+                   borderTop: "1px solid var(--mm-border-gold)",
+                 }}
+                 onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 18,
+                            fontWeight: 400, color: "var(--mm-text)" }}>
+                  Go to…
+                </p>
+                <button onClick={() => setShowMobileMenu(false)} className="mm-icon-btn">
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {NAV.map(({ to, icon: Icon, label }) => (
+                  <NavLink key={to} to={to} end={to === "/"}
+                           onClick={() => setShowMobileMenu(false)}
+                           className="flex flex-col items-center gap-2 p-3"
+                           style={({ isActive }) => ({
+                             background: isActive ? "rgba(212,175,55,0.1)" : "var(--mm-surface-2)",
+                             borderRadius: 16,
+                             color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
+                           })}>
+                    <Icon size={20} />
+                    <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+                                   fontFamily: "'Outfit', sans-serif" }}>
+                      {label}
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── MODALS ──────────────────────────────────────────────── */}
