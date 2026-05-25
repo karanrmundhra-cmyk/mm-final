@@ -193,8 +193,7 @@ export default function AppShell() {
                                  : label === "Reminders" ? navBadges.reminders : 0;
                 return (
                   <NavLink key={to} to={to} end={to === "/"}
-                           title={label}
-                           className="flex items-center justify-center px-3 py-2 transition-all duration-200 relative"
+                           className="relative group flex items-center justify-center px-3 py-2 transition-all duration-200"
                            style={({ isActive }) => ({
                              borderRadius: 14,
                              color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
@@ -206,6 +205,7 @@ export default function AppShell() {
                       <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5"
                             style={{ background: "var(--mm-gold)", borderRadius: "50%" }} />
                     )}
+                    <Tooltip label={label} side="right" />
                   </NavLink>
                 );
               })}
@@ -235,7 +235,7 @@ export default function AppShell() {
                         onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                         onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
                   <LogOut size={13} />
-                  <Tooltip label="Sign out" />
+                  <Tooltip label="Sign Out" side="right" />
                 </button>
               </div>
             </div>
@@ -314,7 +314,7 @@ export default function AppShell() {
                         onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                         onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
                   <LogOut size={13} />
-                  <Tooltip label="Sign out" />
+                  <Tooltip label="Sign Out" side="top" />
                 </button>
               </div>
             </div>
@@ -440,73 +440,53 @@ export default function AppShell() {
   );
 }
 
-/* ── MM Logo SVG (matches circular monogram reference) ───────── */
+/* ── MM Logo — uses the actual rkm-logo.png from /public ─────── */
 function MMLogo({ size = 46 }) {
+  /* The PNG is a 1179×2556 portrait; the circular monogram is centred
+     at roughly the horizontal midpoint and vertical centre.
+     background-size scales the image so the ring fills the container. */
   return (
-    <svg width={size} height={size} viewBox="0 0 46 46" fill="none"
-         xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-      <defs>
-        {/* userSpaceOnUse: dark bronze bottom-left → bright gold → medium bronze top-right */}
-        <linearGradient id="mmLogoGrad" gradientUnits="userSpaceOnUse"
-                        x1="4" y1="42" x2="42" y2="4">
-          <stop offset="0%"   stopColor="#5C3D11" />
-          <stop offset="50%"  stopColor="#D4AF37" />
-          <stop offset="100%" stopColor="#A8761C" />
-        </linearGradient>
-      </defs>
-
-      {/* Outer thick ring — r=20, stroke=5 → inner edge at r=17.5 */}
-      <circle cx="23" cy="23" r="20"
-              stroke="url(#mmLogoGrad)" strokeWidth="5" fill="none" />
-      {/* Inner thin ring — r=14, gap ≈ 3.5 px from outer inner-edge */}
-      <circle cx="23" cy="23" r="14"
-              stroke="url(#mmLogoGrad)" strokeWidth="1" fill="none" />
-
-      {/* ── Left M — x: 14 (outer) … 19 (inner), verticals y 15→32 ── */}
-      <line x1="14" y1="15" x2="14" y2="32"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="19" y1="15" x2="19" y2="32"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      {/* V legs meet at (16.5, 25) */}
-      <line x1="14" y1="15" x2="16.5" y2="25"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="19" y1="15" x2="16.5" y2="25"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      {/* teardrop accent at V tip */}
-      <ellipse cx="16.5" cy="27.5" rx="1.5" ry="2.2" fill="url(#mmLogoGrad)" />
-
-      {/* ── Right M — x: 27 (inner) … 32 (outer), mirror of left ── */}
-      <line x1="27" y1="15" x2="27" y2="32"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="32" y1="15" x2="32" y2="32"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      {/* V legs meet at (29.5, 25) */}
-      <line x1="27" y1="15" x2="29.5" y2="25"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="32" y1="15" x2="29.5" y2="25"
-            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
-      {/* teardrop accent at V tip */}
-      <ellipse cx="29.5" cy="27.5" rx="1.5" ry="2.2" fill="url(#mmLogoGrad)" />
-    </svg>
+    <div
+      aria-label="Mind Matters Logo"
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        backgroundImage: "url(/rkm-logo.png)",
+        backgroundSize: `${Math.round(size * 1.62)}px auto`,
+        backgroundPosition: "center 50%",
+        backgroundRepeat: "no-repeat",
+      }}
+    />
   );
 }
 
-/* ── Shared tooltip ───────────────────────────────────────────── */
-function Tooltip({ label }) {
+/* ── Shared tooltip ─────────────────────────────────────────────
+   side="right"  → appears to the RIGHT of the icon (default for
+                   left-edge sidebar — never clipped by the screen)
+   side="top"    → appears ABOVE (for bottom-row utility buttons)
+   ─────────────────────────────────────────────────────────────── */
+function Tooltip({ label, side = "right" }) {
+  const pos = side === "top"
+    ? "bottom-full left-1/2 -translate-x-1/2 mb-2"
+    : "left-full top-1/2 -translate-y-1/2 ml-2.5";
   return (
-    <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1
-                     opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-50"
-          style={{
-            background: "rgba(12,12,15,0.92)",
-            border: "1px solid var(--mm-border-gold)",
-            borderRadius: 8,
-            color: "var(--mm-text)",
-            fontSize: 10,
-            fontFamily: "'Outfit', sans-serif",
-            letterSpacing: "0.06em",
-            backdropFilter: "blur(8px)",
-            pointerEvents: "none",
-          }}>
+    <span
+      className={`pointer-events-none absolute ${pos} px-2.5 py-1.5
+                  opacity-0 group-hover:opacity-100 transition-opacity
+                  duration-150 whitespace-nowrap z-[200]`}
+      style={{
+        background: "rgba(10,10,12,0.96)",
+        border: "1px solid var(--mm-border-gold)",
+        borderRadius: 8,
+        color: "var(--mm-text)",
+        fontSize: 11,
+        fontFamily: "'Outfit', sans-serif",
+        letterSpacing: "0.05em",
+        backdropFilter: "blur(10px)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.55)",
+        pointerEvents: "none",
+      }}>
       {label}
     </span>
   );
@@ -533,19 +513,19 @@ function SyncBtn() {
                : "rgba(34,197,94,0.45)";
 
   const timeAgoStr = (date) => {
-    if (!date) return "just now";
+    if (!date) return "Just Now";
     const s = Math.floor((Date.now() - date) / 1000);
-    if (s < 10)  return "just now";
-    if (s < 60)  return `${s}s ago`;
-    if (s < 3600) return `${Math.floor(s/60)}m ago`;
-    return `${Math.floor(s/3600)}h ago`;
+    if (s < 10)   return "Just Now";
+    if (s < 60)   return `${s}s Ago`;
+    if (s < 3600) return `${Math.floor(s / 60)}m Ago`;
+    return `${Math.floor(s / 3600)}h Ago`;
   };
 
   const tooltipLabel = !state.online
     ? "Offline"
     : state.pending > 0
-    ? `Syncing — ${state.pending} pending`
-    : `Last synced: ${timeAgoStr(lastSync)}`;
+    ? `Syncing — ${state.pending} Pending`
+    : `Last Synced: ${timeAgoStr(lastSync)}`;
 
   return (
     <button className="relative flex items-center justify-center p-2 group"

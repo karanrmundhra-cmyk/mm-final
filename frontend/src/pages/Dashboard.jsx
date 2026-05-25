@@ -2,13 +2,35 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, ChevronDown, ChevronUp, Check,
-  Star, ClipboardList, Edit2, Plus, X,
+  Star, ClipboardList, Plus, X, GripVertical,
+  Calendar, TrendingUp,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatAmount } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import WorldClock from "@/components/WorldClock";
 import CountdownTimer from "@/components/CountdownTimer";
+import CountdownDate from "@/components/CountdownDate";
+
+/* ── Fixed news tabs (no customisation needed) ───────────────── */
+const FIXED_NEWS_TABS = [
+  { id: "general",       label: "General"       },
+  { id: "business",      label: "Business"      },
+  { id: "tech",          label: "Tech"          },
+  { id: "politics",      label: "Politics"      },
+  { id: "sports",        label: "Sports"        },
+  { id: "science",       label: "Science"       },
+  { id: "health",        label: "Health"        },
+  { id: "entertainment", label: "Entertainment" },
+  { id: "india",         label: "India"         },
+];
+
+/* ── Default draggable section order ─────────────────────────── */
+const DEFAULT_SECTION_ORDER = [
+  "overdue", "today", "soon", "routines",
+  "cashflow", "reminders_deadlines", "quote",
+  "news", "worldclock", "timers",
+];
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function timeGreeting() {
@@ -34,115 +56,31 @@ function wxEmoji(code) {
   return "🌤️";
 }
 
-/* ── Comprehensive news options (categories + every country) ─────── */
-const ALL_NEWS_OPTIONS = [
-  // 7 categories
-  { group: "Categories", value: "general",       label: "General"              },
-  { group: "Categories", value: "politics",      label: "Politics"             },
-  { group: "Categories", value: "business",      label: "Business"             },
-  { group: "Categories", value: "tech",          label: "Technology"           },
-  { group: "Categories", value: "science",       label: "Science"              },
-  { group: "Categories", value: "health",        label: "Health"               },
-  { group: "Categories", value: "sports",        label: "Sports"               },
-  { group: "Categories", value: "entertainment", label: "Entertainment"        },
-  // Countries
-  { group: "Countries",  value: "world",         label: "World"                },
-  { group: "Countries",  value: "india",         label: "India"                },
-  { group: "Countries",  value: "us",            label: "United States"        },
-  { group: "Countries",  value: "uk",            label: "United Kingdom"       },
-  { group: "Countries",  value: "canada",        label: "Canada"               },
-  { group: "Countries",  value: "australia",     label: "Australia"            },
-  { group: "Countries",  value: "uae",           label: "UAE"                  },
-  { group: "Countries",  value: "singapore",     label: "Singapore"            },
-  { group: "Countries",  value: "germany",       label: "Germany"              },
-  { group: "Countries",  value: "france",        label: "France"               },
-  { group: "Countries",  value: "japan",         label: "Japan"                },
-  { group: "Countries",  value: "china",         label: "China"                },
-  { group: "Countries",  value: "russia",        label: "Russia"               },
-  { group: "Countries",  value: "brazil",        label: "Brazil"               },
-  { group: "Countries",  value: "south_africa",  label: "South Africa"         },
-  { group: "Countries",  value: "nigeria",       label: "Nigeria"              },
-  { group: "Countries",  value: "egypt",         label: "Egypt"                },
-  { group: "Countries",  value: "south_korea",   label: "South Korea"          },
-  { group: "Countries",  value: "indonesia",     label: "Indonesia"            },
-  { group: "Countries",  value: "pakistan",      label: "Pakistan"             },
-  { group: "Countries",  value: "bangladesh",    label: "Bangladesh"           },
-  { group: "Countries",  value: "malaysia",      label: "Malaysia"             },
-  { group: "Countries",  value: "thailand",      label: "Thailand"             },
-  { group: "Countries",  value: "vietnam",       label: "Vietnam"              },
-  { group: "Countries",  value: "philippines",   label: "Philippines"          },
-  { group: "Countries",  value: "sri_lanka",     label: "Sri Lanka"            },
-  { group: "Countries",  value: "nepal",         label: "Nepal"                },
-  { group: "Countries",  value: "israel",        label: "Israel"               },
-  { group: "Countries",  value: "saudi_arabia",  label: "Saudi Arabia"         },
-  { group: "Countries",  value: "turkey",        label: "Turkey"               },
-  { group: "Countries",  value: "iran",          label: "Iran"                 },
-  { group: "Countries",  value: "iraq",          label: "Iraq"                 },
-  { group: "Countries",  value: "jordan",        label: "Jordan"               },
-  { group: "Countries",  value: "qatar",         label: "Qatar"                },
-  { group: "Countries",  value: "kuwait",        label: "Kuwait"               },
-  { group: "Countries",  value: "bahrain",       label: "Bahrain"              },
-  { group: "Countries",  value: "oman",          label: "Oman"                 },
-  { group: "Countries",  value: "italy",         label: "Italy"                },
-  { group: "Countries",  value: "spain",         label: "Spain"                },
-  { group: "Countries",  value: "netherlands",   label: "Netherlands"          },
-  { group: "Countries",  value: "sweden",        label: "Sweden"               },
-  { group: "Countries",  value: "norway",        label: "Norway"               },
-  { group: "Countries",  value: "denmark",       label: "Denmark"              },
-  { group: "Countries",  value: "finland",       label: "Finland"              },
-  { group: "Countries",  value: "switzerland",   label: "Switzerland"          },
-  { group: "Countries",  value: "austria",       label: "Austria"              },
-  { group: "Countries",  value: "belgium",       label: "Belgium"              },
-  { group: "Countries",  value: "poland",        label: "Poland"               },
-  { group: "Countries",  value: "ukraine",       label: "Ukraine"              },
-  { group: "Countries",  value: "czech",         label: "Czech Republic"       },
-  { group: "Countries",  value: "romania",       label: "Romania"              },
-  { group: "Countries",  value: "greece",        label: "Greece"               },
-  { group: "Countries",  value: "portugal",      label: "Portugal"             },
-  { group: "Countries",  value: "mexico",        label: "Mexico"               },
-  { group: "Countries",  value: "argentina",     label: "Argentina"            },
-  { group: "Countries",  value: "colombia",      label: "Colombia"             },
-  { group: "Countries",  value: "chile",         label: "Chile"                },
-  { group: "Countries",  value: "peru",          label: "Peru"                 },
-  { group: "Countries",  value: "venezuela",     label: "Venezuela"            },
-  { group: "Countries",  value: "new_zealand",   label: "New Zealand"          },
-  { group: "Countries",  value: "hong_kong",     label: "Hong Kong"            },
-  { group: "Countries",  value: "taiwan",        label: "Taiwan"               },
-  { group: "Countries",  value: "kenya",         label: "Kenya"                },
-  { group: "Countries",  value: "ethiopia",      label: "Ethiopia"             },
-  { group: "Countries",  value: "ghana",         label: "Ghana"                },
-  { group: "Countries",  value: "tanzania",      label: "Tanzania"             },
-  { group: "Countries",  value: "morocco",       label: "Morocco"              },
-  { group: "Countries",  value: "algeria",       label: "Algeria"              },
-  { group: "Countries",  value: "ireland",       label: "Ireland"              },
-  { group: "Countries",  value: "hungary",       label: "Hungary"              },
-  { group: "Countries",  value: "belarus",       label: "Belarus"              },
-  { group: "Countries",  value: "kazakhstan",    label: "Kazakhstan"           },
-  { group: "Countries",  value: "uzbekistan",    label: "Uzbekistan"           },
-];
 
-const DEFAULT_NEWS_TABS = [
-  { id: 1, label: "General",  category: "general"  },
-  { id: 2, label: "Business", category: "business" },
-  { id: 3, label: "Tech",     category: "tech"     },
-  { id: 4, label: "Politics", category: "politics" },
-  { id: 5, label: "India",    category: "india"    },
-];
-
-/* ── Weather badge (replaces the old completion ring) ────────────── */
+/* ── Weather badge ────────────────────────────────────────────────
+   paddingTop pushes the circle below the floating ProjectSelector
+   badge (top-4 + ~32px height = ~48px).
+   ─────────────────────────────────────────────────────────────── */
 function WeatherBadge({ weather }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+    <div className="flex flex-col items-center gap-1.5 flex-shrink-0"
+         style={{ paddingTop: 44 }}>
       <div style={{
-        width: 76, height: 76, borderRadius: "50%",
+        width: 68, height: 68, borderRadius: "50%",
         border: "1.5px solid var(--mm-border-gold)",
         background: "rgba(212,175,55,0.04)",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", gap: 3,
       }}>
-        <span style={{ fontSize: 26, lineHeight: 1 }}>{weather.emoji}</span>
+        {/* Explicit emoji font prevents white-box rendering */}
         <span style={{
-          fontSize: 13, fontWeight: 300, fontFamily: "'Outfit', sans-serif",
+          fontSize: 24, lineHeight: 1,
+          fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif',
+        }}>
+          {weather.emoji}
+        </span>
+        <span style={{
+          fontSize: 12, fontWeight: 300, fontFamily: "'Outfit', sans-serif",
           color: "var(--mm-text)", letterSpacing: "0.02em",
         }}>
           {weather.temp}°C
@@ -150,7 +88,7 @@ function WeatherBadge({ weather }) {
       </div>
       <span style={{
         fontSize: 9, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
-        maxWidth: 80, textAlign: "center", lineHeight: 1.3,
+        maxWidth: 72, textAlign: "center", lineHeight: 1.3,
       }}>
         {weather.desc}
       </span>
@@ -198,7 +136,7 @@ function AffirmationCard() {
       <textarea
         value={text}
         onChange={e => onChange(e.target.value)}
-        placeholder="Write your personal affirmation for today…"
+        placeholder="Affirmation…"
         rows={2}
         className="w-full resize-none outline-none bg-transparent"
         style={{
@@ -211,104 +149,6 @@ function AffirmationCard() {
   );
 }
 
-/* ── News tab manager modal ──────────────────────────────────────── */
-function NewsTabModal({ tabs, onSave, onClose }) {
-  const [local, setLocal] = useState(tabs.map(t => ({ ...t })));
-  const [query, setQuery] = useState("");
-
-  const update = (i, key, val) =>
-    setLocal(arr => arr.map((t, j) => j === i ? { ...t, [key]: val } : t));
-  const add    = () => {
-    if (local.length >= 5) return;
-    setLocal(arr => [...arr, { id: Date.now(), label: "My Tab", category: "general" }]);
-  };
-  const remove = (i) => setLocal(arr => arr.filter((_, j) => j !== i));
-
-  const filtered = query.trim()
-    ? ALL_NEWS_OPTIONS.filter(o =>
-        o.label.toLowerCase().includes(query.toLowerCase()) ||
-        o.value.toLowerCase().includes(query.toLowerCase()))
-    : ALL_NEWS_OPTIONS;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-         style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(14px)" }}
-         onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg animate-scale-in"
-           style={{
-             background: "var(--mm-surface)", border: "1px solid var(--mm-border-gold)",
-             borderRadius: 24, padding: 24, maxHeight: "85vh", overflowY: "auto",
-           }}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 20, fontWeight: 400, color: "var(--mm-text)",
-          }}>
-            Manage News Tabs
-          </h3>
-          <button onClick={onClose} className="mm-icon-btn">×</button>
-        </div>
-
-        <p className="text-xs mb-4" style={{ color: "var(--mm-muted)" }}>
-          Up to 5 tabs — choose any category or country. Start typing to filter.
-        </p>
-
-        <div className="space-y-3 mb-4">
-          {local.map((tab, i) => (
-            <div key={tab.id}>
-              <div className="flex items-center gap-2">
-                <input
-                  value={tab.label}
-                  onChange={e => update(i, "label", e.target.value)}
-                  placeholder="Tab name"
-                  className="mm-form-input text-xs"
-                  style={{ flex: "0 0 90px" }}
-                />
-                {/* Searchable datalist input */}
-                <input
-                  list={`news-opts-${i}`}
-                  value={tab.category}
-                  onChange={e => update(i, "category", e.target.value)}
-                  placeholder="Type category or country…"
-                  className="mm-form-input text-xs flex-1"
-                />
-                <datalist id={`news-opts-${i}`}>
-                  {ALL_NEWS_OPTIONS.map(o => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </datalist>
-                <button onClick={() => remove(i)}
-                        style={{ color: "var(--mm-muted)", opacity: 0.5, padding: 4, flexShrink: 0 }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                  <X size={13} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {local.length < 5 && (
-          <button onClick={add}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 mb-3"
-                  style={{
-                    border: "1px dashed var(--mm-border)", borderRadius: 12,
-                    color: "var(--mm-muted)", fontSize: 12,
-                    fontFamily: "'Outfit', sans-serif",
-                  }}>
-            <Plus size={12} /> Add Tab
-          </button>
-        )}
-
-        <button onClick={() => { onSave(local); onClose(); }}
-                className="mm-btn-gold w-full py-2.5 text-xs">
-          Save Changes
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ── Dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -316,18 +156,28 @@ export default function Dashboard() {
 
   const [data,          setData]          = useState(null);
   const [news,          setNews]          = useState([]);
-  const [newsTabs,      setNewsTabs]      = useState(() => {
-    try { return JSON.parse(localStorage.getItem("mm_news_tabs") || "null") || DEFAULT_NEWS_TABS; }
-    catch { return DEFAULT_NEWS_TABS; }
-  });
-  const [activeNewsTab, setActiveNewsTab] = useState(0);
+  const [activeNewsTab, setActiveNewsTab] = useState(0);   // index into FIXED_NEWS_TABS; length = Others
   const [customRss,     setCustomRss]     = useState(() => localStorage.getItem("mm_news_custom_url") || "");
-  const [showTabModal,  setShowTabModal]  = useState(false);
   const [quote,         setQuote]         = useState(null);
   const [collapsed,     setCollapsed]     = useState({});
   const [now,           setNow]           = useState(new Date());
   const [completedIds,  setCompletedIds]  = useState(new Set());
   const [showReview,    setShowReview]    = useState(false);
+  /* Finance period toggle */
+  const [financeView,   setFinanceView]   = useState("month"); // "month" | "year"
+  const [yearlyData,    setYearlyData]    = useState(null);
+  /* Drag-and-drop section order */
+  const [sectionOrder,  setSectionOrder]  = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("mm_section_order"));
+      if (!saved) return DEFAULT_SECTION_ORDER;
+      // merge: keep saved order but append any new sections not yet in it
+      const set = new Set(saved);
+      return [...saved, ...DEFAULT_SECTION_ORDER.filter(id => !set.has(id))];
+    } catch { return DEFAULT_SECTION_ORDER; }
+  });
+  const [dragId,        setDragId]        = useState(null);
+  const [dragOverId,    setDragOverId]    = useState(null);
   const [weather,       setWeather]       = useState(null);
 
   /* Clock */
@@ -376,7 +226,7 @@ export default function Dashboard() {
   useEffect(() => { load(); }, [load]);
 
   /* News */
-  const isOthersTab = activeNewsTab === newsTabs.length;
+  const isOthersTab = activeNewsTab === FIXED_NEWS_TABS.length;
   useEffect(() => {
     if (isOthersTab) {
       if (!customRss) return;
@@ -385,20 +235,36 @@ export default function Dashboard() {
          .catch(() => {});
       return;
     }
-    const tab = newsTabs[activeNewsTab];
+    const tab = FIXED_NEWS_TABS[activeNewsTab];
     if (!tab) return;
-    api.get("/news", { params: { category: tab.category } })
+    api.get("/news", { params: { category: tab.id } })
        .then(r => setNews(r.data.items || []))
        .catch(() => {});
-  }, [activeNewsTab, newsTabs, customRss, isOthersTab]);
-
-  const saveNewsTabs = (tabs) => {
-    setNewsTabs(tabs);
-    localStorage.setItem("mm_news_tabs", JSON.stringify(tabs));
-  };
+  }, [activeNewsTab, customRss, isOthersTab]);
 
   const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
   const isOpen = (key) => !collapsed[key];
+
+  /* Drag-and-drop handlers */
+  const handleDragStart = (id) => setDragId(id);
+  const handleDragEnd   = ()   => { setDragId(null); setDragOverId(null); };
+  const handleDragOver  = (e, id) => { e.preventDefault(); setDragOverId(id); };
+  const handleDrop      = (e, targetId) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) { setDragId(null); setDragOverId(null); return; }
+    setSectionOrder(prev => {
+      const next = [...prev];
+      const from = next.indexOf(dragId);
+      const to   = next.indexOf(targetId);
+      if (from === -1 || to === -1) return prev;
+      next.splice(from, 1);
+      next.splice(to, 0, dragId);
+      localStorage.setItem("mm_section_order", JSON.stringify(next));
+      return next;
+    });
+    setDragId(null);
+    setDragOverId(null);
+  };
 
   const completeTask = async (id) => {
     try {
@@ -426,25 +292,57 @@ export default function Dashboard() {
   })();
 
   /* ── Sub-components ── */
-  const Section = ({ id, title, count, children }) => (
+  const Section = ({ id, title, count, extra, children }) => (
     <div className="mb-5">
       <button onClick={() => toggle(id)}
               className="w-full flex items-center justify-between py-2 text-left group">
         <div className="flex items-center gap-2.5">
-          <span className="mm-label">{title}</span>
+          {/* Grip handle — visible on hover */}
+          <GripVertical size={13}
+            className="opacity-0 group-hover:opacity-40 transition-opacity cursor-grab flex-shrink-0"
+            style={{ color: "var(--mm-muted)" }} />
+          {/* Bold Title Case heading */}
+          <span style={{
+            fontSize: 13, fontWeight: 700, letterSpacing: "0.01em",
+            color: "var(--mm-text)", fontFamily: "'Outfit', sans-serif",
+          }}>
+            {title}
+          </span>
           {count > 0 && (
-            <span className="text-xs px-1.5 py-0.5"
-                  style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)",
-                           fontSize: 10, borderRadius: 6 }}>
+            <span style={{
+              background: "var(--mm-surface-3)", color: "var(--mm-muted)",
+              fontSize: 10, borderRadius: 6, padding: "1px 6px",
+            }}>
               {count}
             </span>
           )}
+          {extra}
         </div>
         <span style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
           {isOpen(id) ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </span>
       </button>
       {isOpen(id) && <div className="animate-fade-in">{children}</div>}
+    </div>
+  );
+
+  /* Draggable wrapper around each Section */
+  const DraggableSection = ({ id, children }) => (
+    <div
+      draggable
+      onDragStart={() => handleDragStart(id)}
+      onDragEnd={handleDragEnd}
+      onDragOver={e => handleDragOver(e, id)}
+      onDrop={e => handleDrop(e, id)}
+      style={{
+        opacity:       dragId === id ? 0.45 : 1,
+        outline:       dragOverId === id && dragId !== id ? "2px solid var(--mm-gold)" : "none",
+        outlineOffset: 4,
+        borderRadius:  12,
+        transition:    "opacity 0.15s, outline 0.1s",
+      }}
+    >
+      {children}
     </div>
   );
 
@@ -545,11 +443,16 @@ export default function Dashboard() {
             { label: "Done Today", value: data.stats.done_today,    color: "var(--mm-gold)" },
             { label: "Reminders",  value: data.stats.reminders_due, color: "var(--mm-gold)" },
           ].map(s => (
-            <div key={s.label} className="mm-card p-4 text-center">
+            <div key={s.label} className="mm-card p-4 flex flex-col items-center justify-center text-center">
               <div className="text-3xl font-light mm-font-display" style={{ color: s.color }}>
                 {s.value}
               </div>
-              <div className="mt-1 mm-label">{s.label}</div>
+              <div className="mt-1" style={{
+                fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
+              }}>
+                {s.label}
+              </div>
             </div>
           ))}
         </div>
@@ -584,7 +487,12 @@ export default function Dashboard() {
              style={{ borderColor: "var(--mm-border-gold)", background: "rgba(212,175,55,0.03)" }}>
           <div className="flex items-center gap-2 mb-3">
             <Star size={12} style={{ color: "var(--mm-gold)" }} />
-            <span className="mm-label" style={{ color: "var(--mm-gold)" }}>Top 3 for today</span>
+            <span style={{
+              fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif",
+            }}>
+              Top 3 For Today
+            </span>
           </div>
           <div className="space-y-2">
             {top3.map((t, i) => (
@@ -603,277 +511,323 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Overdue ── */}
-      {data?.overdue?.length > 0 && (
-        <Section id="overdue" title="Overdue"
-                 count={data.overdue.filter(t => !completedIds.has(t.id)).length}>
-          <div className="mm-card overflow-hidden">
-            {data.overdue.filter(t => !completedIds.has(t.id)).map(t => (
-              <TaskCheckRow key={t.id} t={t} to="/tasks" />
-            ))}
-          </div>
-        </Section>
-      )}
+      {/* ── Draggable sections ── */}
+      {sectionOrder.map(sectionId => {
+        switch (sectionId) {
 
-      {/* ── Due today ── */}
-      {data?.due_today?.length > 0 && (
-        <Section id="today" title="Due Today"
-                 count={data.due_today.filter(t => !completedIds.has(t.id)).length}>
-          <div className="mm-card overflow-hidden">
-            {data.due_today.filter(t => !completedIds.has(t.id)).map(t => (
-              <TaskCheckRow key={t.id} t={t} to="/tasks" />
-            ))}
-          </div>
-        </Section>
-      )}
+          case "overdue":
+            return data?.overdue?.filter(t => !completedIds.has(t.id)).length > 0 ? (
+              <DraggableSection key="overdue" id="overdue">
+                <Section id="overdue" title="Overdue"
+                         count={data.overdue.filter(t => !completedIds.has(t.id)).length}>
+                  <div className="mm-card overflow-hidden">
+                    {data.overdue.filter(t => !completedIds.has(t.id)).map(t => (
+                      <TaskCheckRow key={t.id} t={t} to="/tasks" />
+                    ))}
+                  </div>
+                </Section>
+              </DraggableSection>
+            ) : null;
 
-      {/* ── Due Soon — top 3 only ── */}
-      {data?.due_soon?.length > 0 && (
-        <Section id="soon" title="Due Soon">
-          <div className="mm-card overflow-hidden">
-            {data.due_soon.slice(0, 3).map(t => (
-              <button key={t.id} onClick={() => navigate("/tasks")}
-                      className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                      style={{ borderColor: "var(--mm-border)" }}>
-                <span className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: "var(--mm-border)" }} />
-                <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
+          case "today":
+            return data?.due_today?.filter(t => !completedIds.has(t.id)).length > 0 ? (
+              <DraggableSection key="today" id="today">
+                <Section id="today" title="Today's Tasks"
+                         count={data.due_today.filter(t => !completedIds.has(t.id)).length}>
+                  <div className="mm-card overflow-hidden">
+                    {data.due_today.filter(t => !completedIds.has(t.id)).map(t => (
+                      <TaskCheckRow key={t.id} t={t} to="/tasks" />
+                    ))}
+                  </div>
+                </Section>
+              </DraggableSection>
+            ) : null;
 
-      {/* ── Routines ── */}
-      {data?.routines?.length > 0 && (
-        <Section id="routines" title="Today's Routines">
-          <div className="mm-card overflow-hidden">
-            {data.routines.map(r => (
-              <button key={r.id} onClick={() => navigate("/routines")}
-                      className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
-                      style={{ borderColor: "var(--mm-border)" }}>
-                <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
-                     style={{
-                       borderColor: r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
-                       background: r.done_today ? "rgba(212,175,55,0.12)" : "transparent",
-                       borderRadius: "50%",
-                     }}>
-                  {r.done_today && (
-                    <span style={{ color: "var(--mm-gold)", fontSize: 9, fontWeight: 700 }}>✓</span>
+          case "soon":
+            return data?.due_soon?.length > 0 ? (
+              <DraggableSection key="soon" id="soon">
+                <Section id="soon" title="Coming Up">
+                  <div className="mm-card overflow-hidden">
+                    {data.due_soon.slice(0, 3).map(t => (
+                      <button key={t.id} onClick={() => navigate("/tasks")}
+                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                              style={{ borderColor: "var(--mm-border)" }}>
+                        <span className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ background: "var(--mm-border)" }} />
+                        <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
+                        <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              </DraggableSection>
+            ) : null;
+
+          case "routines":
+            return data?.routines?.length > 0 ? (
+              <DraggableSection key="routines" id="routines">
+                <Section id="routines" title="Today's Routines">
+                  <div className="mm-card overflow-hidden">
+                    {data.routines.map(r => (
+                      <button key={r.id} onClick={() => navigate("/routines")}
+                              className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
+                              style={{ borderColor: "var(--mm-border)" }}>
+                        <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
+                             style={{
+                               borderColor: r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
+                               background:  r.done_today ? "rgba(212,175,55,0.12)" : "transparent",
+                               borderRadius: "50%",
+                             }}>
+                          {r.done_today && (
+                            <span style={{ color: "var(--mm-gold)", fontSize: 9, fontWeight: 700 }}>✓</span>
+                          )}
+                        </div>
+                        <span className="flex-1 text-sm"
+                              style={{ color: "var(--mm-text)", opacity: r.done_today ? 0.5 : 1 }}>
+                          {r.activity}
+                        </span>
+                        {r.streak > 0 && (
+                          <span style={{ color: "var(--mm-gold)", fontSize: 10 }}>🔥{r.streak}</span>
+                        )}
+                        <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{r.group}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              </DraggableSection>
+            ) : null;
+
+          case "cashflow":
+            return data?.cashflow ? (
+              <DraggableSection key="cashflow" id="cashflow">
+                <Section id="cashflow" title="Finances"
+                  extra={
+                    <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
+                      {["month", "year"].map(v => (
+                        <button key={v} onClick={() => setFinanceView(v)}
+                                style={{
+                                  fontSize: 9, padding: "2px 8px", borderRadius: 20,
+                                  fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
+                                  textTransform: "uppercase",
+                                  background:   financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                                  color:        financeView === v ? "#0a0a0a" : "var(--mm-muted)",
+                                  border: "none", cursor: "pointer",
+                                }}>
+                          {v === "month" ? "Month" : "Year"}
+                        </button>
+                      ))}
+                    </div>
+                  }>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(financeView === "year" && yearlyData ? yearlyData : data.cashflow).map(([cat, val]) => (
+                      <button key={cat} onClick={() => navigate("/cash-flow")}
+                              className="mm-card mm-row p-4 text-left">
+                        <div style={{
+                          fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
+                        }}>
+                          {cat}
+                        </div>
+                        <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                          ₹{formatAmount(val)}
+                        </div>
+                      </button>
+                    ))}
+                    <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
+                      <div style={{
+                        fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                        color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
+                      }}>
+                        Upcoming Payments
+                      </div>
+                      <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                        {data.upcoming_payments !== undefined
+                          ? `₹${formatAmount(data.upcoming_payments)}`
+                          : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                      </div>
+                    </button>
+                    <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
+                      <div style={{
+                        fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                        color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
+                      }}>
+                        Upcoming Receipts
+                      </div>
+                      <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                        {data.upcoming_receipts !== undefined
+                          ? `₹${formatAmount(data.upcoming_receipts)}`
+                          : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                      </div>
+                    </button>
+                  </div>
+                  {spendingInsight && (
+                    <p className="text-xs mt-2 px-1" style={{ color: "var(--mm-muted)" }}>
+                      {spendingInsight}
+                    </p>
                   )}
-                </div>
-                <span className="flex-1 text-sm"
-                      style={{ color: "var(--mm-text)", opacity: r.done_today ? 0.5 : 1 }}>
-                  {r.activity}
-                </span>
-                {r.streak > 0 && (
-                  <span style={{ color: "var(--mm-gold)", fontSize: 10 }}>🔥{r.streak}</span>
-                )}
-                <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{r.group}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
+                </Section>
+              </DraggableSection>
+            ) : null;
 
-      {/* ── Month Finances — 6 cards (Income, Expense, Savings, Balance + upcoming) ── */}
-      {data?.cashflow && (
-        <Section id="cashflow" title="Month Finances">
-          <div className="grid grid-cols-2 gap-3">
-            {/* Standard cashflow keys */}
-            {Object.entries(data.cashflow).map(([cat, val]) => (
-              <button key={cat} onClick={() => navigate("/cash-flow")}
-                      className="mm-card mm-row p-4 text-left">
-                <div className="mm-label mb-1.5">{cat}</div>
-                <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                  ₹{formatAmount(val)}
-                </div>
-              </button>
-            ))}
-            {/* Upcoming Payments */}
-            <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-              <div className="mm-label mb-1.5">Upcoming Payments</div>
-              <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                {data.upcoming_payments !== undefined
-                  ? `₹${formatAmount(data.upcoming_payments)}`
-                  : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
-              </div>
-            </button>
-            {/* Upcoming Receipts */}
-            <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-              <div className="mm-label mb-1.5">Upcoming Receipts</div>
-              <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                {data.upcoming_receipts !== undefined
-                  ? `₹${formatAmount(data.upcoming_receipts)}`
-                  : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
-              </div>
-            </button>
-          </div>
-          {spendingInsight && (
-            <p className="text-xs mt-2 px-1" style={{ color: "var(--mm-muted)" }}>
-              {spendingInsight}
-            </p>
-          )}
-        </Section>
-      )}
+          case "reminders_deadlines":
+            return ((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) ? (
+              <DraggableSection key="reminders_deadlines" id="reminders_deadlines">
+                <Section id="reminders_deadlines" title="Reminders">
+                  <div className="mm-card overflow-hidden">
+                    {data?.reminders?.slice(0, 3).map(r => (
+                      <button key={`rem-${r.id}`} onClick={() => navigate("/reminders")}
+                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                              style={{ borderColor: "var(--mm-border)" }}>
+                        <span className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
+                        <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
+                          {r.title}
+                        </span>
+                        <span style={{
+                          fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0,
+                        }}>
+                          Reminder
+                        </span>
+                        {r.fire_at && (
+                          <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>
+                            {new Date(r.fire_at).toLocaleTimeString("en-IN", {
+                              hour: "2-digit", minute: "2-digit",
+                            })}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                    {data?.due_soon?.slice(0, 3).map(t => (
+                      <button key={`dl-${t.id}`} onClick={() => navigate("/tasks")}
+                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                              style={{ borderColor: "var(--mm-border)" }}>
+                        <span className="w-2 h-2 rounded-full flex-shrink-0"
+                              style={{ background: "var(--mm-muted)", opacity: 0.5 }} />
+                        <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
+                          {t.task}
+                        </span>
+                        <span style={{
+                          fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0,
+                        }}>
+                          Deadline
+                        </span>
+                        <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              </DraggableSection>
+            ) : null;
 
-      {/* ── Reminders & Deadlines (below finances, top 3 each) ── */}
-      {((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) && (
-        <Section id="reminders_deadlines" title="Reminders & Deadlines">
-          <div className="mm-card overflow-hidden">
-            {/* Upcoming reminders — top 3 */}
-            {data?.reminders?.slice(0, 3).map(r => (
-              <button key={`rem-${r.id}`} onClick={() => navigate("/reminders")}
-                      className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                      style={{ borderColor: "var(--mm-border)" }}>
-                <span className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
-                <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
-                  {r.title}
-                </span>
-                <span className="mm-label flex-shrink-0">Reminder</span>
-                {r.fire_at && (
-                  <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>
-                    {new Date(r.fire_at).toLocaleTimeString("en-IN", {
-                      hour: "2-digit", minute: "2-digit",
-                    })}
-                  </span>
-                )}
-              </button>
-            ))}
-            {/* Upcoming deadlines (due_soon top 3) */}
-            {data?.due_soon?.slice(0, 3).map(t => (
-              <button key={`dl-${t.id}`} onClick={() => navigate("/tasks")}
-                      className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                      style={{ borderColor: "var(--mm-border)" }}>
-                <span className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: "var(--mm-muted)", opacity: 0.5 }} />
-                <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
-                  {t.task}
-                </span>
-                <span className="mm-label flex-shrink-0">Deadline</span>
-                <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
+          case "quote":
+            return quote ? (
+              <DraggableSection key="quote" id="quote">
+                <Section id="quote" title="Today's Note From The World">
+                  <div className="px-5 py-5"
+                       style={{
+                         borderLeft: "3px solid var(--mm-border-gold)",
+                         background: "var(--mm-surface-2)",
+                         borderRadius: "0 16px 16px 0",
+                       }}>
+                    <p className="mm-font-serif text-base italic"
+                       style={{ color: "var(--mm-text)", lineHeight: 1.7 }}>
+                      "{quote.quote}"
+                    </p>
+                    {quote.author && (
+                      <p className="text-xs mt-2 uppercase tracking-widest" style={{ color: "var(--mm-muted)" }}>
+                        — {quote.author}
+                      </p>
+                    )}
+                  </div>
+                  <AffirmationCard />
+                </Section>
+              </DraggableSection>
+            ) : null;
 
-      {/* ── Reminders standalone (kept for context) ── */}
-      {data?.reminders?.length > 0 && (
-        <Section id="reminders" title="Upcoming Reminders">
-          <div className="mm-card overflow-hidden">
-            {data.reminders.map(r => (
-              <button key={r.id} onClick={() => navigate("/reminders")}
-                      className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                      style={{ borderColor: "var(--mm-border)" }}>
-                <span className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ background: "var(--mm-gold)", boxShadow: "0 0 6px rgba(212,175,55,0.5)" }} />
-                <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{r.title}</span>
-                <span className="text-xs" style={{ color: "var(--mm-muted)" }}>
-                  {r.fire_at
-                    ? new Date(r.fire_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
-                    : ""}
-                </span>
-              </button>
-            ))}
-          </div>
-        </Section>
-      )}
+          case "news":
+            return (
+              <DraggableSection key="news" id="news">
+                <Section id="news" title="News">
+                  <div className="space-y-3">
+                    {/* Fixed tab row */}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {FIXED_NEWS_TABS.map((tab, i) => (
+                        <button key={tab.id}
+                                onClick={() => setActiveNewsTab(i)}
+                                className={`mm-filter-tab ${activeNewsTab === i && !isOthersTab ? "active" : ""}`}>
+                          {tab.label}
+                        </button>
+                      ))}
+                      <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
+                              className={`mm-filter-tab ${isOthersTab ? "active" : ""}`}>
+                        Others
+                      </button>
+                    </div>
 
-      {/* ── Today's Note from the World ── */}
-      {quote && (
-        <Section id="quote" title="Today's Note from the World">
-          <div className="px-5 py-5"
-               style={{
-                 borderLeft: "3px solid var(--mm-border-gold)",
-                 background: "var(--mm-surface-2)",
-                 borderRadius: "0 16px 16px 0",
-               }}>
-            <p className="mm-font-serif text-base italic"
-               style={{ color: "var(--mm-text)", lineHeight: 1.7 }}>
-              "{quote.quote}"
-            </p>
-            {quote.author && (
-              <p className="text-xs mt-2 uppercase tracking-widest" style={{ color: "var(--mm-muted)" }}>
-                — {quote.author}
-              </p>
-            )}
-          </div>
-          <AffirmationCard />
-        </Section>
-      )}
+                    {/* Others — custom RSS */}
+                    {isOthersTab && (
+                      <div className="flex gap-2">
+                        <input value={customRss} onChange={e => setCustomRss(e.target.value)}
+                               placeholder="Paste a custom RSS feed URL…"
+                               className="mm-form-input flex-1 text-xs" />
+                        <button onClick={() => localStorage.setItem("mm_news_custom_url", customRss)}
+                                className="mm-btn-gold px-4 text-xs">Save</button>
+                      </div>
+                    )}
 
-      {/* ── News ── */}
-      <Section id="news" title="News">
-        <div className="space-y-3">
-          {/* Tab row */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {newsTabs.map((tab, i) => (
-              <button key={tab.id}
-                      onClick={() => setActiveNewsTab(i)}
-                      className={`mm-filter-tab capitalize ${activeNewsTab === i && !isOthersTab ? "active" : ""}`}>
-                {tab.label}
-              </button>
-            ))}
-            <button onClick={() => setActiveNewsTab(newsTabs.length)}
-                    className={`mm-filter-tab ${isOthersTab ? "active" : ""}`}>
-              Others
-            </button>
-            <button onClick={() => setShowTabModal(true)}
-                    className="mm-filter-tab" title="Manage tabs"
-                    style={{ marginLeft: "auto" }}>
-              <Edit2 size={10} />
-            </button>
-          </div>
+                    {/* News list */}
+                    <div className="mm-card overflow-hidden">
+                      {news.length === 0
+                        ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
+                        : news.map((item, i) => (
+                            <a key={i}
+                               href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
+                               target="_blank" rel="noopener noreferrer"
+                               className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
+                               style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
+                              <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
+                              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                    style={{ color: "var(--mm-gold)" }}>→</span>
+                            </a>
+                          ))
+                      }
+                    </div>
+                  </div>
+                </Section>
+              </DraggableSection>
+            );
 
-          {/* Others RSS input */}
-          {isOthersTab && (
-            <div className="flex gap-2">
-              <input value={customRss} onChange={e => setCustomRss(e.target.value)}
-                     placeholder="Paste a custom RSS feed URL…"
-                     className="mm-form-input flex-1 text-xs" />
-              <button onClick={() => localStorage.setItem("mm_news_custom_url", customRss)}
-                      className="mm-btn-gold px-4 text-xs">Save</button>
-            </div>
-          )}
+          case "worldclock":
+            return (
+              <DraggableSection key="worldclock" id="worldclock">
+                <Section id="worldclock" title="World Clock">
+                  <WorldClock />
+                </Section>
+              </DraggableSection>
+            );
 
-          {/* News list */}
-          <div className="mm-card overflow-hidden">
-            {news.length === 0
-              ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
-              : news.map((item, i) => (
-                  <a key={i}
-                     href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
-                     target="_blank" rel="noopener noreferrer"
-                     className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
-                     style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
-                    <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
-                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                          style={{ color: "var(--mm-gold)" }}>→</span>
-                  </a>
-                ))
-            }
-          </div>
-        </div>
-      </Section>
+          case "timers":
+            return (
+              <DraggableSection key="timers" id="timers">
+                <Section id="timers" title="Timers">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="mm-card p-5 flex flex-col items-center">
+                      <CountdownTimer />
+                    </div>
+                    <div className="mm-card p-5 flex flex-col items-center">
+                      <CountdownDate />
+                    </div>
+                  </div>
+                </Section>
+              </DraggableSection>
+            );
 
-      {showTabModal && (
-        <NewsTabModal tabs={newsTabs} onSave={saveNewsTabs} onClose={() => setShowTabModal(false)} />
-      )}
-
-      {/* ── World Clock ── */}
-      <Section id="worldclock" title="World Clock">
-        <WorldClock />
-      </Section>
-
-      {/* ── Countdown Timer ── */}
-      <Section id="countdown" title="Countdown Timer">
-        <div className="mm-card p-6 flex flex-col items-center">
-          <CountdownTimer />
-        </div>
-      </Section>
+          default:
+            return null;
+        }
+      })}
 
     </div>
   );

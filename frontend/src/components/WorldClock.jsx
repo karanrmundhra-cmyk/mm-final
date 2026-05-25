@@ -247,10 +247,9 @@ export default function WorldClock() {
 
   return (
     <>
-      {/* Header row */}
-      <div className="flex items-center mb-3">
-        <span className="mm-label flex-1">World Clock</span>
-        {cities.length < 5 && (
+      {/* Add city button — title comes from the parent Section */}
+      {cities.length < 5 && (
+        <div className="flex justify-end mb-2">
           <button onClick={() => setShowPicker(true)}
                   className="flex items-center gap-1 text-xs px-2 py-1 transition-opacity"
                   style={{ color: "var(--mm-muted)", borderRadius: 8, opacity: 0.7 }}
@@ -258,8 +257,8 @@ export default function WorldClock() {
                   onMouseLeave={e => e.currentTarget.style.opacity = "0.7"}>
             <Plus size={11} /> Add city
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 5-clock grid */}
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cities.length}, 1fr)` }}>
