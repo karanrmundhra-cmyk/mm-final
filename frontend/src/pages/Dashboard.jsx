@@ -173,36 +173,64 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto px-5 py-7 space-y-7">
+    <div className="px-6 py-8 space-y-7" style={{ maxWidth: "100%" }}>
 
-      {/* ── Greeting + Completion Ring ── */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="mm-font-display" style={{ fontSize: 36, fontWeight: 300, color: "var(--mm-text)", lineHeight: 1.15 }}>
-            {timeGreeting()},
-            <br />
-            <em style={{ color: "var(--mm-gold)", fontWeight: 400 }}>
-              {user?.first_name}{user?.last_name ? ` ${user.last_name}` : ""}
-            </em>
-            <span style={{ color: "var(--mm-muted)" }}>.</span>
-          </h1>
-          <p className="mt-2" style={{ fontSize: 11, color: "var(--mm-muted)", letterSpacing: "0.15em" }}>
-            {now.toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            {" · "}
-            {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-          </p>
-        </div>
+      {/* ── Hero Greeting ── */}
+      <div>
+        {/* Date · Time — small caps, muted, above */}
+        <p style={{
+          fontSize: 11,
+          color: "var(--mm-muted)",
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          fontFamily: "'Outfit', sans-serif",
+          marginBottom: 14,
+        }}>
+          {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+              .toUpperCase()}
+          {" · "}
+          {now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+        </p>
 
-        {/* Day completion ring */}
-        {ringTotal > 0 && (
+        {/* Huge single-line greeting */}
+        <h1 style={{
+          fontFamily: "'Cormorant Garamond', serif",
+          fontSize: "clamp(44px, 5.8vw, 82px)",
+          fontWeight: 300,
+          lineHeight: 1.08,
+          color: "var(--mm-text)",
+          letterSpacing: "-0.01em",
+        }}>
+          {timeGreeting()},{" "}
+          <em style={{
+            fontStyle: "italic",
+            fontWeight: 400,
+            color: "var(--mm-gold)",
+            letterSpacing: "0.01em",
+          }}>
+            {user?.first_name}{user?.last_name ? ` ${user.last_name}` : ""}
+          </em>
+          <span style={{ color: "var(--mm-text)" }}>.</span>
+        </h1>
+
+        {/* Gold accent line */}
+        <div style={{
+          width: 48, height: 1.5, marginTop: 18, borderRadius: 2,
+          background: "linear-gradient(90deg, var(--mm-gold), transparent)",
+        }} />
+      </div>
+
+      {/* ── Completion Ring (if data exists) ── */}
+      {ringTotal > 0 && (
+        <div className="flex items-center gap-4">
           <div className="flex flex-col items-center gap-1 flex-shrink-0">
             <CompletionRing done={ringDone} total={ringTotal} size={76} stroke={6} label="Today" />
             {ringDone === ringTotal && ringTotal > 0 && (
               <span className="text-xs" style={{ color: "var(--mm-gold)" }}>🔥 All done!</span>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Weekly Review Banner ── */}
       {showReview && (

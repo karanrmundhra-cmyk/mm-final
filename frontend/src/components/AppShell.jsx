@@ -162,11 +162,9 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* Actual brand logo — no circular clip so the double-ring shows cleanly */}
-          <div style={{ width: 42, height: 42, flexShrink: 0, overflow: "hidden", position: "relative" }}>
-            <img src="/rkm-logo.png" alt="MM"
-                 style={{ width: "100%", position: "absolute", top: 0, left: 0 }} />
-          </div>
+          {/* Brand logo — object-fit:cover centred at the ring portion of the portrait PNG */}
+          <img src="/rkm-logo.png" alt="MM"
+               style={{ width: 46, height: 46, objectFit: "cover", objectPosition: "center 35%", flexShrink: 0 }} />
           {!collapsed && (
             <div className="min-w-0">
               <div style={{
@@ -233,44 +231,53 @@ export default function AppShell() {
         </nav>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-2 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
+        <div className="flex-shrink-0 py-3 px-2" style={{ borderTop: "1px solid var(--mm-border)" }}>
           {collapsed ? (
-            /* Collapsed: 2-column grid so all 6 icons fit in 64px */
-            <div className="grid grid-cols-2 gap-1">
-              <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
+            /* ── Collapsed: vertical column of icons + sign-out at bottom ── */
+            <div className="flex flex-col items-center gap-1">
+              <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
               <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
-              <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
-              <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} gold />
+              <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} />
               <SyncBtn />
               <button onClick={toggleCollapse}
                       className="relative flex items-center justify-center p-2 transition-all group"
-                      style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
+                      style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
                       onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                      onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
+                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
                 <ChevronRight size={14} />
                 <Tooltip label="Expand" />
               </button>
+              {/* Sign-out always visible in collapsed mode */}
+              <div className="w-full mt-1 pt-1" style={{ borderTop: "1px solid var(--mm-border)" }}>
+                <button onClick={logout}
+                        className="relative w-full flex items-center justify-center p-2 transition-all group"
+                        style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                  <LogOut size={13} />
+                  <Tooltip label="Sign out" />
+                </button>
+              </div>
             </div>
           ) : (
+            /* ── Expanded: row of icons + user info ── */
             <>
-              {/* Expanded: single row, all 6 equally spaced */}
               <div className="flex items-center justify-between px-1 mb-3">
-                <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
+                <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} gold />
+                <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
-                        style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
+                        style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
                         onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
                   <ChevronLeft size={14} />
                   <Tooltip label="Collapse" />
                 </button>
               </div>
-
-              {/* User info — no avatar, just name + email + sign-out */}
+              {/* Name · email · sign-out (no avatar) */}
               <div className="flex items-center gap-2 px-1 pt-2.5"
                    style={{ borderTop: "1px solid var(--mm-border)" }}>
                 <div className="flex-1 min-w-0">
@@ -403,12 +410,12 @@ function SyncBtn() {
     return unsub;
   }, []);
 
-  const color  = !state.online ? "rgba(240,237,232,0.3)"
-               : state.pending > 0 ? "var(--mm-gold)"
-               : "rgba(212,175,55,0.55)";
-  const shadow = !state.online ? "rgba(240,237,232,0.1)"
-               : state.pending > 0 ? "rgba(212,175,55,0.6)"
-               : "rgba(212,175,55,0.25)";
+  const color  = !state.online ? "rgba(240,237,232,0.25)"
+               : state.pending > 0 ? "#D4AF37"        /* syncing → gold */
+               : "#22C55E";                            /* synced  → green */
+  const shadow = !state.online ? "transparent"
+               : state.pending > 0 ? "rgba(212,175,55,0.5)"
+               : "rgba(34,197,94,0.45)";
 
   const timeAgoStr = (date) => {
     if (!date) return "just now";
@@ -439,18 +446,14 @@ function SyncBtn() {
   );
 }
 
-/* ── Sidebar utility button ───────────────────────────────────── */
-function SidebarBtn({ icon: Icon, label, onClick, gold }) {
+/* ── Sidebar utility button — always grey ────────────────────── */
+function SidebarBtn({ icon: Icon, label, onClick }) {
   return (
     <button onClick={onClick}
-            className="relative flex items-center justify-center p-2 transition-all hover:opacity-100 group"
-            style={{
-              color: gold ? "var(--mm-gold)" : "var(--mm-muted)",
-              opacity: gold ? 0.9 : 0.55,
-              borderRadius: 10,
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.opacity = gold ? "0.9" : "0.55"; }}>
+            className="relative flex items-center justify-center p-2 transition-all group"
+            style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
+            onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "scale(1.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.transform = "scale(1)"; }}>
       <Icon size={14} />
       <Tooltip label={label} />
     </button>
