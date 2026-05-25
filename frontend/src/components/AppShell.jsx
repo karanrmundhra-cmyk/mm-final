@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, CheckSquare, RefreshCw, DollarSign, FileText,
+  LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
-  Download, Keyboard, FolderOpen,
+  Download, Keyboard,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -21,12 +21,11 @@ const NAV = [
   { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
   { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
   { to: "/routines",  icon: RefreshCw,       label: "Routines",   key: "3" },
-  { to: "/cash-flow", icon: DollarSign,      label: "Cash Flow",  key: "4" },
+  { to: "/cash-flow", icon: Wallet,          label: "Cash Flow",  key: "4" },
   { to: "/notes",     icon: FileText,        label: "Notes",      key: "5" },
   { to: "/reminders", icon: Bell,            label: "Reminders",  key: "6" },
-  { to: "/projects",  icon: FolderOpen,      label: "Projects",   key: "7" },
-  { to: "/reports",   icon: BarChart2,       label: "Reports",    key: "8" },
-  { to: "/settings",  icon: Settings,        label: "Settings",   key: "9" },
+  { to: "/reports",   icon: BarChart2,       label: "Reports",    key: "7" },
+  { to: "/settings",  icon: Settings,        label: "Settings",   key: "8" },
 ];
 
 const BOTTOM_NAV = NAV.slice(0, 5);
@@ -162,21 +161,25 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* RKM circular logo */}
-          <div className="flex-shrink-0"
+          {/* MM monogram — single clean circle */}
+          <div className="flex-shrink-0 flex items-center justify-center"
                style={{
-                 width: 36, height: 36,
-                 borderRadius: "50%",
-                 overflow: "hidden",
-                 boxShadow: "0 0 12px rgba(212,175,55,0.28)",
+                 width: 38, height: 38, borderRadius: "50%",
+                 background: "rgba(212,175,55,0.07)",
+                 border: "1.5px solid rgba(212,175,55,0.55)",
+                 boxShadow: "0 0 14px rgba(212,175,55,0.18), inset 0 0 8px rgba(212,175,55,0.05)",
                }}>
-            <img src="/rkm-logo.png" alt="MM"
-                 style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 35%" }} />
+            <span style={{
+              color: "var(--mm-gold)",
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: 14, fontWeight: 600, letterSpacing: "0.08em",
+              lineHeight: 1,
+            }}>MM</span>
           </div>
           {!collapsed && (
             <div className="min-w-0">
               <div style={{
-                color: "var(--mm-text)",
+                color: "var(--mm-gold)",
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: 16, fontWeight: 500, letterSpacing: "0.05em",
                 lineHeight: 1.2,
@@ -239,69 +242,54 @@ export default function AppShell() {
         </nav>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-3 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
-          {/* Action buttons — 2-col grid when collapsed, row when expanded */}
-          {collapsed ? (
-            <div className="grid grid-cols-2 gap-0.5">
-              <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
-              <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
-              <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
-              <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
-              <div className="flex items-center justify-center py-2">
-                <SyncDot />
+        <div className="flex-shrink-0 px-2 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
+          {/* 6 utility buttons — equally spaced in both modes */}
+          <div className="flex items-center justify-between px-1 mb-3">
+            <SidebarBtn icon={Plus}        label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
+            <SidebarBtn icon={Search}      label="Search"     onClick={() => setShowSearch(true)} />
+            <SidebarBtn icon={Mic}         label="Voice Note" onClick={() => setShowVoice(true)} />
+            <SidebarBtn icon={Zap}         label="AI Chat"    onClick={() => setShowAi(true)} gold />
+            <SyncBtn />
+            <button onClick={toggleCollapse}
+                    title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    className="relative flex items-center justify-center p-2 transition-all hover:opacity-100 group"
+                    style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                    onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
+              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+              <Tooltip label={collapsed ? "Expand" : "Collapse"} />
+            </button>
+          </div>
+
+          {/* User info — hide when collapsed */}
+          {!collapsed && (
+            <div className="flex items-center gap-2.5 px-1 pt-2.5"
+                 style={{ borderTop: "1px solid var(--mm-border)" }}>
+              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+                   style={{
+                     background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
+                     borderRadius: 10, color: "#0B0B0C",
+                   }}>
+                <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
               </div>
-              <button onClick={toggleCollapse}
-                      className="flex items-center justify-center py-2 transition-colors hover:opacity-100"
-                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-                <ChevronRight size={13} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium truncate"
+                     style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
+                  {user?.first_name} {user?.last_name}
+                </div>
+                <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
+                  {user?.email}
+                </div>
+              </div>
+              <button onClick={logout}
+                      className="relative p-1.5 transition-opacity hover:opacity-100 group"
+                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                <LogOut size={13} />
+                <Tooltip label="Sign out" />
               </button>
             </div>
-          ) : (
-            <>
-              {/* Action row */}
-              <div className="flex items-center justify-between px-1 mb-3">
-                <div className="flex items-center gap-0.5">
-                  <SidebarBtn icon={Plus}   label="Quick Add" onClick={() => setShowQuickAdd(true)} gold />
-                  <SidebarBtn icon={Search} label="Search"    onClick={() => setShowSearch(true)} />
-                  <SidebarBtn icon={Mic}    label="Voice"     onClick={() => setShowVoice(true)} />
-                  <SidebarBtn icon={Zap}    label="AI Chat"   onClick={() => setShowAi(true)} gold />
-                </div>
-                <div className="flex items-center gap-2">
-                  <SyncDot />
-                  <button onClick={toggleCollapse}
-                          className="p-1.5 transition-colors hover:opacity-100"
-                          style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-                    <ChevronLeft size={13} />
-                  </button>
-                </div>
-              </div>
-
-              {/* User info */}
-              <div className="flex items-center gap-2.5 px-1 pt-2.5"
-                   style={{ borderTop: "1px solid var(--mm-border)" }}>
-                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                     style={{
-                       background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
-                       borderRadius: 10, color: "#0B0B0C",
-                     }}>
-                  <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium truncate"
-                       style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
-                    {user?.first_name} {user?.last_name}
-                  </div>
-                  <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
-                    {user?.email}
-                  </div>
-                </div>
-                <button onClick={logout} title="Sign out"
-                        className="p-1.5 transition-opacity hover:opacity-100"
-                        style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-                  <LogOut size={13} />
-                </button>
-              </div>
-            </>
           )}
         </div>
       </aside>
@@ -417,38 +405,90 @@ export default function AppShell() {
   );
 }
 
-function SyncDot() {
-  const [state, setState] = useState({ online: true, pending: 0 });
-  useEffect(() => subscribeSync(setState), []);
-  const color  = !state.online ? "rgba(240,237,232,0.3)"
-               : state.pending > 0 ? "var(--mm-gold)"
-               : "rgba(212,175,55,0.45)";
-  const shadow = !state.online ? "rgba(240,237,232,0.1)"
-               : state.pending > 0 ? "rgba(212,175,55,0.5)"
-               : "rgba(212,175,55,0.2)";
+/* ── Shared tooltip ───────────────────────────────────────────── */
+function Tooltip({ label }) {
   return (
-    <div title={state.pending > 0 ? `${state.pending} pending` : "Synced"}
-         style={{
-           width: 8, height: 8, borderRadius: "50%",
-           background: color,
-           boxShadow: `0 0 8px ${shadow}`,
-         }} />
+    <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1
+                     opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-50"
+          style={{
+            background: "rgba(12,12,15,0.92)",
+            border: "1px solid var(--mm-border-gold)",
+            borderRadius: 8,
+            color: "var(--mm-text)",
+            fontSize: 10,
+            fontFamily: "'Outfit', sans-serif",
+            letterSpacing: "0.06em",
+            backdropFilter: "blur(8px)",
+            pointerEvents: "none",
+          }}>
+      {label}
+    </span>
   );
 }
 
+/* ── Sync button with "Last synced" tooltip ───────────────────── */
+function SyncBtn() {
+  const [state, setState]     = useState({ online: true, pending: 0 });
+  const [lastSync, setLastSync] = useState(null);
+
+  useEffect(() => {
+    const unsub = subscribeSync((s) => {
+      setState(s);
+      if (s.pending === 0) setLastSync(new Date());
+    });
+    return unsub;
+  }, []);
+
+  const color  = !state.online ? "rgba(240,237,232,0.3)"
+               : state.pending > 0 ? "var(--mm-gold)"
+               : "rgba(212,175,55,0.55)";
+  const shadow = !state.online ? "rgba(240,237,232,0.1)"
+               : state.pending > 0 ? "rgba(212,175,55,0.6)"
+               : "rgba(212,175,55,0.25)";
+
+  const timeAgoStr = (date) => {
+    if (!date) return "just now";
+    const s = Math.floor((Date.now() - date) / 1000);
+    if (s < 10)  return "just now";
+    if (s < 60)  return `${s}s ago`;
+    if (s < 3600) return `${Math.floor(s/60)}m ago`;
+    return `${Math.floor(s/3600)}h ago`;
+  };
+
+  const tooltipLabel = !state.online
+    ? "Offline"
+    : state.pending > 0
+    ? `Syncing — ${state.pending} pending`
+    : `Last synced: ${timeAgoStr(lastSync)}`;
+
+  return (
+    <button className="relative flex items-center justify-center p-2 group"
+            style={{ borderRadius: 10, cursor: "default" }}>
+      <div style={{
+        width: 8, height: 8, borderRadius: "50%",
+        background: color,
+        boxShadow: `0 0 8px ${shadow}`,
+        transition: "background 0.3s, box-shadow 0.3s",
+      }} />
+      <Tooltip label={tooltipLabel} />
+    </button>
+  );
+}
+
+/* ── Sidebar utility button ───────────────────────────────────── */
 function SidebarBtn({ icon: Icon, label, onClick, gold }) {
   return (
-    <button onClick={onClick} title={label}
-            className="flex items-center justify-center p-2 transition-all hover:opacity-100"
+    <button onClick={onClick}
+            className="relative flex items-center justify-center p-2 transition-all hover:opacity-100 group"
             style={{
               color: gold ? "var(--mm-gold)" : "var(--mm-muted)",
               opacity: gold ? 0.9 : 0.55,
               borderRadius: 10,
-              transition: "opacity 0.15s, transform 0.15s cubic-bezier(0.34,1.56,0.64,1)",
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.12)"; e.currentTarget.style.opacity = "1"; }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.opacity = "1"; }}
             onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.opacity = gold ? "0.9" : "0.55"; }}>
       <Icon size={14} />
+      <Tooltip label={label} />
     </button>
   );
 }

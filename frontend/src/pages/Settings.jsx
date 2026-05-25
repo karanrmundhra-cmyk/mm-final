@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import People from "@/pages/People";
 import RecycleBin from "@/pages/RecycleBin";
+import Projects from "@/pages/Projects";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export default function Settings() {
   const [density, setDensityState] = useState(() => localStorage.getItem("mm_density") || "default");
   const [oled,    setOledState]    = useState(() => localStorage.getItem("mm_oled") === "1");
 
-  const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account", "People", "Trash"];
+  const TABS = ["Profile", "Appearance", "Projects", "Telegram", "Export", "Account", "People", "Trash"];
 
   const load = useCallback(async () => {
     try {
@@ -111,7 +112,7 @@ export default function Settings() {
   const theme = document.documentElement.classList.contains("light") ? "light" : "dark";
 
   return (
-    <div className="px-4 py-6 max-w-2xl mx-auto">
+    <div className={`px-4 py-6 mx-auto ${tab === "Projects" ? "max-w-5xl" : "max-w-2xl"}`}>
       <div className="mb-5">
         <h1 className="text-xl font-semibold mm-font-display" style={{ color: "var(--mm-text)" }}>Settings</h1>
         <p className="text-xs mt-0.5" style={{ color: "var(--mm-muted)" }}>Manage your account and preferences</p>
@@ -340,6 +341,12 @@ export default function Settings() {
             <p className="text-sm font-medium mb-1" style={{ color: "var(--mm-text)" }}>Account Info</p>
             <p className="text-xs" style={{ color: "var(--mm-muted)" }}>Signed in as <strong>{user?.email || settings?.email}</strong></p>
           </div>
+        </div>
+      )}
+
+      {tab === "Projects" && (
+        <div className="-mx-4 -my-6">
+          <Projects />
         </div>
       )}
 
