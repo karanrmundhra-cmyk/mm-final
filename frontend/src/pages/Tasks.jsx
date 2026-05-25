@@ -227,7 +227,8 @@ export default function Tasks() {
 
   /* ── Bulk ── */
   const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
-  const clearSel = () => setSelected(new Set());
+  const selectAll    = () => setSelected(new Set(visible.map(t => t.id)));
+  const clearSel     = () => setSelected(new Set());
   const bulkComplete = async () => {
     const ids = [...selected];
     await Promise.all(ids.map(id => api.patch(`/tasks/${id}`, {status:"Completed"}).catch(()=>{})));
@@ -319,20 +320,41 @@ export default function Tasks() {
           <h1 className="mm-page-title">Tasks</h1>
           <p className="mm-page-sub">{pending} pending · {visible.length} total</p>
         </div>
-        {selected.size > 0 && (
-          <div className="flex items-center gap-2 animate-slide-up">
-            <span className="text-xs font-medium" style={{ color:"var(--mm-gold)" }}>{selected.size} selected</span>
-            <button onClick={bulkComplete} className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1">
-              <Check size={11} /> Complete
-            </button>
-            <button onClick={bulkDelete} className="mm-btn-ghost px-3 py-1.5 text-xs"
-                    style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
-              Delete
-            </button>
-            <button onClick={clearSel} className="mm-icon-btn" style={{ fontSize:16 }}>×</button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <select value={filter.status}
+                  onChange={e => setFilter(f => ({...f, status:e.target.value}))}
+                  className="mm-filter-select">
+            <option value="">All Status</option>
+            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          </select>
+          <select value={filter.group}
+                  onChange={e => setFilter(f => ({...f, group:e.target.value}))}
+                  className="mm-filter-select">
+            <option value="">All Groups</option>
+            {groups.map(g => <option key={g}>{g}</option>)}
+          </select>
+        </div>
       </div>
+
+      {/* ── Bulk action bar ── */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-4 animate-slide-up"
+             style={{ background:"rgba(212,175,55,0.08)", border:"1px solid var(--mm-border-gold)", borderRadius:16 }}>
+          <span className="text-sm font-medium" style={{ color:"var(--mm-gold)" }}>
+            {selected.size} selected
+          </span>
+          <button onClick={bulkComplete} className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5">
+            <Check size={11} /> Mark complete
+          </button>
+          <button onClick={bulkDelete}
+                  className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"
+                  style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
+            <Trash2 size={11} /> Delete all
+          </button>
+          <button onClick={selectAll} className="mm-btn-ghost px-3 py-1.5 text-xs">Select all</button>
+          <button onClick={clearSel} className="mm-icon-btn ml-auto" style={{ fontSize:16 }}>×</button>
+        </div>
+      )}
 
       {/* ── Onboarding tip ── */}
       <OnboardingTip page="tasks" />
@@ -479,7 +501,7 @@ export default function Tasks() {
                       <input type="date" value={t.date||""}
                              onChange={e => update(t.id,{date:e.target.value})}
                              className="mm-input-ghost text-xs"
-                             style={{ color: over?"var(--mm-gold)":"var(--mm-text)" }} />
+                             style={{ color: over?"var(--mm-muted)":"var(--mm-text)" }} />
 
                       {/* Person picker */}
                       <PersonCell task={t} people={people} update={update} />

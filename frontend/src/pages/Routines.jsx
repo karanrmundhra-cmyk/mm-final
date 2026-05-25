@@ -13,7 +13,7 @@ const FREQS = [
   "Every Monday","Every Tuesday","Every Wednesday","Every Thursday","Every Friday",
   "Quarterly","Half-Yearly","Yearly",
 ];
-const EMPTY = { activity:"", group:"", details:"", frequency:"Daily", priority:"Medium", status:"Active" };
+const EMPTY = { activity:"", name:"", group:"", details:"", frequency:"Daily", priority:"Medium", status:"Active" };
 
 const PRIORITY_COLORS = { High:"var(--mm-text)", Medium:"var(--mm-gold)", Low:"var(--mm-muted)" };
 const STATUS_COLORS   = { Active:"var(--mm-gold)", Paused:"var(--mm-muted)", Done:"var(--mm-muted)", Completed:"var(--mm-muted)" };
@@ -109,6 +109,7 @@ export default function Routines() {
       const { data } = await api.post("/parse/routine",{ text:aiText });
       setPreview({ fields:[
         { key:"activity",  label:"Activity",  value:data.activity,            confidence:data.confidence },
+        { key:"name",      label:"Person",    value:data.name,                confidence:"medium" },
         { key:"group",     label:"Group",     value:data.group,               confidence:"medium" },
         { key:"frequency", label:"Frequency", value:data.frequency,           confidence:"medium" },
         { key:"priority",  label:"Priority",  value:data.priority||"Medium",  confidence:"high" },
@@ -220,6 +221,18 @@ export default function Routines() {
               Delete {selected.size}
             </button>
           )}
+          <select value={colFilter.group}
+                  onChange={e => setColFilter(f => ({...f, group:e.target.value}))}
+                  className="mm-filter-select">
+            <option value="">All Groups</option>
+            {allGroups.map(g => <option key={g}>{g}</option>)}
+          </select>
+          <select value={colFilter.status}
+                  onChange={e => setColFilter(f => ({...f, status:e.target.value}))}
+                  className="mm-filter-select">
+            <option value="">All Status</option>
+            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          </select>
         </div>
       </div>
 
