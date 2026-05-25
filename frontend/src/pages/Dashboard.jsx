@@ -32,6 +32,64 @@ const DEFAULT_SECTION_ORDER = [
   "news", "worldclock", "timers",
 ];
 
+/* ── Module-level sub-components (stable refs — no unmount/remount) ─ */
+
+function Section({ id, title, count, extra, children, onToggle, isOpenFn }) {
+  const open = isOpenFn(id);
+  return (
+    <div className="mb-5">
+      <button onClick={() => onToggle(id)}
+              className="w-full flex items-center justify-between py-2 text-left group">
+        <div className="flex items-center gap-2.5">
+          <GripVertical size={13}
+            className="opacity-0 group-hover:opacity-40 transition-opacity cursor-grab flex-shrink-0"
+            style={{ color: "var(--mm-muted)" }} />
+          <span style={{
+            fontSize: 13, fontWeight: 700, letterSpacing: "0.01em",
+            color: "var(--mm-text)", fontFamily: "'Outfit', sans-serif",
+          }}>
+            {title}
+          </span>
+          {count > 0 && (
+            <span style={{
+              background: "var(--mm-surface-3)", color: "var(--mm-muted)",
+              fontSize: 10, borderRadius: 6, padding: "1px 6px",
+            }}>
+              {count}
+            </span>
+          )}
+          {extra}
+        </div>
+        <span style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
+          {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </span>
+      </button>
+      {open && <div className="animate-fade-in">{children}</div>}
+    </div>
+  );
+}
+
+function DraggableSection({ id, children, dragId, dragOverId, onDragStart, onDragEnd, onDragOver, onDrop }) {
+  return (
+    <div
+      draggable
+      onDragStart={() => onDragStart(id)}
+      onDragEnd={onDragEnd}
+      onDragOver={e => onDragOver(e, id)}
+      onDrop={e => onDrop(e, id)}
+      style={{
+        opacity:       dragId === id ? 0.45 : 1,
+        outline:       dragOverId === id && dragId !== id ? "2px solid var(--mm-gold)" : "none",
+        outlineOffset: 4,
+        borderRadius:  12,
+        transition:    "opacity 0.15s, outline 0.1s",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function timeGreeting() {
   const h = new Date().getHours();
@@ -291,60 +349,11 @@ export default function Dashboard() {
     return exp > 0 ? `₹${formatAmount(exp)} spent this month` : null;
   })();
 
-  /* ── Sub-components ── */
-  const Section = ({ id, title, count, extra, children }) => (
-    <div className="mb-5">
-      <button onClick={() => toggle(id)}
-              className="w-full flex items-center justify-between py-2 text-left group">
-        <div className="flex items-center gap-2.5">
-          {/* Grip handle — visible on hover */}
-          <GripVertical size={13}
-            className="opacity-0 group-hover:opacity-40 transition-opacity cursor-grab flex-shrink-0"
-            style={{ color: "var(--mm-muted)" }} />
-          {/* Bold Title Case heading */}
-          <span style={{
-            fontSize: 13, fontWeight: 700, letterSpacing: "0.01em",
-            color: "var(--mm-text)", fontFamily: "'Outfit', sans-serif",
-          }}>
-            {title}
-          </span>
-          {count > 0 && (
-            <span style={{
-              background: "var(--mm-surface-3)", color: "var(--mm-muted)",
-              fontSize: 10, borderRadius: 6, padding: "1px 6px",
-            }}>
-              {count}
-            </span>
-          )}
-          {extra}
-        </div>
-        <span style={{ color: "var(--mm-muted)", opacity: 0.5 }}>
-          {isOpen(id) ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-        </span>
-      </button>
-      {isOpen(id) && <div className="animate-fade-in">{children}</div>}
-    </div>
-  );
-
-  /* Draggable wrapper around each Section */
-  const DraggableSection = ({ id, children }) => (
-    <div
-      draggable
-      onDragStart={() => handleDragStart(id)}
-      onDragEnd={handleDragEnd}
-      onDragOver={e => handleDragOver(e, id)}
-      onDrop={e => handleDrop(e, id)}
-      style={{
-        opacity:       dragId === id ? 0.45 : 1,
-        outline:       dragOverId === id && dragId !== id ? "2px solid var(--mm-gold)" : "none",
-        outlineOffset: 4,
-        borderRadius:  12,
-        transition:    "opacity 0.15s, outline 0.1s",
-      }}
-    >
-      {children}
-    </div>
-  );
+  /* Convenience shorthands passed as props to module-level Section/DraggableSection */
+  const sectionProps  = { onToggle: toggle, isOpenFn: isOpen };
+  const dragProps     = { dragId, dragOverId,
+                          onDragStart: handleDragStart, onDragEnd: handleDragEnd,
+                          onDragOver:  handleDragOver,  onDrop:    handleDrop };
 
   const TaskCheckRow = ({ t, to }) => (
     <div className="mm-row flex items-center gap-3 px-4 py-3 border-b"
@@ -513,316 +522,249 @@ export default function Dashboard() {
 
       {/* ── Draggable sections ── */}
       {sectionOrder.map(sectionId => {
+        const DS = (id, children) => (
+          <DraggableSection key={id} id={id} {...dragProps}>{children}</DraggableSection>
+        );
+        const S = (id, title, children, opts = {}) => (
+          <Section id={id} title={title} {...sectionProps} {...opts}>{children}</Section>
+        );
+
         switch (sectionId) {
 
-          case "overdue":
-            return data?.overdue?.filter(t => !completedIds.has(t.id)).length > 0 ? (
-              <DraggableSection key="overdue" id="overdue">
-                <Section id="overdue" title="Overdue"
-                         count={data.overdue.filter(t => !completedIds.has(t.id)).length}>
-                  <div className="mm-card overflow-hidden">
-                    {data.overdue.filter(t => !completedIds.has(t.id)).map(t => (
-                      <TaskCheckRow key={t.id} t={t} to="/tasks" />
-                    ))}
-                  </div>
-                </Section>
-              </DraggableSection>
-            ) : null;
+          case "overdue": {
+            const rows = data?.overdue?.filter(t => !completedIds.has(t.id)) || [];
+            return rows.length > 0 ? DS("overdue", S("overdue", "Overdue",
+              <div className="mm-card overflow-hidden">
+                {rows.map(t => <TaskCheckRow key={t.id} t={t} to="/tasks" />)}
+              </div>, { count: rows.length })) : null;
+          }
 
-          case "today":
-            return data?.due_today?.filter(t => !completedIds.has(t.id)).length > 0 ? (
-              <DraggableSection key="today" id="today">
-                <Section id="today" title="Today's Tasks"
-                         count={data.due_today.filter(t => !completedIds.has(t.id)).length}>
-                  <div className="mm-card overflow-hidden">
-                    {data.due_today.filter(t => !completedIds.has(t.id)).map(t => (
-                      <TaskCheckRow key={t.id} t={t} to="/tasks" />
-                    ))}
-                  </div>
-                </Section>
-              </DraggableSection>
-            ) : null;
+          case "today": {
+            const rows = data?.due_today?.filter(t => !completedIds.has(t.id)) || [];
+            return rows.length > 0 ? DS("today", S("today", "Today's Tasks",
+              <div className="mm-card overflow-hidden">
+                {rows.map(t => <TaskCheckRow key={t.id} t={t} to="/tasks" />)}
+              </div>, { count: rows.length })) : null;
+          }
 
           case "soon":
-            return data?.due_soon?.length > 0 ? (
-              <DraggableSection key="soon" id="soon">
-                <Section id="soon" title="Coming Up">
-                  <div className="mm-card overflow-hidden">
-                    {data.due_soon.slice(0, 3).map(t => (
-                      <button key={t.id} onClick={() => navigate("/tasks")}
-                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                              style={{ borderColor: "var(--mm-border)" }}>
-                        <span className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ background: "var(--mm-border)" }} />
-                        <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                        <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
-                      </button>
-                    ))}
-                  </div>
-                </Section>
-              </DraggableSection>
-            ) : null;
+            return data?.due_soon?.length > 0 ? DS("soon", S("soon", "Coming Up",
+              <div className="mm-card overflow-hidden">
+                {data.due_soon.slice(0, 3).map(t => (
+                  <button key={t.id} onClick={() => navigate("/tasks")}
+                          className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                          style={{ borderColor: "var(--mm-border)" }}>
+                    <span className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: "var(--mm-border)" }} />
+                    <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
+                    <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                  </button>
+                ))}
+              </div>)) : null;
 
           case "routines":
-            return data?.routines?.length > 0 ? (
-              <DraggableSection key="routines" id="routines">
-                <Section id="routines" title="Today's Routines">
-                  <div className="mm-card overflow-hidden">
-                    {data.routines.map(r => (
-                      <button key={r.id} onClick={() => navigate("/routines")}
-                              className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
-                              style={{ borderColor: "var(--mm-border)" }}>
-                        <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
-                             style={{
-                               borderColor: r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
-                               background:  r.done_today ? "rgba(212,175,55,0.12)" : "transparent",
-                               borderRadius: "50%",
-                             }}>
-                          {r.done_today && (
-                            <span style={{ color: "var(--mm-gold)", fontSize: 9, fontWeight: 700 }}>✓</span>
-                          )}
-                        </div>
-                        <span className="flex-1 text-sm"
-                              style={{ color: "var(--mm-text)", opacity: r.done_today ? 0.5 : 1 }}>
-                          {r.activity}
-                        </span>
-                        {r.streak > 0 && (
-                          <span style={{ color: "var(--mm-gold)", fontSize: 10 }}>🔥{r.streak}</span>
-                        )}
-                        <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{r.group}</span>
-                      </button>
-                    ))}
-                  </div>
-                </Section>
-              </DraggableSection>
-            ) : null;
+            return data?.routines?.length > 0 ? DS("routines", S("routines", "Today's Routines",
+              <div className="mm-card overflow-hidden">
+                {data.routines.map(r => (
+                  <button key={r.id} onClick={() => navigate("/routines")}
+                          className="mm-row w-full flex items-center gap-3 px-3 py-2.5 text-left border-b"
+                          style={{ borderColor: "var(--mm-border)" }}>
+                    <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
+                         style={{
+                           borderColor: r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
+                           background:  r.done_today ? "rgba(212,175,55,0.12)" : "transparent",
+                           borderRadius: "50%",
+                         }}>
+                      {r.done_today && <span style={{ color: "var(--mm-gold)", fontSize: 9, fontWeight: 700 }}>✓</span>}
+                    </div>
+                    <span className="flex-1 text-sm"
+                          style={{ color: "var(--mm-text)", opacity: r.done_today ? 0.5 : 1 }}>
+                      {r.activity}
+                    </span>
+                    {r.streak > 0 && <span style={{ color: "var(--mm-gold)", fontSize: 10 }}>🔥{r.streak}</span>}
+                    <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{r.group}</span>
+                  </button>
+                ))}
+              </div>)) : null;
 
           case "cashflow":
-            return data?.cashflow ? (
-              <DraggableSection key="cashflow" id="cashflow">
-                <Section id="cashflow" title="Financial Overview"
-                  extra={
-                    <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
-                      {["month", "year"].map(v => (
-                        <button key={v} onClick={() => setFinanceView(v)}
-                                style={{
-                                  fontSize: 9, padding: "2px 8px", borderRadius: 20,
-                                  fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
-                                  textTransform: "uppercase",
-                                  background:   financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
-                                  color:        financeView === v ? "#0a0a0a" : "var(--mm-muted)",
-                                  border: "none", cursor: "pointer",
-                                }}>
-                          {v === "month" ? "Month" : "Year"}
-                        </button>
-                      ))}
+            return data?.cashflow ? DS("cashflow", S("cashflow", "Financial Overview",
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(financeView === "year" && yearlyData ? yearlyData : data.cashflow).map(([cat, val]) => (
+                    <button key={cat} onClick={() => navigate("/cash-flow")}
+                            className="mm-card mm-row p-4 text-left">
+                      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                                    color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
+                        {cat}
+                      </div>
+                      <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                        ₹{formatAmount(val)}
+                      </div>
+                    </button>
+                  ))}
+                  <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
+                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                                  color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
+                      Upcoming Payments
                     </div>
-                  }>
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(financeView === "year" && yearlyData ? yearlyData : data.cashflow).map(([cat, val]) => (
-                      <button key={cat} onClick={() => navigate("/cash-flow")}
-                              className="mm-card mm-row p-4 text-left">
-                        <div style={{
-                          fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
-                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
-                        }}>
-                          {cat}
-                        </div>
-                        <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                          ₹{formatAmount(val)}
-                        </div>
+                    <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                      {data.upcoming_payments !== undefined
+                        ? `₹${formatAmount(data.upcoming_payments)}`
+                        : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                    </div>
+                  </button>
+                  <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
+                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                                  color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
+                      Upcoming Receipts
+                    </div>
+                    <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
+                      {data.upcoming_receipts !== undefined
+                        ? `₹${formatAmount(data.upcoming_receipts)}`
+                        : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                    </div>
+                  </button>
+                </div>
+                {financeView === "year" && !yearlyData && (
+                  <p className="text-xs mt-3 px-1 text-center" style={{ color: "var(--mm-muted)" }}>
+                    Year-to-date totals coming soon
+                  </p>
+                )}
+                {spendingInsight && financeView === "month" && (
+                  <p className="text-xs mt-2 px-1" style={{ color: "var(--mm-muted)" }}>
+                    {spendingInsight}
+                  </p>
+                )}
+              </>,
+              {
+                extra: (
+                  <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
+                    {["month", "year"].map(v => (
+                      <button key={v} onClick={() => setFinanceView(v)}
+                              style={{
+                                fontSize: 9, padding: "2px 8px", borderRadius: 20,
+                                fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
+                                textTransform: "uppercase",
+                                background: financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                                color:      financeView === v ? "#0a0a0a" : "var(--mm-muted)",
+                                border: "none", cursor: "pointer",
+                              }}>
+                        {v === "month" ? "Month" : "Year"}
                       </button>
                     ))}
-                    <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-                      <div style={{
-                        fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
-                        color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
-                      }}>
-                        Upcoming Payments
-                      </div>
-                      <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                        {data.upcoming_payments !== undefined
-                          ? `₹${formatAmount(data.upcoming_payments)}`
-                          : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
-                      </div>
-                    </button>
-                    <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-                      <div style={{
-                        fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
-                        color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6,
-                      }}>
-                        Upcoming Receipts
-                      </div>
-                      <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                        {data.upcoming_receipts !== undefined
-                          ? `₹${formatAmount(data.upcoming_receipts)}`
-                          : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
-                      </div>
-                    </button>
                   </div>
-                  {spendingInsight && (
-                    <p className="text-xs mt-2 px-1" style={{ color: "var(--mm-muted)" }}>
-                      {spendingInsight}
-                    </p>
-                  )}
-                </Section>
-              </DraggableSection>
-            ) : null;
+                ),
+              })) : null;
 
           case "reminders_deadlines":
-            return ((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) ? (
-              <DraggableSection key="reminders_deadlines" id="reminders_deadlines">
-                <Section id="reminders_deadlines" title="Today's Reminders">
-                  <div className="mm-card overflow-hidden">
-                    {data?.reminders?.slice(0, 3).map(r => (
-                      <button key={`rem-${r.id}`} onClick={() => navigate("/reminders")}
-                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                              style={{ borderColor: "var(--mm-border)" }}>
-                        <span className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
-                        <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
-                          {r.title}
+            return ((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) ? DS("reminders_deadlines",
+              S("reminders_deadlines", "Today's Reminders",
+                <div className="mm-card overflow-hidden">
+                  {data?.reminders?.slice(0, 3).map(r => (
+                    <button key={`rem-${r.id}`} onClick={() => navigate("/reminders")}
+                            className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                            style={{ borderColor: "var(--mm-border)" }}>
+                      <span className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
+                      <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>{r.title}</span>
+                      <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                                     color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>
+                        Reminder
+                      </span>
+                      {r.fire_at && (
+                        <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>
+                          {new Date(r.fire_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                         </span>
-                        <span style={{
-                          fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
-                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0,
-                        }}>
-                          Reminder
-                        </span>
-                        {r.fire_at && (
-                          <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>
-                            {new Date(r.fire_at).toLocaleTimeString("en-IN", {
-                              hour: "2-digit", minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                    {data?.due_soon?.slice(0, 3).map(t => (
-                      <button key={`dl-${t.id}`} onClick={() => navigate("/tasks")}
-                              className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                              style={{ borderColor: "var(--mm-border)" }}>
-                        <span className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ background: "var(--mm-muted)", opacity: 0.5 }} />
-                        <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>
-                          {t.task}
-                        </span>
-                        <span style={{
-                          fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
-                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0,
-                        }}>
-                          Deadline
-                        </span>
-                        <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
-                      </button>
-                    ))}
-                  </div>
-                </Section>
-              </DraggableSection>
-            ) : null;
+                      )}
+                    </button>
+                  ))}
+                  {data?.due_soon?.slice(0, 3).map(t => (
+                    <button key={`dl-${t.id}`} onClick={() => navigate("/tasks")}
+                            className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
+                            style={{ borderColor: "var(--mm-border)" }}>
+                      <span className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: "var(--mm-muted)", opacity: 0.5 }} />
+                      <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>{t.task}</span>
+                      <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                                     color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>
+                        Deadline
+                      </span>
+                      <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                    </button>
+                  ))}
+                </div>)) : null;
 
           case "quote":
-            return quote ? (
-              <DraggableSection key="quote" id="quote">
-                <Section id="quote" title="Today's Note From The World">
-                  <div className="px-5 py-5"
-                       style={{
-                         borderLeft: "3px solid var(--mm-border-gold)",
-                         background: "var(--mm-surface-2)",
-                         borderRadius: "0 16px 16px 0",
-                       }}>
-                    <p className="mm-font-serif text-base italic"
-                       style={{ color: "var(--mm-text)", lineHeight: 1.7 }}>
-                      "{quote.quote}"
+            return quote ? DS("quote", S("quote", "Today's Note From The World",
+              <>
+                <div className="px-5 py-5"
+                     style={{ borderLeft: "3px solid var(--mm-border-gold)",
+                              background: "var(--mm-surface-2)", borderRadius: "0 16px 16px 0" }}>
+                  <p className="mm-font-serif text-base italic"
+                     style={{ color: "var(--mm-text)", lineHeight: 1.7 }}>
+                    "{quote.quote}"
+                  </p>
+                  {quote.author && (
+                    <p className="text-xs mt-2 uppercase tracking-widest" style={{ color: "var(--mm-muted)" }}>
+                      — {quote.author}
                     </p>
-                    {quote.author && (
-                      <p className="text-xs mt-2 uppercase tracking-widest" style={{ color: "var(--mm-muted)" }}>
-                        — {quote.author}
-                      </p>
-                    )}
-                  </div>
-                  <AffirmationCard />
-                </Section>
-              </DraggableSection>
-            ) : null;
+                  )}
+                </div>
+                <AffirmationCard />
+              </>)) : null;
 
           case "news":
-            return (
-              <DraggableSection key="news" id="news">
-                <Section id="news" title="News">
-                  <div className="space-y-3">
-                    {/* Fixed tab row */}
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {FIXED_NEWS_TABS.map((tab, i) => (
-                        <button key={tab.id}
-                                onClick={() => setActiveNewsTab(i)}
-                                className={`mm-filter-tab ${activeNewsTab === i && !isOthersTab ? "active" : ""}`}>
-                          {tab.label}
-                        </button>
-                      ))}
-                      <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
-                              className={`mm-filter-tab ${isOthersTab ? "active" : ""}`}>
-                        Others
-                      </button>
-                    </div>
-
-                    {/* Others — custom RSS */}
-                    {isOthersTab && (
-                      <div className="flex gap-2">
-                        <input value={customRss} onChange={e => setCustomRss(e.target.value)}
-                               placeholder="Paste a custom RSS feed URL…"
-                               className="mm-form-input flex-1 text-xs" />
-                        <button onClick={() => localStorage.setItem("mm_news_custom_url", customRss)}
-                                className="mm-btn-gold px-4 text-xs">Save</button>
-                      </div>
-                    )}
-
-                    {/* News list */}
-                    <div className="mm-card overflow-hidden">
-                      {news.length === 0
-                        ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
-                        : news.map((item, i) => (
-                            <a key={i}
-                               href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
-                               target="_blank" rel="noopener noreferrer"
-                               className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
-                               style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
-                              <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
-                              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                    style={{ color: "var(--mm-gold)" }}>→</span>
-                            </a>
-                          ))
-                      }
-                    </div>
+            return DS("news", S("news", "News",
+              <div className="space-y-3">
+                <div className="flex items-center gap-1 flex-wrap">
+                  {FIXED_NEWS_TABS.map((tab, i) => (
+                    <button key={tab.id} onClick={() => setActiveNewsTab(i)}
+                            className={`mm-filter-tab ${activeNewsTab === i && !isOthersTab ? "active" : ""}`}>
+                      {tab.label}
+                    </button>
+                  ))}
+                  <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
+                          className={`mm-filter-tab ${isOthersTab ? "active" : ""}`}>
+                    Others
+                  </button>
+                </div>
+                {isOthersTab && (
+                  <div className="flex gap-2">
+                    <input value={customRss} onChange={e => setCustomRss(e.target.value)}
+                           placeholder="Paste a custom RSS feed URL…"
+                           className="mm-form-input flex-1 text-xs" />
+                    <button onClick={() => localStorage.setItem("mm_news_custom_url", customRss)}
+                            className="mm-btn-gold px-4 text-xs">Save</button>
                   </div>
-                </Section>
-              </DraggableSection>
-            );
+                )}
+                <div className="mm-card overflow-hidden">
+                  {news.length === 0
+                    ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
+                    : news.map((item, i) => (
+                        <a key={i}
+                           href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
+                           target="_blank" rel="noopener noreferrer"
+                           className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
+                           style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
+                          <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
+                          <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                style={{ color: "var(--mm-gold)" }}>→</span>
+                        </a>
+                      ))
+                  }
+                </div>
+              </div>));
 
           case "worldclock":
-            return (
-              <DraggableSection key="worldclock" id="worldclock">
-                <Section id="worldclock" title="World Clock">
-                  <WorldClock />
-                </Section>
-              </DraggableSection>
-            );
+            return DS("worldclock", S("worldclock", "World Clock", <WorldClock />));
 
           case "timers":
-            return (
-              <DraggableSection key="timers" id="timers">
-                <Section id="timers" title="Timers">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="mm-card p-5 flex flex-col items-center">
-                      <CountdownTimer />
-                    </div>
-                    <div className="mm-card p-5 flex flex-col items-center">
-                      <CountdownDate />
-                    </div>
-                  </div>
-                </Section>
-              </DraggableSection>
-            );
+            return DS("timers", S("timers", "Timers",
+              <div className="grid grid-cols-2 gap-4">
+                <div className="mm-card p-5 flex flex-col items-center"><CountdownTimer /></div>
+                <div className="mm-card p-5 flex flex-col items-center"><CountdownDate /></div>
+              </div>));
 
           default:
             return null;
