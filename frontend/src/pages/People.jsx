@@ -224,6 +224,12 @@ export default function People() {
                   {p.role || p.company || "—"}
                 </p>
               </div>
+              {selected?.id === p.id && items.length > 0 && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
+                      style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
+                  {items.length}
+                </span>
+              )}
               <ChevronRight size={12} style={{ color:"var(--mm-muted)", opacity:0.5 }} />
             </button>
           ))}
@@ -332,6 +338,39 @@ export default function People() {
                 )}
               </div>
             )}
+
+            {/* Workload summary */}
+            {!itemsLoading && items.length > 0 && (() => {
+              const byType = {};
+              items.forEach(it => { byType[it.type] = (byType[it.type]||0) + 1; });
+              const total = items.length;
+              const LABELS = { task:"Tasks", routine:"Routines", transaction:"Transactions", note:"Notes", reminder:"Reminders" };
+              return (
+                <div className="mm-card p-4 mb-5">
+                  <p className="mm-label mb-3">Workload  ·  {total} linked item{total !== 1 ? "s" : ""}</p>
+                  <div className="space-y-2">
+                    {Object.entries(byType).map(([type, count]) => {
+                      const pct = Math.round((count / total) * 100);
+                      return (
+                        <div key={type}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-xs" style={{ color:"var(--mm-muted)" }}>
+                              {LABELS[type] || type}
+                            </span>
+                            <span className="text-xs font-medium" style={{ color:"var(--mm-gold)" }}>
+                              {count}
+                            </span>
+                          </div>
+                          <div className="mm-budget-bar">
+                            <div className="mm-budget-bar-fill" style={{ width:`${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Linked items */}
             <div>

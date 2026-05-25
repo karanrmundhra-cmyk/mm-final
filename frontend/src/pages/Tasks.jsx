@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus, Trash2, Flag, Paperclip, Check, Loader, GripVertical,
   ChevronRight, ChevronDown, MessageSquare, ArrowUp, ArrowDown,
-  Send, X,
+  Send, X, Copy,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -12,9 +12,12 @@ import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
 import SwipeRow from "@/components/SwipeRow";
 import OnboardingTip from "@/components/OnboardingTip";
+import DateQuickPick from "@/components/DateQuickPick";
 
-const STATUSES = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
-const EMPTY    = { task:"", name:"", date:"", status:"Pending", group:"", details:"", flagged:false };
+const STATUSES   = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
+const PRIORITIES = ["", "P1", "P2", "P3", "P4"];
+const ESTIMATES  = ["", "15m", "30m", "1h", "2h", "4h", "1d"];
+const EMPTY      = { task:"", name:"", date:"", status:"Pending", group:"", details:"", flagged:false, priority:"", estimate:"" };
 
 const STATUS_COLORS = {
   "Pending":     "var(--mm-muted)",
@@ -26,7 +29,7 @@ const STATUS_COLORS = {
   "On Hold":     "var(--mm-muted)",
 };
 
-const COLS = "32px 28px 1fr 110px 120px 90px 100px 88px";
+const COLS = "32px 28px 1fr 110px 120px 90px 100px 108px";
 
 /* ─── Column-header filter dropdown ─────────────────────────── */
 function ColFilter({ label, col, filter, setFilter, values, open, setOpen }) {
@@ -118,6 +121,7 @@ export default function Tasks() {
   const [addingSec,        setAddingSec]        = useState(false);
   const [newSecName,       setNewSecName]       = useState("");
   const [colFilter,        setColFilter]        = useState(null);
+  const [datePickOpen,     setDatePickOpen]     = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -178,9 +182,30 @@ export default function Tasks() {
     update(task.id, { status: ["Completed","Done"].includes(task.status) ? "Pending" : "Completed" });
   };
 
-  const del = async (id) => {
-    try { await api.delete(`/tasks/${id}`); toast.success("Moved to trash"); load(); }
-    catch { toast.error("Failed to delete task"); }
+  const del = (id) => {
+    const task = tasks.find(t => t.id === id);
+    setTasks(ts => ts.filter(t => t.id !== id)); // optimistic
+    let undid = false;
+    toast("Moved to trash", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          undid = true;
+          setTasks(ts => [...ts, task].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
+        },
+      },
+      duration: 4000,
+    });
+    setTimeout(() => { if (!undid) api.delete(`/tasks/${id}`).catch(() => load()); }, 4500);
+  };
+
+  const duplicate = async (task) => {
+    try {
+      const { id, ...rest } = task;
+      await api.post("/tasks", { ...rest, task: `${task.task} (copy)` });
+      toast.success("Task duplicated");
+      load();
+    } catch { toast.error("Failed to duplicate"); }
   };
 
   /* ── Reorder ── */
@@ -475,6 +500,18 @@ export default function Tasks() {
                       {/* Task title + badges */}
                       <div className="flex items-center gap-1.5 min-w-0">
                         {t.flagged && <Flag size={11} style={{ color:"var(--mm-gold)",flexShrink:0 }} />}
+                        {/* Priority badge — click to cycle */}
+                        {t.priority && (
+                          <button
+                            onClick={() => {
+                              const idx = PRIORITIES.indexOf(t.priority);
+                              update(t.id, { priority: PRIORITIES[(idx+1) % PRIORITIES.length] });
+                            }}
+                            className={`mm-est-pill mm-${t.priority.toLowerCase()} flex-shrink-0`}
+                            title="Cycle priority">
+                            {t.priority}
+                          </button>
+                        )}
                         <div className="flex-1 min-w-0">
                           <input value={t.task} onChange={e => update(t.id,{task:e.target.value})}
                                  className="mm-input-ghost text-sm w-full" />
@@ -484,6 +521,18 @@ export default function Tasks() {
                             </div>
                           )}
                         </div>
+                        {/* Estimate pill — click to cycle */}
+                        {t.estimate && (
+                          <button
+                            onClick={() => {
+                              const idx = ESTIMATES.indexOf(t.estimate);
+                              update(t.id, { estimate: ESTIMATES[(idx+1) % ESTIMATES.length] });
+                            }}
+                            className="mm-est-pill flex-shrink-0"
+                            title="Cycle time estimate">
+                            {t.estimate}
+                          </button>
+                        )}
                         {t.confidence && t.confidence!=="high" &&
                           <ConfidenceBadge level={t.confidence} size="xs" />}
                         {t.attachments?.length > 0 &&
@@ -517,10 +566,34 @@ export default function Tasks() {
                         {STATUSES.map(s => <option key={s}>{s}</option>)}
                       </select>
 
-                      {/* Actions: ↑↓ flag comment trash grip */}
+                      {/* Actions: ↑↓ priority estimate flag comment duplicate trash grip */}
                       <div className="flex items-center gap-0.5 justify-end">
                         <button onClick={() => moveUp(t.id)}   title="Move up"   className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowUp   size={10} /></button>
                         <button onClick={() => moveDown(t.id)} title="Move down" className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowDown size={10} /></button>
+                        {/* Priority cycle */}
+                        <button
+                          onClick={() => {
+                            const idx = PRIORITIES.indexOf(t.priority || "");
+                            update(t.id, { priority: PRIORITIES[(idx+1) % PRIORITIES.length] });
+                          }}
+                          title={`Priority: ${t.priority || "none"}`}
+                          className={`mm-icon-btn mm-${(t.priority||"").toLowerCase()}`}>
+                          <span style={{ fontSize:9, fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+                            {t.priority || "P—"}
+                          </span>
+                        </button>
+                        {/* Estimate cycle */}
+                        <button
+                          onClick={() => {
+                            const idx = ESTIMATES.indexOf(t.estimate || "");
+                            update(t.id, { estimate: ESTIMATES[(idx+1) % ESTIMATES.length] });
+                          }}
+                          title={`Estimate: ${t.estimate || "none"}`}
+                          className="mm-icon-btn" style={{ color:"var(--mm-muted)", fontSize:9 }}>
+                          <span style={{ fontSize:8, fontFamily:"'Outfit',sans-serif" }}>
+                            {t.estimate || "⏱"}
+                          </span>
+                        </button>
                         <button onClick={() => update(t.id,{flagged:!t.flagged})}
                                 className={`mm-icon-btn ${t.flagged?"active":""}`}>
                           <Flag size={11} />
@@ -530,6 +603,10 @@ export default function Tasks() {
                                 className="mm-icon-btn"
                                 style={{ color:commentCount>0?"var(--mm-gold)":"var(--mm-muted)" }}>
                           <MessageSquare size={11} />
+                        </button>
+                        <button onClick={() => duplicate(t)} title="Duplicate task"
+                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
+                          <Copy size={10} />
                         </button>
                         <button onClick={() => del(t.id)} className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
                           <Trash2 size={11} />
@@ -648,7 +725,8 @@ export default function Tasks() {
              style={{ gridTemplateColumns:COLS, borderBottom:"1px solid var(--mm-border)" }}>
           <span></span><span></span>
           <span style={{ color:"var(--mm-gold)" }}>New task</span>
-          <span>Due</span><span>Person</span><span>Group</span><span>Status</span><span></span>
+          <span>Due</span><span>Person</span><span>Group</span><span>Status</span>
+          <span>Priority</span>
         </div>
         <div className="grid items-center px-3 py-2"
              style={{ gridTemplateColumns:COLS, minWidth:740 }}>
@@ -661,9 +739,38 @@ export default function Tasks() {
                  onKeyDown={e => e.key==="Enter" && addManual()}
                  placeholder="Task title…"
                  className="mm-input-ghost text-sm" />
-          <input type="date" value={newRow.date}
-                 onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
-                 className="mm-input-ghost text-xs" />
+          <div className="relative">
+            <input type="date" value={newRow.date}
+                   onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
+                   onFocus={() => setDatePickOpen(true)}
+                   onBlur={() => setTimeout(() => setDatePickOpen(false), 200)}
+                   className="mm-input-ghost text-xs w-full" />
+            {datePickOpen && (
+              <div className="absolute left-0 z-50 mt-1 p-2 rounded-xl shadow-2xl"
+                   style={{ background:"var(--mm-surface-2)", border:"1px solid var(--mm-border-gold)", minWidth:160 }}>
+                {[
+                  { label:"Today",    fn:() => { const d=new Date(); return d.toISOString().slice(0,10); } },
+                  { label:"Tomorrow", fn:() => { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); } },
+                  { label:"This Fri", fn:() => { const d=new Date(); const diff=(5-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff); return d.toISOString().slice(0,10); } },
+                  { label:"+7 days",  fn:() => { const d=new Date(); d.setDate(d.getDate()+7); return d.toISOString().slice(0,10); } },
+                ].map(({ label, fn }) => (
+                  <button key={label}
+                          onMouseDown={() => { setNewRow(r=>({...r,date:fn()})); setDatePickOpen(false); }}
+                          className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors hover:opacity-80"
+                          style={{ color:"var(--mm-text)" }}>
+                    {label}
+                  </button>
+                ))}
+                {newRow.date && (
+                  <button onMouseDown={() => { setNewRow(r=>({...r,date:""})); setDatePickOpen(false); }}
+                          className="w-full text-left px-3 py-1.5 text-xs rounded-lg"
+                          style={{ color:"var(--mm-muted)" }}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <input value={newRow.name}
                  onChange={e => setNewRow(r=>({...r,name:e.target.value}))}
                  placeholder="Person"
@@ -681,6 +788,13 @@ export default function Tasks() {
                   className="mm-input-ghost text-xs mm-status-select"
                   style={{ color:STATUS_COLORS[newRow.status]||"var(--mm-muted)" }}>
             {STATUSES.map(s => <option key={s}>{s}</option>)}
+          </select>
+          {/* Priority for new row */}
+          <select value={newRow.priority}
+                  onChange={e => setNewRow(r => ({...r, priority:e.target.value}))}
+                  className="mm-input-ghost text-xs mm-status-select"
+                  style={{ color: newRow.priority ? "var(--mm-gold)" : "var(--mm-muted)" }}>
+            {PRIORITIES.map(p => <option key={p} value={p}>{p || "P—"}</option>)}
           </select>
           <button onClick={addManual}
                   className="mm-btn-gold flex items-center justify-center gap-1 text-xs px-3 py-1.5">

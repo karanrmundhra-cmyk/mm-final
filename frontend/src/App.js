@@ -38,6 +38,15 @@ const W = ({ C }) => <ErrorBoundary><C /></ErrorBoundary>;
 function Root() {
   const [booting, setBooting] = useState(true);
   useEffect(() => {
+    // Restore persisted display preferences on every load
+    const html = document.documentElement;
+    if (localStorage.getItem("mm_theme") === "light") html.classList.add("light");
+    const density = localStorage.getItem("mm_density");
+    if (density === "compact")      html.classList.add("density-compact");
+    if (density === "comfortable")  html.classList.add("density-comfortable");
+    if (localStorage.getItem("mm_oled") === "1") html.classList.add("oled");
+  }, []);
+  useEffect(() => {
     const t = setTimeout(() => setBooting(false), 1400);
     return () => clearTimeout(t);
   }, []);

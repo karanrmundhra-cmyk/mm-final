@@ -304,3 +304,86 @@ html, body {
 /* ── SELECT APPEARANCE ─────────────────────────────────────────────────── */
 select                    { appearance: none; -webkit-appearance: none; }
 select option             { background: #16161A; color: #F0EDE8; }
+
+/* ── OLED TRUE BLACK ────────────────────────────────────────────────────── */
+.oled {
+  --mm-bg:        #000000;
+  --mm-surface:   #080808;
+  --mm-surface-2: #0D0D0D;
+  --mm-surface-3: #111111;
+}
+
+/* ── DENSITY MODES ──────────────────────────────────────────────────────── */
+html.density-compact   .mm-row { padding-top: 4px  !important; padding-bottom: 4px  !important; }
+html.density-compact   .mm-form-input { padding: 7px 12px; }
+html.density-compact   .mm-ai-input  { padding: 8px 14px; }
+html.density-comfortable .mm-row { padding-top: 14px !important; padding-bottom: 14px !important; }
+html.density-comfortable .mm-form-input { padding: 14px 20px; }
+
+/* ── PRIORITY INDICATORS (P1–P4) ────────────────────────────────────────── */
+.mm-p1 { color: var(--mm-gold); opacity: 1; }
+.mm-p2 { color: var(--mm-gold); opacity: 0.6; }
+.mm-p3 { color: var(--mm-muted); opacity: 0.9; }
+.mm-p4 { color: var(--mm-muted); opacity: 0.4; }
+
+/* ── TIME ESTIMATE PILL ─────────────────────────────────────────────────── */
+.mm-est-pill {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  background: rgba(212,175,55,0.1); color: var(--mm-gold);
+  transition: background 0.15s, color 0.15s;
+}
+.mm-est-pill:hover { background: rgba(212,175,55,0.2); }
+.mm-est-pill.unset { background: rgba(255,255,255,0.04); color: var(--mm-muted); }
+
+/* ── HABIT HEATMAP ──────────────────────────────────────────────────────── */
+.mm-heat-cell {
+  width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+  transition: transform 0.15s var(--spring), opacity 0.15s;
+}
+.mm-heat-cell:hover { transform: scale(1.4); z-index: 1; position: relative; }
+
+/* ── BUDGET BAR ─────────────────────────────────────────────────────────── */
+.mm-budget-bar { height: 3px; border-radius: 4px; background: var(--mm-surface-3); overflow: hidden; margin-top: 8px; }
+.mm-budget-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--mm-gold-dark), var(--mm-gold)); transition: width 0.8s var(--ease-out); }
+
+/* ── DATE QUICK-PICK PILLS ──────────────────────────────────────────────── */
+.mm-date-pill {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px; cursor: pointer; flex-shrink: 0;
+  border: 1px solid var(--mm-border); color: var(--mm-muted);
+  font-family: 'Outfit', sans-serif;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.mm-date-pill:hover, .mm-date-pill.active { border-color: var(--mm-border-gold); color: var(--mm-gold); background: rgba(212,175,55,0.08); }
+
+/* ── QUICK NOTE ─────────────────────────────────────────────────────────── */
+.mm-quick-note textarea {
+  width: 100%; min-height: 140px; background: transparent; border: none;
+  color: var(--mm-text); outline: none; resize: none;
+  font-family: 'Outfit', sans-serif; font-size: 14px; line-height: 1.8;
+}
+.mm-quick-note textarea::placeholder { color: var(--mm-muted); }
+
+/* ── REVIEW BANNER ──────────────────────────────────────────────────────── */
+.mm-review-banner {
+  border: 1px solid var(--mm-border-gold); border-radius: 20px; padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.07) 0%, transparent 100%);
+}
+
+/* ── ROW LIFT (stronger hover for table rows) ───────────────────────────── */
+.mm-row-lift { transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out); position: relative; }
+.mm-row-lift:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 1; }
+
+/* ── ADDITIONAL ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes completeFlash { 0% { background:transparent } 35% { background:rgba(212,175,55,0.14) } 100% { background:transparent } }
+@keyframes overdueRing   { 0%,100% { box-shadow:0 0 0 0 rgba(212,175,55,0) } 55% { box-shadow:0 0 0 3px rgba(212,175,55,0.28) } }
+@keyframes streakPop     { 0%{transform:scale(1)rotate(0deg)} 25%{transform:scale(1.45)rotate(-4deg)} 60%{transform:scale(1.2)rotate(2deg)} 100%{transform:scale(1)rotate(0deg)} }
+@keyframes ringDraw      { from{stroke-dashoffset:var(--dash-total,999)} to{stroke-dashoffset:var(--dash-offset,0)} }
+
+.animate-complete-flash { animation: completeFlash 0.55s ease-out; }
+.animate-overdue-ring   { animation: overdueRing 2.2s ease-in-out infinite; }
+.animate-streak-pop     { animation: streakPop 0.55s var(--spring); }
+.animate-ring-draw      { animation: ringDraw 1s 0.4s var(--ease-out) both; }

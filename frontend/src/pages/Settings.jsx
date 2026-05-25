@@ -16,6 +16,8 @@ export default function Settings() {
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState("Profile");
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [density, setDensityState] = useState(() => localStorage.getItem("mm_density") || "default");
+  const [oled,    setOledState]    = useState(() => localStorage.getItem("mm_oled") === "1");
 
   const TABS = ["Profile", "Appearance", "Telegram", "Export", "Account", "People", "Trash"];
 
@@ -87,6 +89,23 @@ export default function Settings() {
     save({ theme: isLight ? "dark" : "light" });
   };
 
+  const applyDensity = (d) => {
+    const html = document.documentElement;
+    html.classList.remove("density-compact", "density-comfortable");
+    if (d === "compact")      html.classList.add("density-compact");
+    if (d === "comfortable")  html.classList.add("density-comfortable");
+    localStorage.setItem("mm_density", d);
+    setDensityState(d);
+  };
+
+  const toggleOled = () => {
+    const html = document.documentElement;
+    html.classList.toggle("oled");
+    const next = html.classList.contains("oled");
+    localStorage.setItem("mm_oled", next ? "1" : "0");
+    setOledState(next);
+  };
+
   if (loading) return <LoadingPage />;
 
   const theme = document.documentElement.classList.contains("light") ? "light" : "dark";
@@ -143,6 +162,7 @@ export default function Settings() {
       {/* Appearance */}
       {tab === "Appearance" && (
         <div className="space-y-4">
+          {/* Theme */}
           <div className="mm-card p-4 flex items-center justify-between">
             <div>
               <p className="text-sm font-medium" style={{ color: "var(--mm-text)" }}>Theme</p>
@@ -152,6 +172,57 @@ export default function Settings() {
                     className="px-4 py-2 rounded-lg text-sm font-medium"
                     style={{ background: "var(--mm-gold)", color: "#0A0A0A" }}>
               Switch to {theme === "dark" ? "Light" : "Dark"}
+            </button>
+          </div>
+
+          {/* Row density */}
+          <div className="mm-card p-4">
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--mm-text)" }}>Row Density</p>
+            <p className="text-xs mb-3" style={{ color: "var(--mm-muted)" }}>Adjust spacing in tables and lists</p>
+            <div className="flex gap-2">
+              {[
+                { key:"compact",     label:"Compact",     desc:"Tighter rows" },
+                { key:"default",     label:"Default",     desc:"Balanced" },
+                { key:"comfortable", label:"Comfortable", desc:"Spacious rows" },
+              ].map(({ key, label, desc }) => {
+                const active = density === key;
+                return (
+                  <button key={key} onClick={() => applyDensity(key)}
+                          className="flex-1 px-3 py-3 rounded-xl text-center transition-all"
+                          style={{
+                            background: active ? "rgba(212,175,55,0.12)" : "var(--mm-surface-2)",
+                            border: active ? "1px solid var(--mm-border-gold)" : "1px solid var(--mm-border)",
+                          }}>
+                    <p className="text-sm font-medium mb-0.5" style={{ color: active ? "var(--mm-gold)" : "var(--mm-text)" }}>
+                      {label}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* OLED mode */}
+          <div className="mm-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--mm-text)" }}>OLED True Black</p>
+              <p className="text-xs" style={{ color: "var(--mm-muted)" }}>
+                Pure #000 background — saves battery on OLED screens
+              </p>
+            </div>
+            <button onClick={toggleOled}
+                    className="relative w-11 h-6 rounded-full transition-all flex-shrink-0"
+                    style={{
+                      background: oled ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                      border: "1px solid var(--mm-border)",
+                    }}>
+              <span className="absolute top-0.5 rounded-full transition-all"
+                    style={{
+                      width: 20, height: 20,
+                      background: "#0A0A0A",
+                      left: oled ? 18 : 2,
+                    }} />
             </button>
           </div>
 

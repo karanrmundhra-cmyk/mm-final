@@ -79,10 +79,14 @@ export default function CashFlow() {
   const [aiLoading, setAiLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [newRow, setNewRow]   = useState({ ...EMPTY });
-  const [colFilter, setColFilter] = useState({ category:"", vendor:"", mode:"" });
+  const [colFilter, setColFilter]   = useState({ category:"", vendor:"", mode:"" });
   const [filterOpen, setFilterOpen] = useState(null);
-  const [monthly, setMonthly] = useState([]);
-  const [splitting, setSplitting] = useState(null);
+  const [monthly, setMonthly]       = useState([]);
+  const [splitting, setSplitting]   = useState(null);
+  const [budgets, setBudgets]       = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mm_budgets") || "{}"); } catch { return {}; }
+  });
+  const [editingBudget, setEditingBudget] = useState(null); // cat being edited
 
   const load = useCallback(async () => {
     try {
@@ -174,6 +178,13 @@ export default function CashFlow() {
 
   const exportCsv = () => window.open(`${api.defaults.baseURL}/export/cashflow.csv`,"_blank");
 
+  const saveBudget = (cat, val) => {
+    const updated = { ...budgets, [cat]: parseFloat(val) || 0 };
+    setBudgets(updated);
+    localStorage.setItem("mm_budgets", JSON.stringify(updated));
+    setEditingBudget(null);
+  };
+
   // Unique values for filter dropdowns
   const allVendors  = useMemo(() => [...new Set(txns.map(t=>t.vendor).filter(Boolean))], [txns]);
   const allModes    = useMemo(() => [...new Set(txns.map(t=>t.mode).filter(Boolean))],   [txns]);
@@ -253,27 +264,58 @@ export default function CashFlow() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {CATS.map((cat) => {
           const sparkValues = monthly.map(m => m[cat] || 0);
+          const spent  = totals[cat] || 0;
+          const budget = budgets[cat] || 0;
+          const pct    = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
           return (
-            <button key={cat}
-                    onClick={() => setColFilter(f => ({ ...f, category: f.category===cat ? "" : cat }))}
-                    title={`Filter by ${cat}`}
-                    className="mm-card p-4 text-left transition-all"
-                    style={{
-                      background: colFilter.category===cat ? `${CAT_COLORS[cat]}12` : "var(--mm-surface-2)",
-                      borderColor: colFilter.category===cat ? `${CAT_COLORS[cat]}55` : "var(--mm-border)",
-                      boxShadow: colFilter.category===cat ? `0 4px 20px ${CAT_COLORS[cat]}22` : "var(--elev-1)",
-                    }}>
-              <div className="mm-label mb-2" style={{ color:"var(--mm-muted)" }}>{cat}</div>
-              <div className="text-xl font-light mm-font-display" style={{ color:CAT_COLORS[cat] }}>
-                ₹{formatAmount(totals[cat]||0)}
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <Sparkline values={sparkValues} color={CAT_COLORS[cat]} width={72} height={20} />
-                <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>
-                  {monthly.length ? monthly[monthly.length-1].month : ""}
-                </span>
-              </div>
-            </button>
+            <div key={cat} className="mm-card p-4 text-left transition-all"
+                 style={{
+                   background: colFilter.category===cat ? `${CAT_COLORS[cat]}12` : "var(--mm-surface-2)",
+                   borderColor: colFilter.category===cat ? `${CAT_COLORS[cat]}55` : "var(--mm-border)",
+                   boxShadow: colFilter.category===cat ? `0 4px 20px ${CAT_COLORS[cat]}22` : "var(--elev-1)",
+                 }}>
+              <button className="w-full text-left"
+                      onClick={() => setColFilter(f => ({ ...f, category: f.category===cat ? "" : cat }))}>
+                <div className="mm-label mb-2" style={{ color:"var(--mm-muted)" }}>{cat}</div>
+                <div className="text-xl font-light mm-font-display" style={{ color:CAT_COLORS[cat] }}>
+                  ₹{formatAmount(spent)}
+                </div>
+                {budget > 0 && (
+                  <div className="mt-1">
+                    <div className="mm-budget-bar">
+                      <div className="mm-budget-bar-fill" style={{ width:`${pct}%` }} />
+                    </div>
+                    <p className="text-xs mt-1" style={{ color:"var(--mm-muted)", fontSize:9 }}>
+                      {Math.round(pct)}% of ₹{formatAmount(budget)} budget
+                    </p>
+                  </div>
+                )}
+                <div className="mt-2 flex items-center justify-between">
+                  <Sparkline values={sparkValues} color={CAT_COLORS[cat]} width={60} height={18} />
+                  <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>
+                    {monthly.length ? monthly[monthly.length-1].month : ""}
+                  </span>
+                </div>
+              </button>
+              {/* Budget set button */}
+              {editingBudget === cat ? (
+                <form onSubmit={e => { e.preventDefault(); saveBudget(cat, e.target.budget.value); }}
+                      className="flex gap-1 mt-2">
+                  <input name="budget" type="number" defaultValue={budget || ""}
+                         placeholder="Monthly ₹"
+                         autoFocus
+                         className="flex-1 bg-transparent text-xs outline-none border-b"
+                         style={{ borderColor:"var(--mm-border)", color:"var(--mm-text)", paddingBottom:2 }}
+                         onBlur={e => saveBudget(cat, e.target.value)} />
+                </form>
+              ) : (
+                <button onClick={() => setEditingBudget(cat)}
+                        className="mt-2 text-xs"
+                        style={{ color:"var(--mm-muted)", opacity:0.5, fontSize:9 }}>
+                  {budget > 0 ? "Edit budget" : "+ Set budget"}
+                </button>
+              )}
+            </div>
           );
         })}
       </div>

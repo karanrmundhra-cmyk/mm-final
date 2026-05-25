@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Plus, Trash2, Check, Loader, Flag, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, Check, Loader, Flag, ChevronDown, ArrowUp, ArrowDown, Calendar } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import EditablePreview from "@/components/EditablePreview";
@@ -80,8 +80,10 @@ export default function Routines() {
   const [newRow, setNewRow]     = useState({ ...EMPTY });
   const [colFilter, setColFilter] = useState({ group:"", frequency:"", priority:"", status:"" });
   const [filterOpen, setFilterOpen] = useState(null);
-  const [groups, setGroups]     = useState([]);
-  const [selected, setSelected] = useState(new Set());
+  const [groups,    setGroups]    = useState([]);
+  const [selected,  setSelected]  = useState(new Set());
+  const [heatmap,   setHeatmap]   = useState([]); // [{date, count, total}]
+  const [showHeat,  setShowHeat]  = useState(false);
 
   const today = new Date().toISOString().slice(0,10);
 
@@ -101,6 +103,32 @@ export default function Routines() {
   }, [today]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Habit heatmap — try to fetch 90-day log history
+  useEffect(() => {
+    const end   = new Date().toISOString().slice(0, 10);
+    const start = new Date(Date.now() - 89 * 86400000).toISOString().slice(0, 10);
+    api.get("/routines/logs", { params: { start_date: start, end_date: end } })
+      .then(r => {
+        if (!Array.isArray(r.data) || r.data.length === 0) return;
+        // Group by date and count done vs total
+        const map = {};
+        r.data.forEach(entry => {
+          const d = entry.date || today;
+          if (!map[d]) map[d] = { done: 0, total: 0 };
+          map[d].total++;
+          if (entry.done) map[d].done++;
+        });
+        // Build 90-day array
+        const days = Array.from({ length: 90 }, (_, i) => {
+          const d = new Date(Date.now() - (89 - i) * 86400000).toISOString().slice(0, 10);
+          return { date: d, ...(map[d] || { done: 0, total: 0 }) };
+        });
+        setHeatmap(days);
+        setShowHeat(true);
+      })
+      .catch(() => {}); // gracefully ignore if endpoint not supported
+  }, [today]); // eslint-disable-line
 
   const parseAi = async () => {
     if (!aiText.trim()) return;
@@ -139,10 +167,23 @@ export default function Routines() {
     catch { /* optimistic */ }
   };
 
+  const STREAK_MILESTONES = [7, 14, 21, 30, 60, 90, 100, 180, 365];
   const logDone = async (id, done) => {
     setLogs(l => ({...l,[id]:done}));
-    try { await api.post(`/routines/${id}/log`,{ date:today,done }); }
-    catch { toast.error("Failed to save log"); }
+    try {
+      await api.post(`/routines/${id}/log`,{ date:today,done });
+      if (done) {
+        const routine = routines.find(r => r.id === id);
+        const newStreak = (routine?.streak || 0) + 1;
+        if (STREAK_MILESTONES.includes(newStreak)) {
+          toast(`🔥 ${newStreak}-day streak on "${routine?.activity}"!`, {
+            description: newStreak >= 30 ? "Incredible consistency." : "Keep it up!",
+            duration: 5000,
+          });
+          setRoutines(rs => rs.map(r => r.id===id ? {...r, streak:newStreak} : r));
+        }
+      }
+    } catch { toast.error("Failed to save log"); }
   };
 
   const del = async (id) => {
@@ -257,6 +298,47 @@ export default function Routines() {
             </div>
           </div>
           {completionPct === 100 && <span style={{ fontSize:28 }}>🔥</span>}
+        </div>
+      )}
+
+      {/* ── 90-day heatmap ── */}
+      {showHeat && heatmap.length > 0 && (
+        <div className="mm-card p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Calendar size={12} style={{ color:"var(--mm-muted)" }} />
+              <span className="mm-label">90-day habit history</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="mm-heat-cell" style={{ background:"var(--mm-surface-3)" }} />
+              <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>none</span>
+              <span className="mm-heat-cell" style={{ background:"rgba(212,175,55,0.35)" }} />
+              <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>partial</span>
+              <span className="mm-heat-cell" style={{ background:"var(--mm-gold)" }} />
+              <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>all done</span>
+            </div>
+          </div>
+          {/* 13 weeks × 7 rows grid */}
+          <div className="flex gap-0.5 flex-wrap" style={{ maxHeight: 90 }}>
+            {heatmap.map(day => {
+              const pct = day.total > 0 ? day.done / day.total : 0;
+              const bg  = day.total === 0
+                ? "var(--mm-surface-3)"
+                : pct === 0
+                  ? "rgba(212,175,55,0.08)"
+                  : pct < 0.5
+                    ? "rgba(212,175,55,0.25)"
+                    : pct < 1
+                      ? "rgba(212,175,55,0.55)"
+                      : "var(--mm-gold)";
+              return (
+                <div key={day.date}
+                     className="mm-heat-cell"
+                     title={`${day.date}: ${day.done}/${day.total} done`}
+                     style={{ background: bg }} />
+              );
+            })}
+          </div>
         </div>
       )}
 

@@ -15,6 +15,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import AiChat from "@/components/AiChat";
 import ProjectSelector from "@/components/ProjectSelector";
 import VoiceCapture from "@/components/VoiceCapture";
+import QuickNote from "@/components/QuickNote";
 
 const NAV = [
   { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
@@ -40,6 +41,8 @@ export default function AppShell() {
   const [showAi, setShowAi] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showQuickNote, setShowQuickNote] = useState(false);
+  const [navBadges, setNavBadges] = useState({ tasks: 0, reminders: 0 });
   const [theme, setTheme] = useState(() => localStorage.getItem("mm_theme") || "dark");
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
@@ -51,6 +54,22 @@ export default function AppShell() {
 
   useEffect(() => {
     api.get("/pending-review/count").then(r => setPendingReview(r.data.count)).catch(() => {});
+  }, []);
+
+  // Nav badge counts — tasks due today + reminders today
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const { data } = await api.get("/dashboard");
+        setNavBadges({
+          tasks:     (data.due_today?.length || 0) + (data.overdue?.length || 0),
+          reminders: data.reminders?.length || 0,
+        });
+      } catch {}
+    };
+    fetchBadges();
+    const iv = setInterval(fetchBadges, 5 * 60 * 1000); // refresh every 5 min
+    return () => clearInterval(iv);
   }, []);
 
   // Live reminder polling
@@ -107,7 +126,8 @@ export default function AppShell() {
       if (ctrl && e.key === "k") { e.preventDefault(); setShowSearch(true); return; }
       if (ctrl && e.key === "n") { e.preventDefault(); setShowQuickAdd(true); return; }
       if (ctrl && e.key === "/") { e.preventDefault(); setShowShortcuts(s => !s); return; }
-      if (e.key === "Escape")    { setShowQuickAdd(false); setShowSearch(false); setShowAi(false); setShowVoice(false); setShowShortcuts(false); return; }
+      if (ctrl && e.shiftKey && e.key === "N") { e.preventDefault(); setShowQuickNote(s => !s); return; }
+      if (e.key === "Escape")    { setShowQuickAdd(false); setShowSearch(false); setShowAi(false); setShowVoice(false); setShowShortcuts(false); setShowQuickNote(false); return; }
 
       /* Cmd/Ctrl + 1-9 → navigate */
       if (ctrl) {
@@ -173,7 +193,11 @@ export default function AppShell() {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
           {NAV.map(({ to, icon: Icon, label }) => {
-            const hasBadge = label === "Reports" && pendingReview > 0;
+            const badgeCount = label === "Reports"   ? (pendingReview > 0 ? pendingReview : 0)
+                             : label === "Tasks"     ? navBadges.tasks
+                             : label === "Reminders" ? navBadges.reminders
+                             : 0;
+            const hasBadge = badgeCount > 0;
             return (
               <NavLink
                 key={to} to={to} end={to === "/"}
@@ -200,7 +224,7 @@ export default function AppShell() {
                       <span className="text-xs px-1.5 py-0.5"
                             style={{ background: "rgba(212,175,55,0.12)", color: "var(--mm-gold)",
                                      fontSize: 9, borderRadius: 8 }}>
-                        {pendingReview}
+                        {badgeCount}
                       </span>
                     )}
                   </>
@@ -365,6 +389,7 @@ export default function AppShell() {
       {showAi        && <AiChat onClose={() => setShowAi(false)} />}
       {showVoice     && <VoiceCapture onClose={() => setShowVoice(false)} />}
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
+      {showQuickNote && <QuickNote onClose={() => setShowQuickNote(false)} />}
 
       {/* ── PWA Install banner ── */}
       {showInstall && (
@@ -429,12 +454,13 @@ function SidebarBtn({ icon: Icon, label, onClick, gold }) {
 }
 
 const SHORTCUTS = [
-  { keys: ["⌘", "K"],   desc: "Global search" },
-  { keys: ["⌘", "N"],   desc: "Quick add" },
-  { keys: ["⌘", "1-9"], desc: "Navigate to section" },
-  { keys: ["⌘", "/"],   desc: "Toggle this panel" },
-  { keys: ["Esc"],       desc: "Close any modal" },
-  { keys: ["Enter"],     desc: "Submit / save form" },
+  { keys: ["⌘", "K"],     desc: "Global search" },
+  { keys: ["⌘", "N"],     desc: "Quick add task" },
+  { keys: ["⌘", "⇧", "N"],desc: "Scratch pad note" },
+  { keys: ["⌘", "1–9"],   desc: "Navigate to section" },
+  { keys: ["⌘", "/"],     desc: "Toggle shortcuts" },
+  { keys: ["Esc"],         desc: "Close any modal" },
+  { keys: ["Enter"],       desc: "Submit / save form" },
 ];
 
 function ShortcutsModal({ onClose }) {

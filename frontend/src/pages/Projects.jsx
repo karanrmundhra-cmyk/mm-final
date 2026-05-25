@@ -39,13 +39,19 @@ export default function Projects() {
             api.get("/routines",     { params: { project_id: p.id } }),
             api.get("/notes",        { params: { project_id: p.id } }),
             api.get("/transactions", { params: { project_id: p.id } }),
-          ]).then(([t, r, n, tr]) => ({
-            id: p.id,
-            tasks:        t.data.filter(x => !["Completed","Done"].includes(x.status)).length,
-            routines:     r.data.filter(x => x.status === "Active").length,
-            notes:        n.data.length,
-            transactions: tr.data.length,
-          }))
+          ]).then(([t, r, n, tr]) => {
+            const allTasks  = t.data || [];
+            const doneTasks = allTasks.filter(x => ["Completed","Done"].includes(x.status));
+            return {
+              id: p.id,
+              tasks:        allTasks.filter(x => !["Completed","Done"].includes(x.status)).length,
+              tasksDone:    doneTasks.length,
+              tasksTotal:   allTasks.length,
+              routines:     r.data.filter(x => x.status === "Active").length,
+              notes:        n.data.length,
+              transactions: tr.data.length,
+            };
+          })
         )
       );
       const c = {};
@@ -297,6 +303,24 @@ export default function Projects() {
                       value={c.transactions ?? "—"}
                       color={p.color} />
                   </div>
+
+                  {/* Task completion progress bar */}
+                  {c.tasksTotal > 0 && (
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs" style={{ color: "var(--mm-muted)", fontSize: 10 }}>
+                          Task progress
+                        </span>
+                        <span className="text-xs font-medium" style={{ color: "var(--mm-gold)", fontSize: 10 }}>
+                          {c.tasksDone}/{c.tasksTotal}
+                        </span>
+                      </div>
+                      <div className="mm-budget-bar">
+                        <div className="mm-budget-bar-fill"
+                             style={{ width: `${Math.round((c.tasksDone / c.tasksTotal) * 100)}%` }} />
+                      </div>
+                    </div>
+                  )}
 
                   {/* Navigation shortcuts */}
                   <div className="flex gap-1.5 flex-wrap mt-auto">
