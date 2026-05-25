@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 
 export default function AiChat({ onClose }) {
   const [messages, setMessages] = useState([
-    { role: "assistant", text: "Hi! I'm your Mind Matters AI. Ask me anything about your tasks, finances, or schedule." }
+    { role: "assistant", text: "Hi, I'm your Chief of Staff. Ask me anything about your tasks, finances, routines, or schedule — I'm here to help you run your day." }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function AiChat({ onClose }) {
           <div className="flex items-center gap-2">
             <Zap size={16} style={{ color: "var(--mm-gold)" }} />
             <span className="font-semibold text-sm mm-font-display" style={{ color: "var(--mm-text)" }}>
-              AI Assistant
+              Chief of Staff
             </span>
           </div>
           <button onClick={onClose} style={{ color: "var(--mm-muted)" }}><X size={16} /></button>

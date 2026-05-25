@@ -217,7 +217,7 @@ export default function AppShell() {
                 <SidebarBtn icon={Plus}   label="Quick Add"   onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"      onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note"  onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="AI Chat"     onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Zap}    label="Chief of Staff"     onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
@@ -287,7 +287,7 @@ export default function AppShell() {
                 <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Zap}    label="Chief of Staff"    onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
@@ -349,7 +349,7 @@ export default function AppShell() {
             { icon: Plus,       label: "Add",    action: () => setShowQuickAdd(true) },
             { icon: Search,     label: "Search", action: () => setShowSearch(true) },
             { icon: Mic,        label: "Voice",  action: () => setShowVoice(true) },
-            { icon: Zap,        label: "AI",     action: () => setShowAi(true) },
+            { icon: Zap,        label: "COS",    action: () => setShowAi(true) },
             { icon: LogOut,     label: "Out",    action: logout },
           ].map(({ icon: Icon, label, action }) => (
             <button key={label} onClick={action}

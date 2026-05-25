@@ -7,6 +7,8 @@ import {
 import { api } from "@/lib/api";
 import { formatAmount } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import WorldClock from "@/components/WorldClock";
+import CountdownTimer from "@/components/CountdownTimer";
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 function timeGreeting() {
@@ -870,6 +872,19 @@ export default function Dashboard() {
       {showTabModal && (
         <NewsTabModal tabs={newsTabs} onSave={saveNewsTabs} onClose={() => setShowTabModal(false)} />
       )}
+
+      {/* ── World Clock ── */}
+      <Section id="worldclock" title="World Clock">
+        <WorldClock />
+      </Section>
+
+      {/* ── Countdown Timer ── */}
+      <Section id="countdown" title="Countdown Timer">
+        <div className="mm-card p-6 flex flex-col items-center">
+          <CountdownTimer />
+        </div>
+      </Section>
+
     </div>
   );
 }
