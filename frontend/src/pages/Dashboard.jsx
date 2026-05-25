@@ -130,15 +130,9 @@ const DEFAULT_NEWS_TABS = [
 ];
 
 /* ── Weather badge (replaces the old completion ring) ────────────── */
-function WeatherBadge({ weather, project }) {
+function WeatherBadge({ weather }) {
   return (
     <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-      <span style={{
-        fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
-        color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
-      }}>
-        {project || "Personal"}
-      </span>
       <div style={{
         width: 76, height: 76, borderRadius: "50%",
         border: "1.5px solid var(--mm-border-gold)",
@@ -335,10 +329,6 @@ export default function Dashboard() {
   const [completedIds,  setCompletedIds]  = useState(new Set());
   const [showReview,    setShowReview]    = useState(false);
   const [weather,       setWeather]       = useState(null);
-  const [activeProject, setActiveProject] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("mm_project") || "null")?.name || "Personal"; }
-    catch { return "Personal"; }
-  });
 
   /* Clock */
   useEffect(() => {
@@ -522,7 +512,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right: Weather circle (where the 0% ring was) */}
-        {weather && <WeatherBadge weather={weather} project={activeProject} />}
+        {weather && <WeatherBadge weather={weather} />}
       </div>
 
       {/* ── Weekly Review Banner ── */}

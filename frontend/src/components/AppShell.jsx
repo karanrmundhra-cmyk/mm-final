@@ -211,13 +211,13 @@ export default function AppShell() {
               })}
             </nav>
 
-            {/* Utility buttons — right below nav, separated by the border */}
+            {/* Utility buttons + sign-out — right below nav, separated by border */}
             <div className="px-2 py-2 flex-shrink-0" style={{ borderTop: "1px solid var(--mm-border)" }}>
               <div className="flex flex-col items-center gap-1">
-                <SidebarBtn icon={Plus}   label="Quick Add"   onClick={() => setShowQuickAdd(true)} />
-                <SidebarBtn icon={Search} label="Search"      onClick={() => setShowSearch(true)} />
-                <SidebarBtn icon={Mic}    label="Voice Note"  onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="Chief of Staff"     onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Plus}   label="Quick Add"      onClick={() => setShowQuickAdd(true)} />
+                <SidebarBtn icon={Search} label="Search"         onClick={() => setShowSearch(true)} />
+                <SidebarBtn icon={Mic}    label="Voice Note"     onClick={() => setShowVoice(true)} />
+                <SidebarBtn icon={Zap}    label="Chief of Staff" onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
@@ -227,23 +227,21 @@ export default function AppShell() {
                   <ChevronRight size={14} />
                   <Tooltip label="Expand" />
                 </button>
+                {/* Internal divider before sign-out */}
+                <div style={{ width: 28, height: 1, background: "var(--mm-border)", margin: "2px 0" }} />
+                <button onClick={logout}
+                        className="relative w-full flex items-center justify-center p-2 transition-all group"
+                        style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                  <LogOut size={13} />
+                  <Tooltip label="Sign out" />
+                </button>
               </div>
             </div>
 
-            {/* Spacer pushes sign-out to very bottom */}
+            {/* Spacer — nothing pinned below */}
             <div className="flex-1" />
-
-            {/* Sign-out pinned at bottom */}
-            <div className="px-2 py-2 flex-shrink-0" style={{ borderTop: "1px solid var(--mm-border)" }}>
-              <button onClick={logout}
-                      className="relative w-full flex items-center justify-center p-2 transition-all group"
-                      style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                <LogOut size={13} />
-                <Tooltip label="Sign out" />
-              </button>
-            </div>
           </>
         ) : (
           /* ── EXPANDED MODE: nav fills space, utility buttons + user at bottom ── */
@@ -448,36 +446,47 @@ function MMLogo({ size = 46 }) {
     <svg width={size} height={size} viewBox="0 0 46 46" fill="none"
          xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
       <defs>
-        <linearGradient id="mmG" x1="3" y1="3" x2="43" y2="43">
-          <stop offset="0%"   stopColor="#7A4F18" />
-          <stop offset="48%"  stopColor="#D4AF37" />
+        {/* userSpaceOnUse: dark bronze bottom-left → bright gold → medium bronze top-right */}
+        <linearGradient id="mmLogoGrad" gradientUnits="userSpaceOnUse"
+                        x1="4" y1="42" x2="42" y2="4">
+          <stop offset="0%"   stopColor="#5C3D11" />
+          <stop offset="50%"  stopColor="#D4AF37" />
           <stop offset="100%" stopColor="#A8761C" />
         </linearGradient>
       </defs>
-      {/* Outer thick ring */}
-      <circle cx="23" cy="23" r="21.5" stroke="url(#mmG)" strokeWidth="3.5" fill="none" />
-      {/* Inner thin ring (gap ≈ 3px from outer) */}
-      <circle cx="23" cy="23" r="16.5" stroke="url(#mmG)" strokeWidth="1"   fill="none" />
-      {/* ── Left M ── */}
-      {/* outer-left vertical */}
-      <line x1="10" y1="13" x2="10" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* inner-left vertical */}
-      <line x1="18" y1="13" x2="18" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* left V — both legs meet at the tip */}
-      <line x1="10" y1="13" x2="14" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      <line x1="18" y1="13" x2="14" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* teardrop at left V tip */}
-      <ellipse cx="14" cy="28" rx="1.3" ry="2" fill="url(#mmG)" />
-      {/* ── Right M (mirror) ── */}
-      {/* inner-right vertical */}
-      <line x1="28" y1="13" x2="28" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* outer-right vertical */}
-      <line x1="36" y1="13" x2="36" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* right V */}
-      <line x1="28" y1="13" x2="32" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      <line x1="36" y1="13" x2="32" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
-      {/* teardrop at right V tip */}
-      <ellipse cx="32" cy="28" rx="1.3" ry="2" fill="url(#mmG)" />
+
+      {/* Outer thick ring — r=20, stroke=5 → inner edge at r=17.5 */}
+      <circle cx="23" cy="23" r="20"
+              stroke="url(#mmLogoGrad)" strokeWidth="5" fill="none" />
+      {/* Inner thin ring — r=14, gap ≈ 3.5 px from outer inner-edge */}
+      <circle cx="23" cy="23" r="14"
+              stroke="url(#mmLogoGrad)" strokeWidth="1" fill="none" />
+
+      {/* ── Left M — x: 14 (outer) … 19 (inner), verticals y 15→32 ── */}
+      <line x1="14" y1="15" x2="14" y2="32"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="19" y1="15" x2="19" y2="32"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      {/* V legs meet at (16.5, 25) */}
+      <line x1="14" y1="15" x2="16.5" y2="25"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="19" y1="15" x2="16.5" y2="25"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      {/* teardrop accent at V tip */}
+      <ellipse cx="16.5" cy="27.5" rx="1.5" ry="2.2" fill="url(#mmLogoGrad)" />
+
+      {/* ── Right M — x: 27 (inner) … 32 (outer), mirror of left ── */}
+      <line x1="27" y1="15" x2="27" y2="32"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="32" y1="15" x2="32" y2="32"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      {/* V legs meet at (29.5, 25) */}
+      <line x1="27" y1="15" x2="29.5" y2="25"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="32" y1="15" x2="29.5" y2="25"
+            stroke="url(#mmLogoGrad)" strokeWidth="1.8" strokeLinecap="round"/>
+      {/* teardrop accent at V tip */}
+      <ellipse cx="29.5" cy="27.5" rx="1.5" ry="2.2" fill="url(#mmLogoGrad)" />
     </svg>
   );
 }
