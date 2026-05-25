@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Loader, Save, Copy, Check, ExternalLink, Download } from "lucide-react";
+import { Loader, Save, Copy, Check, ExternalLink, Download, Keyboard } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -224,6 +224,22 @@ export default function Settings() {
                       background: "#0A0A0A",
                       left: oled ? 18 : 2,
                     }} />
+            </button>
+          </div>
+
+          {/* Keyboard shortcuts */}
+          <div className="mm-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--mm-text)" }}>Keyboard Shortcuts</p>
+              <p className="text-xs" style={{ color: "var(--mm-muted)" }}>
+                View all available keyboard shortcuts · also press <kbd className="px-1 py-0.5 text-xs"
+                  style={{ background:"var(--mm-surface-3)", border:"1px solid var(--mm-border)", borderRadius:5 }}>⌘/</kbd>
+              </p>
+            </div>
+            <button onClick={() => window.dispatchEvent(new CustomEvent("mm:shortcuts"))}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm"
+                    style={{ border:"1px solid var(--mm-border)", color:"var(--mm-muted)" }}>
+              <Keyboard size={13} /> View
             </button>
           </div>
 

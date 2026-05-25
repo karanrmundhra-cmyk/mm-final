@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
-  Download, Keyboard,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
@@ -42,14 +42,15 @@ export default function AppShell() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickNote, setShowQuickNote] = useState(false);
   const [navBadges, setNavBadges] = useState({ tasks: 0, reminders: 0 });
-  const [theme, setTheme] = useState(() => localStorage.getItem("mm_theme") || "dark");
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showInstall, setShowInstall] = useState(false);
 
+  // Allow Settings page to open the shortcuts modal via custom event
   useEffect(() => {
-    document.documentElement.className = theme === "light" ? "light" : "";
-    localStorage.setItem("mm_theme", theme);
-  }, [theme]);
+    const handler = () => setShowShortcuts(true);
+    window.addEventListener("mm:shortcuts", handler);
+    return () => window.removeEventListener("mm:shortcuts", handler);
+  }, []);
 
   useEffect(() => {
     api.get("/pending-review/count").then(r => setPendingReview(r.data.count)).catch(() => {});
@@ -161,20 +162,10 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* MM monogram — single clean circle */}
-          <div className="flex-shrink-0 flex items-center justify-center"
-               style={{
-                 width: 38, height: 38, borderRadius: "50%",
-                 background: "rgba(212,175,55,0.07)",
-                 border: "1.5px solid rgba(212,175,55,0.55)",
-                 boxShadow: "0 0 14px rgba(212,175,55,0.18), inset 0 0 8px rgba(212,175,55,0.05)",
-               }}>
-            <span style={{
-              color: "var(--mm-gold)",
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: 14, fontWeight: 600, letterSpacing: "0.08em",
-              lineHeight: 1,
-            }}>MM</span>
+          {/* Actual brand logo — no circular clip so the double-ring shows cleanly */}
+          <div style={{ width: 42, height: 42, flexShrink: 0, overflow: "hidden", position: "relative" }}>
+            <img src="/rkm-logo.png" alt="MM"
+                 style={{ width: "100%", position: "absolute", top: 0, left: 0 }} />
           </div>
           {!collapsed && (
             <div className="min-w-0">
@@ -243,102 +234,75 @@ export default function AppShell() {
 
         {/* Footer */}
         <div className="flex-shrink-0 px-2 py-3" style={{ borderTop: "1px solid var(--mm-border)" }}>
-          {/* 6 utility buttons — equally spaced in both modes */}
-          <div className="flex items-center justify-between px-1 mb-3">
-            <SidebarBtn icon={Plus}        label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
-            <SidebarBtn icon={Search}      label="Search"     onClick={() => setShowSearch(true)} />
-            <SidebarBtn icon={Mic}         label="Voice Note" onClick={() => setShowVoice(true)} />
-            <SidebarBtn icon={Zap}         label="AI Chat"    onClick={() => setShowAi(true)} gold />
-            <SyncBtn />
-            <button onClick={toggleCollapse}
-                    title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    className="relative flex items-center justify-center p-2 transition-all hover:opacity-100 group"
-                    style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                    onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
-              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-              <Tooltip label={collapsed ? "Expand" : "Collapse"} />
-            </button>
-          </div>
-
-          {/* User info — hide when collapsed */}
-          {!collapsed && (
-            <div className="flex items-center gap-2.5 px-1 pt-2.5"
-                 style={{ borderTop: "1px solid var(--mm-border)" }}>
-              <div className="w-8 h-8 flex items-center justify-center flex-shrink-0"
-                   style={{
-                     background: "linear-gradient(135deg, var(--mm-gold-light), var(--mm-gold-dark))",
-                     borderRadius: 10, color: "#0B0B0C",
-                   }}>
-                <span className="text-xs font-semibold">{user?.first_name?.[0]}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium truncate"
-                     style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
-                  {user?.first_name} {user?.last_name}
-                </div>
-                <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
-                  {user?.email}
-                </div>
-              </div>
-              <button onClick={logout}
-                      className="relative p-1.5 transition-opacity hover:opacity-100 group"
-                      style={{ color: "var(--mm-muted)", opacity: 0.5 }}
+          {collapsed ? (
+            /* Collapsed: 2-column grid so all 6 icons fit in 64px */
+            <div className="grid grid-cols-2 gap-1">
+              <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
+              <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
+              <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
+              <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} gold />
+              <SyncBtn />
+              <button onClick={toggleCollapse}
+                      className="relative flex items-center justify-center p-2 transition-all group"
+                      style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
                       onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                <LogOut size={13} />
-                <Tooltip label="Sign out" />
+                      onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
+                <ChevronRight size={14} />
+                <Tooltip label="Expand" />
               </button>
             </div>
+          ) : (
+            <>
+              {/* Expanded: single row, all 6 equally spaced */}
+              <div className="flex items-center justify-between px-1 mb-3">
+                <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} gold />
+                <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
+                <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
+                <SidebarBtn icon={Zap}    label="AI Chat"    onClick={() => setShowAi(true)} gold />
+                <SyncBtn />
+                <button onClick={toggleCollapse}
+                        className="relative flex items-center justify-center p-2 transition-all group"
+                        style={{ color: "var(--mm-muted)", opacity: 0.55, borderRadius: 10 }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}>
+                  <ChevronLeft size={14} />
+                  <Tooltip label="Collapse" />
+                </button>
+              </div>
+
+              {/* User info — no avatar, just name + email + sign-out */}
+              <div className="flex items-center gap-2 px-1 pt-2.5"
+                   style={{ borderTop: "1px solid var(--mm-border)" }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium truncate"
+                       style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
+                    {user?.first_name} {user?.last_name}
+                  </div>
+                  <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
+                    {user?.email}
+                  </div>
+                </div>
+                <button onClick={logout}
+                        className="relative p-1.5 transition-opacity group"
+                        style={{ color: "var(--mm-muted)", opacity: 0.5 }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                  <LogOut size={13} />
+                  <Tooltip label="Sign out" />
+                </button>
+              </div>
+            </>
           )}
         </div>
       </aside>
 
       {/* ── MAIN ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
 
-        {/* Top bar — glass */}
-        <header className="flex items-center gap-3 px-5 flex-shrink-0"
-                style={{
-                  height: 60,
-                  background: "rgba(17,17,20,0.85)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  borderBottom: "1px solid var(--mm-border)",
-                  boxShadow: "0 1px 0 rgba(255,255,255,0.04)",
-                }}>
+        {/* Project selector floats at top-right over the page content */}
+        <div className="absolute top-4 right-5 z-20 pointer-events-auto">
           <ProjectSelector />
-          <div className="flex-1" />
-
-          {/* Search pill */}
-          <button onClick={() => setShowSearch(true)}
-                  className="flex items-center gap-2 px-4 py-2 transition-all hover:opacity-80"
-                  style={{
-                    background: "var(--mm-surface-2)",
-                    border: "1px solid var(--mm-border)",
-                    borderRadius: 20,
-                    color: "var(--mm-muted)",
-                    fontSize: 11, letterSpacing: "0.06em",
-                  }}>
-            <Search size={12} />
-            <span className="hidden sm:inline" style={{ fontSize: 11 }}>Search</span>
-            <kbd className="hidden sm:inline text-xs px-1.5 py-0.5"
-                 style={{ background: "var(--mm-surface-3)", color: "var(--mm-muted)",
-                          fontSize: 9, borderRadius: 6 }}>⌘K</kbd>
-          </button>
-
-          <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
-                  className="p-2 transition-opacity hover:opacity-100"
-                  style={{ color: "var(--mm-muted)", opacity: 0.65, fontSize: 15 }}>
-            {theme === "dark" ? "☀" : "🌙"}
-          </button>
-
-          <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts (⌘/)"
-                  className="p-2 transition-opacity hover:opacity-100"
-                  style={{ color: "var(--mm-muted)", opacity: 0.65 }}>
-            <Keyboard size={14} />
-          </button>
-        </header>
+        </div>
 
         {/* Page */}
         <main className="flex-1 overflow-y-auto">
