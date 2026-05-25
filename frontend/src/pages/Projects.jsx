@@ -111,13 +111,13 @@ export default function Projects() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="mm-page-title">Projects</h1>
-          <p className="mm-page-sub">{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
+          <h1 className="mm-page-title">Spaces</h1>
+          <p className="mm-page-sub">{projects.length} space{projects.length !== 1 ? "s" : ""}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="mm-btn-gold flex items-center gap-2 px-4 py-2">
-          <Plus size={13} /> New Project
+          <Plus size={13} /> New Space
         </button>
       </div>
 

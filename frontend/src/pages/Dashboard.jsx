@@ -600,7 +600,7 @@ export default function Dashboard() {
           case "cashflow":
             return data?.cashflow ? (
               <DraggableSection key="cashflow" id="cashflow">
-                <Section id="cashflow" title="Finances"
+                <Section id="cashflow" title="Financial Overview"
                   extra={
                     <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
                       {["month", "year"].map(v => (
@@ -672,7 +672,7 @@ export default function Dashboard() {
           case "reminders_deadlines":
             return ((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) ? (
               <DraggableSection key="reminders_deadlines" id="reminders_deadlines">
-                <Section id="reminders_deadlines" title="Reminders">
+                <Section id="reminders_deadlines" title="Today's Reminders">
                   <div className="mm-card overflow-hidden">
                     {data?.reminders?.slice(0, 3).map(r => (
                       <button key={`rem-${r.id}`} onClick={() => navigate("/reminders")}

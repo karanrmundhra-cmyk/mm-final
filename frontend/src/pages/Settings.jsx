@@ -20,7 +20,7 @@ export default function Settings() {
   const [density, setDensityState] = useState(() => localStorage.getItem("mm_density") || "default");
   const [oled,    setOledState]    = useState(() => localStorage.getItem("mm_oled") === "1");
 
-  const TABS = ["Profile", "Appearance", "Projects", "Telegram", "Export", "Account", "People", "Trash"];
+  const TABS = ["Profile", "Appearance", "Spaces", "Telegram", "Export", "Account", "People", "Trash"];
 
   const load = useCallback(async () => {
     try {
@@ -112,7 +112,7 @@ export default function Settings() {
   const theme = document.documentElement.classList.contains("light") ? "light" : "dark";
 
   return (
-    <div className={`px-4 py-6 mx-auto ${tab === "Projects" ? "max-w-5xl" : "max-w-2xl"}`}>
+    <div className={`px-4 py-6 mx-auto ${tab === "Spaces" ? "max-w-5xl" : "max-w-2xl"}`}>
       <div className="mb-5">
         <h1 className="text-xl font-semibold mm-font-display" style={{ color: "var(--mm-text)" }}>Settings</h1>
         <p className="text-xs mt-0.5" style={{ color: "var(--mm-muted)" }}>Manage your account and preferences</p>
@@ -360,7 +360,7 @@ export default function Settings() {
         </div>
       )}
 
-      {tab === "Projects" && (
+      {tab === "Spaces" && (
         <div className="-mx-4 -my-6">
           <Projects />
         </div>

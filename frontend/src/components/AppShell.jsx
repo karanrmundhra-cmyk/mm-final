@@ -21,7 +21,7 @@ const NAV = [
   { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
   { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
   { to: "/routines",  icon: RefreshCw,       label: "Routines",   key: "3" },
-  { to: "/cash-flow", icon: Wallet,          label: "Cash Flow",  key: "4" },
+  { to: "/cash-flow", icon: Wallet,          label: "Finances",   key: "4" },
   { to: "/notes",     icon: FileText,        label: "Notes",      key: "5" },
   { to: "/reminders", icon: Bell,            label: "Reminders",  key: "6" },
   { to: "/reports",   icon: BarChart2,       label: "Reports",    key: "7" },
