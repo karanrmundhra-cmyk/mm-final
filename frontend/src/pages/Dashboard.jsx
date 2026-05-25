@@ -103,15 +103,25 @@ function getWeekNumber(d = new Date()) {
   return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
 }
 
+/* BMP-only Unicode weather symbols — no supplementary-plane emoji,
+   no variation selectors → guaranteed to render in all browsers.      */
 function wxEmoji(code) {
   const c = parseInt(code, 10);
-  if (c === 113) return "☀️";
-  if ([116, 119, 122].includes(c)) return "⛅";
-  if ([143, 248, 260].includes(c)) return "🌫️";
-  if ([200, 386, 389, 392, 395].includes(c)) return "⛈️";
-  if ([227, 230, 335, 338, 371, 374].includes(c)) return "❄️";
-  if (c >= 176) return "🌧️";
-  return "🌤️";
+  if (c === 113) return "☀";   // clear
+  if ([116, 119, 122].includes(c)) return "⛅"; // partly cloudy
+  if ([143, 248, 260].includes(c)) return "☁";  // fog / haze → cloud
+  if ([200, 386, 389, 392, 395].includes(c)) return "⚡"; // thunder
+  if ([227, 230, 335, 338, 371, 374].includes(c)) return "❄"; // snow
+  if (c >= 176) return "☂";   // rain
+  return "⛅";
+}
+
+/* Format API date strings (YYYY-MM-DD or ISO) → "26 May" */
+function fmtDate(str) {
+  if (!str) return "";
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
 
 
@@ -373,7 +383,7 @@ export default function Dashboard() {
         {t.estimate && <span className="mm-est-pill">{t.estimate}</span>}
         {t.name && <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.name}</span>}
       </button>
-      <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+      <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{fmtDate(t.date)}</span>
     </div>
   );
 
@@ -557,7 +567,7 @@ export default function Dashboard() {
                     <span className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ background: "var(--mm-border)" }} />
                     <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                    <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                    <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{fmtDate(t.date)}</span>
                   </button>
                 ))}
               </div>)) : null;
@@ -690,7 +700,7 @@ export default function Dashboard() {
                                      color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>
                         Deadline
                       </span>
-                      <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{t.date}</span>
+                      <span className="text-xs flex-shrink-0" style={{ color: "var(--mm-muted)" }}>{fmtDate(t.date)}</span>
                     </button>
                   ))}
                 </div>)) : null;
@@ -741,7 +751,7 @@ export default function Dashboard() {
                 <div className="mm-card overflow-hidden">
                   {news.length === 0
                     ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
-                    : news.map((item, i) => (
+                    : news.filter(item => item && typeof item === "string" && item.trim().length > 5 && item !== "Google News").map((item, i) => (
                         <a key={i}
                            href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
                            target="_blank" rel="noopener noreferrer"
@@ -762,8 +772,8 @@ export default function Dashboard() {
           case "timers":
             return DS("timers", S("timers", "Timers",
               <div className="grid grid-cols-2 gap-4">
-                <div className="mm-card p-5 flex flex-col items-center"><CountdownTimer /></div>
-                <div className="mm-card p-5 flex flex-col items-center"><CountdownDate /></div>
+                <div className="mm-card p-5 flex flex-col items-center justify-center"><CountdownTimer /></div>
+                <div className="mm-card p-5 flex flex-col items-center justify-center"><CountdownDate /></div>
               </div>));
 
           default:
