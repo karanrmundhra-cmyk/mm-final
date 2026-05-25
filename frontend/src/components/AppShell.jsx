@@ -163,11 +163,8 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* Logo — crop portrait PNG so the circular monogram fills the 46×46 slot */}
-          <div style={{ width: 46, height: 46, overflow: "hidden", flexShrink: 0 }}>
-            <img src="/rkm-logo.png" alt="MM"
-                 style={{ display: "block", width: 46, height: "auto", marginTop: "-12px" }} />
-          </div>
+          {/* SVG monogram — guaranteed correct regardless of PNG crop */}
+          <MMLogo size={46} />
           {!collapsed && (
             <div className="min-w-0">
               <div style={{
@@ -185,31 +182,88 @@ export default function AppShell() {
           )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
-          {NAV.map(({ to, icon: Icon, label }) => {
-            const badgeCount = label === "Reports"   ? (pendingReview > 0 ? pendingReview : 0)
-                             : label === "Tasks"     ? navBadges.tasks
-                             : label === "Reminders" ? navBadges.reminders
-                             : 0;
-            const hasBadge = badgeCount > 0;
-            return (
-              <NavLink
-                key={to} to={to} end={to === "/"}
-                title={collapsed ? label : undefined}
-                className="flex items-center gap-3 px-3 py-2 transition-all duration-200 relative"
-                style={({ isActive }) => ({
-                  borderRadius: 14,
-                  color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
-                  background: isActive
-                    ? "rgba(212,175,55,0.1)"
-                    : "transparent",
-                  boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
-                })}
-              >
-                <Icon size={15} className="flex-shrink-0" />
-                {!collapsed && (
-                  <>
+        {/* ── COLLAPSED MODE: nav + utility buttons tight together ── */}
+        {collapsed ? (
+          <>
+            {/* Nav — natural height, no flex-1 */}
+            <nav className="py-3 px-2 space-y-0.5">
+              {NAV.map(({ to, icon: Icon, label }) => {
+                const badgeCount = label === "Reports"   ? (pendingReview > 0 ? pendingReview : 0)
+                                 : label === "Tasks"     ? navBadges.tasks
+                                 : label === "Reminders" ? navBadges.reminders : 0;
+                return (
+                  <NavLink key={to} to={to} end={to === "/"}
+                           title={label}
+                           className="flex items-center justify-center px-3 py-2 transition-all duration-200 relative"
+                           style={({ isActive }) => ({
+                             borderRadius: 14,
+                             color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
+                             background: isActive ? "rgba(212,175,55,0.1)" : "transparent",
+                             boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
+                           })}>
+                    <Icon size={15} />
+                    {badgeCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5"
+                            style={{ background: "var(--mm-gold)", borderRadius: "50%" }} />
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
+
+            {/* Utility buttons — right below nav, separated by the border */}
+            <div className="px-2 py-2 flex-shrink-0" style={{ borderTop: "1px solid var(--mm-border)" }}>
+              <div className="flex flex-col items-center gap-1">
+                <SidebarBtn icon={Plus}   label="Quick Add"   onClick={() => setShowQuickAdd(true)} />
+                <SidebarBtn icon={Search} label="Search"      onClick={() => setShowSearch(true)} />
+                <SidebarBtn icon={Mic}    label="Voice Note"  onClick={() => setShowVoice(true)} />
+                <SidebarBtn icon={Zap}    label="AI Chat"     onClick={() => setShowAi(true)} />
+                <SyncBtn />
+                <button onClick={toggleCollapse}
+                        className="relative flex items-center justify-center p-2 transition-all group"
+                        style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                  <ChevronRight size={14} />
+                  <Tooltip label="Expand" />
+                </button>
+              </div>
+            </div>
+
+            {/* Spacer pushes sign-out to very bottom */}
+            <div className="flex-1" />
+
+            {/* Sign-out pinned at bottom */}
+            <div className="px-2 py-2 flex-shrink-0" style={{ borderTop: "1px solid var(--mm-border)" }}>
+              <button onClick={logout}
+                      className="relative w-full flex items-center justify-center p-2 transition-all group"
+                      style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
+                <LogOut size={13} />
+                <Tooltip label="Sign out" />
+              </button>
+            </div>
+          </>
+        ) : (
+          /* ── EXPANDED MODE: nav fills space, utility buttons + user at bottom ── */
+          <>
+            <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
+              {NAV.map(({ to, icon: Icon, label }) => {
+                const badgeCount = label === "Reports"   ? (pendingReview > 0 ? pendingReview : 0)
+                                 : label === "Tasks"     ? navBadges.tasks
+                                 : label === "Reminders" ? navBadges.reminders : 0;
+                const hasBadge = badgeCount > 0;
+                return (
+                  <NavLink key={to} to={to} end={to === "/"}
+                           className="flex items-center gap-3 px-3 py-2 transition-all duration-200 relative"
+                           style={({ isActive }) => ({
+                             borderRadius: 14,
+                             color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
+                             background: isActive ? "rgba(212,175,55,0.1)" : "transparent",
+                             boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
+                           })}>
+                    <Icon size={15} className="flex-shrink-0" />
                     <span className="flex-1 text-xs"
                           style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 500,
                                    letterSpacing: "0.06em", color: "inherit" }}>
@@ -222,50 +276,13 @@ export default function AppShell() {
                         {badgeCount}
                       </span>
                     )}
-                  </>
-                )}
-                {collapsed && hasBadge && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5"
-                        style={{ background: "var(--mm-gold)", borderRadius: "50%" }} />
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
+                  </NavLink>
+                );
+              })}
+            </nav>
 
-        {/* Footer */}
-        <div className="flex-shrink-0 py-3 px-2" style={{ borderTop: "1px solid var(--mm-border)" }}>
-          {collapsed ? (
-            /* ── Collapsed: vertical column of icons + sign-out at bottom ── */
-            <div className="flex flex-col items-center gap-1">
-              <SidebarBtn icon={Plus}   label="Quick Add"   onClick={() => setShowQuickAdd(true)} />
-              <SidebarBtn icon={Search} label="Search"      onClick={() => setShowSearch(true)} />
-              <SidebarBtn icon={Mic}    label="Voice Note"  onClick={() => setShowVoice(true)} />
-              <SidebarBtn icon={Zap}    label="AI Chat"     onClick={() => setShowAi(true)} />
-              <SyncBtn />
-              <button onClick={toggleCollapse}
-                      className="relative flex items-center justify-center p-2 transition-all group"
-                      style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                      onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                <ChevronRight size={14} />
-                <Tooltip label="Expand" />
-              </button>
-              {/* Sign-out always visible in collapsed mode */}
-              <div className="w-full mt-1 pt-1" style={{ borderTop: "1px solid var(--mm-border)" }}>
-                <button onClick={logout}
-                        className="relative w-full flex items-center justify-center p-2 transition-all group"
-                        style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-                        onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}>
-                  <LogOut size={13} />
-                  <Tooltip label="Sign out" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* ── Expanded: row of icons + user info ── */
-            <>
+            {/* Expanded footer */}
+            <div className="flex-shrink-0 py-3 px-2" style={{ borderTop: "1px solid var(--mm-border)" }}>
               <div className="flex items-center justify-between px-1 mb-3">
                 <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
@@ -281,7 +298,7 @@ export default function AppShell() {
                   <Tooltip label="Collapse" />
                 </button>
               </div>
-              {/* Name · email · sign-out (no avatar) */}
+              {/* Name · email · sign-out */}
               <div className="flex items-center gap-2 px-1 pt-2.5"
                    style={{ borderTop: "1px solid var(--mm-border)" }}>
                 <div className="flex-1 min-w-0">
@@ -302,9 +319,9 @@ export default function AppShell() {
                   <Tooltip label="Sign out" />
                 </button>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </aside>
 
       {/* ── MAIN ────────────────────────────────────────────────────── */}
@@ -422,6 +439,46 @@ export default function AppShell() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ── MM Logo SVG (matches circular monogram reference) ───────── */
+function MMLogo({ size = 46 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 46 46" fill="none"
+         xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <defs>
+        <linearGradient id="mmG" x1="3" y1="3" x2="43" y2="43">
+          <stop offset="0%"   stopColor="#7A4F18" />
+          <stop offset="48%"  stopColor="#D4AF37" />
+          <stop offset="100%" stopColor="#A8761C" />
+        </linearGradient>
+      </defs>
+      {/* Outer thick ring */}
+      <circle cx="23" cy="23" r="21.5" stroke="url(#mmG)" strokeWidth="3.5" fill="none" />
+      {/* Inner thin ring (gap ≈ 3px from outer) */}
+      <circle cx="23" cy="23" r="16.5" stroke="url(#mmG)" strokeWidth="1"   fill="none" />
+      {/* ── Left M ── */}
+      {/* outer-left vertical */}
+      <line x1="10" y1="13" x2="10" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* inner-left vertical */}
+      <line x1="18" y1="13" x2="18" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* left V — both legs meet at the tip */}
+      <line x1="10" y1="13" x2="14" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      <line x1="18" y1="13" x2="14" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* teardrop at left V tip */}
+      <ellipse cx="14" cy="28" rx="1.3" ry="2" fill="url(#mmG)" />
+      {/* ── Right M (mirror) ── */}
+      {/* inner-right vertical */}
+      <line x1="28" y1="13" x2="28" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* outer-right vertical */}
+      <line x1="36" y1="13" x2="36" y2="33" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* right V */}
+      <line x1="28" y1="13" x2="32" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      <line x1="36" y1="13" x2="32" y2="26" stroke="url(#mmG)" strokeWidth="1.1" strokeLinecap="round"/>
+      {/* teardrop at right V tip */}
+      <ellipse cx="32" cy="28" rx="1.3" ry="2" fill="url(#mmG)" />
+    </svg>
   );
 }
 
