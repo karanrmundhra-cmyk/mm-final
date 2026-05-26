@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import {
   Plus, Trash2, Flag, Paperclip, Check, Loader, GripVertical,
   ChevronRight, ChevronDown, MessageSquare, ArrowUp, ArrowDown,
-  Send, X, Copy, Upload, Download, Mic, Bell, FolderOpen, Zap,
+  Send, X, Copy, Upload, Download, Mic, Bell, FolderOpen, Zap, Timer,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ const STATUS_COLORS = {
 
 /* New column order:
    checkbox | done | date-added | group | to | task | due-date | status | icons */
-const COLS = "20px 30px 90px 100px 120px 1fr 100px 120px 200px";
+const COLS = "20px 30px 90px 100px 120px 1fr 100px 120px 240px";
 
 /* ─── Short date display ─────────────────────────────────────── */
 function fmtDate(str) {
@@ -673,7 +673,7 @@ export default function Tasks() {
                          className={`mm-row grid items-center px-3 py-2 border-b ${done?"mm-row-completed":""}`}
                          style={{
                            gridTemplateColumns:COLS,
-                           borderColor:"var(--mm-border)", minWidth:920,
+                           borderColor:"var(--mm-border)", minWidth:960,
                            opacity: dragId===t.id ? 0.4 : 1,
                            borderTop: dragOverId===t.id ? "2px solid var(--mm-gold)" : undefined,
                            background: isSelected ? "rgba(201,169,97,0.04)" : undefined,
@@ -807,6 +807,13 @@ export default function Tasks() {
                                 onClick={() => toast.info("Reminder — go to Reminders page")}>
                           <Bell size={10} />
                         </button>
+                        {/* TIMER */}
+                        <button title="Start Timer"
+                                className="mm-icon-btn"
+                                style={{ color:"var(--mm-muted)" }}
+                                onClick={() => toast.info("Timer — coming soon")}>
+                          <Timer size={10} />
+                        </button>
                         {/* COMMENT */}
                         <button onClick={() => setCommentOpen(t.id===commentOpen?null:t.id)}
                                 title="Comments"
@@ -831,6 +838,11 @@ export default function Tasks() {
                                            onClose={() => setMoveGroupOpen(null)} />
                           )}
                         </div>
+                        {/* DUPLICATE */}
+                        <button onClick={() => duplicate(t)} title="Duplicate Task"
+                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
+                          <Copy size={10} />
+                        </button>
                         {/* DELETE */}
                         <button onClick={() => del(t.id)} title="Delete"
                                 className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
