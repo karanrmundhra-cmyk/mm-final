@@ -388,20 +388,23 @@ export default function Routines() {
               const done = logs[r.id];
               return (
                 <div key={r.id}
-                     className="mm-row grid items-center px-3 py-2 border-b"
+                     className="mm-row group grid items-center px-3 py-2 border-b"
                      style={{ gridTemplateColumns:COLS, borderColor:"var(--mm-border)", minWidth:700,
                               opacity: r.status==="Paused" ? 0.6 : 1 }}>
 
                   {/* Check + select */}
-                  <div className="flex items-center gap-1.5">
-                    <input type="checkbox" checked={selected.has(r.id)}
-                           onChange={() => toggleSelect(r.id)}
-                           style={{ width:13, height:13, accentColor:"var(--mm-gold)", cursor:"pointer", borderRadius:0 }} />
+                  <div className="relative flex items-center justify-center" style={{ width:24, height:24 }}>
+                    {/* Done-today circle — hidden when row is selected */}
                     <button onClick={() => logDone(r.id,!done)}
                             title={done ? "Mark undone" : "Mark done today"}
-                            className={`mm-check ${done ? "done" : ""}`}>
+                            className={`mm-check ${done ? "done" : ""} ${selected.has(r.id) ? "invisible" : ""}`}>
                       {done && <Check size={9} style={{ color:"var(--mm-gold)" }} />}
                     </button>
+                    {/* Bulk-select checkbox — shown on hover or when already selected */}
+                    <input type="checkbox" checked={selected.has(r.id)}
+                           onChange={() => toggleSelect(r.id)}
+                           className={`absolute inset-0 m-auto cursor-pointer ${selected.has(r.id) ? "visible" : "invisible group-hover:visible"}`}
+                           style={{ width:13, height:13, accentColor:"var(--mm-gold)" }} />
                   </div>
 
                   {/* Activity */}

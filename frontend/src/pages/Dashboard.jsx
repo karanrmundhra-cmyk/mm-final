@@ -401,13 +401,16 @@ export default function Dashboard() {
       {data?.stats && (
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Pending",    value: data.stats.pending,       color: "var(--mm-muted)" },
-            { label: "Overdue",    value: data.stats.overdue,       color: data.stats.overdue > 0 ? "var(--mm-text)" : "var(--mm-muted)" },
-            { label: "Done Today", value: data.stats.done_today,    color: "var(--mm-gold)" },
-            { label: "Reminders",  value: data.stats.reminders_due, color: "var(--mm-gold)" },
+            { label: "Pending",    value: data.stats.pending,       color: "var(--mm-muted)",  to: "/tasks" },
+            { label: "Overdue",    value: data.stats.overdue,       color: data.stats.overdue > 0 ? "var(--mm-text)" : "var(--mm-muted)", to: "/tasks" },
+            { label: "Done Today", value: data.stats.done_today,    color: "var(--mm-gold)",   to: "/tasks" },
+            { label: "Reminders",  value: data.stats.reminders_due, color: "var(--mm-gold)",   to: "/reminders" },
           ].map(s => (
-            <div key={s.label} className="mm-card flex flex-col items-center justify-center text-center"
-                 style={{ padding: "20px 12px", minHeight: 90 }}>
+            <button key={s.label} onClick={() => navigate(s.to)}
+                    className="mm-card flex flex-col items-center justify-center text-center group"
+                    style={{ padding: "20px 12px", minHeight: 90, cursor: "pointer" }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = "var(--mm-border-gold)"}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = ""}>
               <div className="text-3xl font-light mm-font-display" style={{ color: s.color, lineHeight: 1 }}>
                 {s.value}
               </div>
@@ -417,7 +420,7 @@ export default function Dashboard() {
               }}>
                 {s.label}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -523,9 +526,9 @@ export default function Dashboard() {
                       Upcoming Payments
                     </div>
                     <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                      {data.upcoming_payments !== undefined
+                      {data.upcoming_payments !== undefined && data.upcoming_payments !== null
                         ? `₹${formatAmount(data.upcoming_payments)}`
-                        : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                        : <span style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Outfit',sans-serif" }}>No Upcoming Payments</span>}
                     </div>
                   </button>
                   <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
@@ -534,9 +537,9 @@ export default function Dashboard() {
                       Upcoming Receipts
                     </div>
                     <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                      {data.upcoming_receipts !== undefined
+                      {data.upcoming_receipts !== undefined && data.upcoming_receipts !== null
                         ? `₹${formatAmount(data.upcoming_receipts)}`
-                        : <span style={{ fontSize: 13, color: "var(--mm-muted)" }}>—</span>}
+                        : <span style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Outfit',sans-serif" }}>No Upcoming Receipts</span>}
                     </div>
                   </button>
                 </div>

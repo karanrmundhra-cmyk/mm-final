@@ -396,8 +396,12 @@ export default function Tasks() {
           <p className="mm-page-sub">{pending} pending · {visible.length} total</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={handleImport} className="mm-btn-ghost flex items-center gap-1.5" title="Import CSV">
+          <button onClick={handleImport}
+                  className="mm-btn-ghost flex items-center gap-1.5"
+                  title="Import CSV — Coming Soon"
+                  style={{ opacity: 0.45, cursor: "default" }}>
             <Upload size={12} /> Import
+            <span style={{ fontSize: 8, letterSpacing: "0.06em", color: "var(--mm-muted)" }}>Soon</span>
           </button>
           <button onClick={exportCsv} className="mm-btn-ghost flex items-center gap-1.5" title="Export CSV">
             <Download size={12} /> Export
@@ -755,7 +759,7 @@ export default function Tasks() {
                           title={`Priority: ${t.priority || "none"}`}
                           className={`mm-icon-btn mm-${(t.priority||"").toLowerCase()}`}>
                           <span style={{ fontSize:9, fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
-                            {t.priority || "P—"}
+                            {t.priority || "—"}
                           </span>
                         </button>
                         <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
-import { Loader, Download, Check, Trash2, BarChart2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Loader, Download, Check, Trash2, BarChart2, RefreshCw, AlertTriangle, ClipboardList, TrendingUp, DollarSign } from "lucide-react";
 import DigestWidget from "@/components/DigestWidget";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -108,14 +108,18 @@ export default function Reports() {
           {tab === "Inbox" && (
             <div className="space-y-3">
               {(data.inbox || []).length === 0 ? (
-                <EmptySection icon="📋" title="No timeline data" />
+                <EmptySection Icon={ClipboardList} title="No Timeline Data" />
               ) : (data.inbox || []).map((item, i) => (
                 <div key={i} className="mm-card px-4 py-3 flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
                        style={{ background: "var(--mm-gold)" }} />
                   <div className="flex-1">
                     <p className="text-sm" style={{ color: "var(--mm-text)" }}>{item.label || item.task || item.title}</p>
-                    <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{item.date} · {item.type}</p>
+                    {(item.date || item.type) && (
+                      <p className="text-xs" style={{ color: "var(--mm-muted)" }}>
+                        {[item.date, item.type].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -145,7 +149,7 @@ export default function Reports() {
                   ))}
                 </>
               ) : (
-                <EmptySection icon="📊" title="No briefing data yet" />
+                <EmptySection Icon={BarChart2} title="No Briefing Data Yet" desc="Click Generate to create your weekly AI digest." />
               )}
             </div>
           )}
@@ -183,7 +187,7 @@ export default function Reports() {
                   )}
                 </>
               ) : (
-                <EmptySection icon="💰" title="No financial data" />
+                <EmptySection Icon={DollarSign} title="No Financial Data" />
               )}
             </div>
           )}
@@ -199,10 +203,10 @@ export default function Reports() {
                   </div>
                 ))
               ) : (
-                <EmptySection icon="📈" title="No signals yet" />
+                <EmptySection Icon={TrendingUp} title="No Signals Yet" desc="Add more data to see patterns." />
               )}
               {data.signals && (Array.isArray(data.signals) ? data.signals : data.signals.insights || []).length === 0 && (
-                <EmptySection icon="📈" title="No signals yet" desc="Add more data to see patterns." />
+                <EmptySection Icon={TrendingUp} title="No Signals Yet" desc="Add more data to see patterns." />
               )}
             </div>
           )}
@@ -271,10 +275,13 @@ export default function Reports() {
   );
 }
 
-function EmptySection({ icon, title, desc }) {
+function EmptySection({ Icon, title, desc }) {
   return (
     <div className="flex flex-col items-center py-16 gap-3 text-center">
-      <span style={{ fontSize: 36 }}>{icon}</span>
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+           style={{ background: "rgba(201,169,97,0.08)", color: "var(--mm-gold)" }}>
+        {Icon && <Icon size={22} />}
+      </div>
       <p className="text-sm font-medium" style={{ color: "var(--mm-text)" }}>{title}</p>
       {desc && <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{desc}</p>}
     </div>

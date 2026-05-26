@@ -122,15 +122,13 @@ function getOffset(tz) {
     const parts = fmt.formatToParts(now);
     const tzPart = parts.find(p => p.type === "timeZoneName")?.value || "";
     const match = tzPart.match(/GMT([+-])(\d+)(?::(\d+))?/);
-    if (!match) return "+0 HRS";
-    const sign = match[1] === "+" ? 1 : -1;
+    if (!match) return "UTC+0";
+    const sign = match[1];
     const hrs  = parseInt(match[2], 10);
     const mins = parseInt(match[3] || "0", 10);
-    const cityOffsetHrs = sign * (hrs + mins / 60);
-    const localOffsetHrs = -now.getTimezoneOffset() / 60;
-    const diff = Math.round((cityOffsetHrs - localOffsetHrs) * 2) / 2;
-    if (diff === 0) return "+0 HRS";
-    return `${diff > 0 ? "+" : ""}${diff % 1 === 0 ? diff : diff.toFixed(1)} HRS`;
+    if (hrs === 0 && mins === 0) return "UTC+0";
+    const minsStr = mins > 0 ? `:${String(mins).padStart(2, "0")}` : "";
+    return `UTC${sign}${hrs}${minsStr}`;
   } catch { return ""; }
 }
 
@@ -306,7 +304,7 @@ export default function WorldClock() {
                   {timeStr}
                 </p>
                 <p style={{ fontSize: 9, color: "var(--mm-muted)", letterSpacing: "0.05em" }}>
-                  Today, {offset}
+                  {offset}
                 </p>
               </div>
             </div>

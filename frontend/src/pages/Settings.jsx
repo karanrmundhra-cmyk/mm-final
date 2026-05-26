@@ -28,11 +28,17 @@ export default function Settings() {
         api.get("/settings"),
         api.get("/telegram/status").catch(() => ({ data: { linked: false } }))
       ]);
-      setSettings(sRes.data);
+      /* Pre-populate name / email from auth token if settings API left them blank */
+      const merged = {
+        ...sRes.data,
+        name:  sRes.data.name  || user?.name  || "",
+        email: sRes.data.email || user?.email || "",
+      };
+      setSettings(merged);
       setTgStatus(tgRes.data);
     } catch {}
     setLoading(false);
-  }, []);
+  }, [user]);
 
   useEffect(() => { load(); }, [load]);
 
