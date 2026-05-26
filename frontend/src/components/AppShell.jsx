@@ -356,7 +356,7 @@ export default function AppShell() {
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
         {/* Project selector + weather stacked, right-aligned */}
-        <div className="absolute top-4 right-5 z-20 pointer-events-auto flex flex-col items-end gap-2">
+        <div className="absolute top-4 right-5 z-20 pointer-events-auto flex flex-col items-center gap-2">
           <ProjectSelector />
           {weather && <WeatherCompact weather={weather} />}
         </div>
