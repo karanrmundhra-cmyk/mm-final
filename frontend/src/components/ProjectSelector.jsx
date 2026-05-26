@@ -3,15 +3,15 @@ import { ChevronDown, Plus, Check, Pencil, X } from "lucide-react";
 import { useProjects } from "@/lib/projects";
 import { api } from "@/lib/api";
 
+/* VIBGYOR palette — Violet · Indigo · Blue · Green · Yellow · Orange · Red */
 const SPACE_COLORS = [
-  "#C9A961", // Gold
-  "#7B9BF2", // Blue
-  "#82C87D", // Green
-  "#E07B7B", // Rose
-  "#9B7BE8", // Purple
-  "#E8A87C", // Amber
-  "#7BC8C8", // Teal
-  "#D4A0D4", // Lavender
+  "#8B5CF6", // Violet
+  "#6366F1", // Indigo
+  "#60A5FA", // Blue
+  "#34D399", // Green
+  "#FBBF24", // Yellow
+  "#FB923C", // Orange
+  "#F87171", // Red
 ];
 
 export default function ProjectSelector() {
@@ -130,7 +130,7 @@ export default function ProjectSelector() {
                 <div className="px-3 py-2 space-y-2" onClick={e => e.stopPropagation()}>
                   <input autoFocus value={newName} onChange={e => setNewName(e.target.value)}
                          onKeyDown={e => { if (e.key === "Enter") addSpace(); if (e.key === "Escape") setAdding(false); }}
-                         placeholder="Space name"
+                         placeholder="Space Name"
                          className="w-full text-xs rounded px-2 py-1 outline-none"
                          style={{ background: "var(--mm-surface-2)", border: "1px solid var(--mm-border)",
                                   color: "var(--mm-text)", fontFamily: "'Outfit', sans-serif" }} />

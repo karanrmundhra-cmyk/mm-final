@@ -242,7 +242,10 @@ export default function Dashboard() {
     return NEWS_COUNTRIES.find(c => c.code === code)?.label || "Global";
   });
   const [quote,          setQuote]         = useState(null);
-  const [collapsed,     setCollapsed]     = useState({});
+  const [collapsed,     setCollapsed]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mm_section_collapsed")) || {}; }
+    catch { return {}; }
+  });
   const [now,           setNow]           = useState(new Date());
   const [completedIds,  setCompletedIds]  = useState(new Set());
   const [showReview,    setShowReview]    = useState(false);
@@ -272,6 +275,9 @@ export default function Dashboard() {
   const [dragId,        setDragId]        = useState(null);
   const [dragOverId,    setDragOverId]    = useState(null);
   const [showNewsPicker, setShowNewsPicker] = useState(false);
+  const [newsLoading,   setNewsLoading]   = useState(false);
+  /* Incrementing trigger forces re-fetch when user clicks "Save & Fetch" */
+  const [othersFetchTrigger, setOthersFetchTrigger] = useState(0);
 
   /* Clock */
   useEffect(() => {
@@ -317,18 +323,23 @@ export default function Dashboard() {
   const isCountrySlot   = activeSlotId === "country";
   const newsCountryCode = NEWS_COUNTRIES.find(c => c.label === newsCountryLabel)?.code || "";
   useEffect(() => {
-    setNews([]);
+    /* Fade old content instead of hard-clearing — avoids layout jerk */
+    setNewsLoading(true);
+    const done = (items) => { setNews(items || []); setNewsLoading(false); };
+
     if (isOthersSlot) {
       if (customRss) {
         api.get("/news", { params: { custom_url: customRss } })
-           .then(r => setNews(r.data.items || r.data || []))
-           .catch(() => {});
+           .then(r => done(r.data.items || r.data))
+           .catch(() => done([]));
       } else if (newsKeywords) {
         const params = { q: newsKeywords };
         if (newsCountryCode) params.gl = newsCountryCode;
         api.get("/news", { params })
-           .then(r => setNews(r.data.items || r.data || []))
-           .catch(() => {});
+           .then(r => done(r.data.items || r.data))
+           .catch(() => done([]));
+      } else {
+        done([]);
       }
       return;
     }
@@ -336,16 +347,20 @@ export default function Dashboard() {
       const params = { category: "general" };
       if (newsCountryCode) params.gl = newsCountryCode;
       api.get("/news", { params })
-         .then(r => setNews(r.data.items || r.data || []))
-         .catch(() => {});
+         .then(r => done(r.data.items || r.data))
+         .catch(() => done([]));
       return;
     }
     api.get("/news", { params: { category: activeSlotId } })
-       .then(r => setNews(r.data.items || r.data || []))
-       .catch(() => {});
-  }, [activeNewsSlot, activeSlotId, isOthersSlot, isCountrySlot, newsCountryCode, customRss, newsKeywords]); // eslint-disable-line
+       .then(r => done(r.data.items || r.data))
+       .catch(() => done([]));
+  }, [activeNewsSlot, activeSlotId, isOthersSlot, isCountrySlot, newsCountryCode, customRss, newsKeywords, othersFetchTrigger]); // eslint-disable-line
 
-  const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
+  const toggle = (key) => setCollapsed(c => {
+    const next = { ...c, [key]: !c[key] };
+    localStorage.setItem("mm_section_collapsed", JSON.stringify(next));
+    return next;
+  });
   const isOpen = (key) => !collapsed[key];
 
   /* Drag-and-drop handlers */
@@ -597,8 +612,8 @@ export default function Dashboard() {
           case "cashflow":
             return data?.cashflow ? DS("cashflow", S("cashflow", "Financial Overview",
               <>
-                {/* Month / Year toggle — inside children so it hides when collapsed */}
-                <div className="flex gap-1 mb-3" onClick={e => e.stopPropagation()}>
+                {/* Month / Year toggle — aligned with section title text */}
+                <div className="flex gap-1 mb-3" style={{ paddingLeft: 23 }} onClick={e => e.stopPropagation()}>
                   {["month", "year"].map(v => (
                     <button key={v} onClick={() => setFinanceView(v)}
                             style={{
@@ -715,9 +730,9 @@ export default function Dashboard() {
               </>)) : null;
 
           case "news": {
-            /* 5-slot tab pills — rendered INSIDE children so they hide when collapsed */
+            /* 5-slot tab pills — inside children, aligned with section title text */
             const newsPills = (
-              <div className="flex gap-1 flex-wrap mb-3" onClick={e => e.stopPropagation()}>
+              <div className="flex gap-1 flex-wrap mb-3" style={{ paddingLeft: 23 }} onClick={e => e.stopPropagation()}>
                 {newsSlots.map((slotId, i) => {
                   let label;
                   if (slotId === "others")  label = "Others";
@@ -765,29 +780,35 @@ export default function Dashboard() {
                     <button onClick={() => {
                               localStorage.setItem("mm_news_custom_url", customRss);
                               localStorage.setItem("mm_news_keywords", newsKeywords);
+                              setOthersFetchTrigger(t => t + 1); // force re-fetch
                             }}
                             className="mm-btn-gold px-4 text-xs">Save & Fetch</button>
                   </div>
                 )}
 
-                <div className="mm-card overflow-hidden">
-                  {news.length === 0
-                    ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>
-                        {isOthersSlot ? "Enter a URL or keywords above, then tap Save & Fetch." : "No News Available"}
-                      </p>
-                    : news.filter(item => item && typeof item === "string" && item.trim().length > 5 && item !== "Google News").map((item, i) => (
-                        <a key={i}
-                           href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
-                           target="_blank" rel="noopener noreferrer"
-                           className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
-                           style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
-                          <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
-                          <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                style={{ color: "var(--mm-gold)" }}>→</span>
-                        </a>
-                      ))
-                  }
-                </div>
+                {/* News card — fade while loading to avoid layout jerk */}
+                {(!isOthersSlot || news.length > 0) && (
+                  <div className="mm-card overflow-hidden"
+                       style={{ opacity: newsLoading ? 0.45 : 1, transition: "opacity 0.22s ease" }}>
+                    {news.length === 0
+                      ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No News Available</p>
+                      : news
+                          .filter(item => item && typeof item === "string" && item.trim().length > 5 && item !== "Google News")
+                          .slice(0, 3)
+                          .map((item, i) => (
+                            <a key={i}
+                               href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
+                               target="_blank" rel="noopener noreferrer"
+                               className="mm-row flex items-center gap-2 px-4 py-2.5 border-b last:border-0 group"
+                               style={{ borderColor: "var(--mm-border)", textDecoration: "none" }}>
+                              <span className="flex-1 text-sm" style={{ color: "var(--mm-muted)" }}>{item}</span>
+                              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                    style={{ color: "var(--mm-gold)" }}>→</span>
+                            </a>
+                          ))
+                    }
+                  </div>
+                )}
               </div>));
           }
 

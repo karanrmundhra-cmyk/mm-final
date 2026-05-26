@@ -63,6 +63,10 @@ export default function AppShell() {
   const [weather,        setWeather]        = useState(null);
   const [theme,          setTheme]          = useState(() => localStorage.getItem("mm_theme") || "dark");
   const [spaceKey,       setSpaceKey]       = useState(0);
+  const [fontZoom,       setFontZoom]       = useState(() => {
+    const k = localStorage.getItem("mm_font_size") || "default";
+    return k === "small" ? 0.88 : k === "large" ? 1.12 : 1;
+  });
 
   // Remount page content when user switches space — forces data refetch
   useEffect(() => {
@@ -76,6 +80,16 @@ export default function AppShell() {
     const handler = () => setShowShortcuts(true);
     window.addEventListener("mm:shortcuts", handler);
     return () => window.removeEventListener("mm:shortcuts", handler);
+  }, []);
+
+  // Font size changes from Settings page
+  useEffect(() => {
+    const handler = () => {
+      const k = localStorage.getItem("mm_font_size") || "default";
+      setFontZoom(k === "small" ? 0.88 : k === "large" ? 1.12 : 1);
+    };
+    window.addEventListener("mm:font-size-changed", handler);
+    return () => window.removeEventListener("mm:font-size-changed", handler);
   }, []);
 
   useEffect(() => {
@@ -229,7 +243,7 @@ export default function AppShell() {
         document.body
       )}
 
-      <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>
+      <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)", zoom: fontZoom }}>
 
       {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
       <aside
@@ -248,7 +262,7 @@ export default function AppShell() {
                         background: "#0A0A0A", flexShrink: 0,
                         boxShadow: "0 0 12px rgba(201,169,97,0.2)" }}>
             <img src="/mm-logo.png" alt="Mind Matters"
-                 style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                 style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scale(1.08)" }} />
           </div>
           {!collapsed && (
             <div className="min-w-0">
@@ -315,8 +329,8 @@ export default function AppShell() {
                   <ChevronRight size={14} />
                   <Tooltip label="Expand" />
                 </button>
-                {/* Internal divider before sign-out */}
-                <div style={{ width: 28, height: 1, background: "var(--mm-border)", margin: "2px 0" }} />
+                {/* Divider before sign-out — full width to match the section borderTop lines */}
+                <div style={{ width: "100%", height: 1, background: "var(--mm-border)", margin: "2px 0" }} />
                 <button onClick={logout}
                         className="relative w-full flex items-center justify-center p-2 transition-all group"
                         style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}

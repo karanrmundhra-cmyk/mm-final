@@ -17,8 +17,9 @@ export default function Settings() {
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState("Profile");
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
-  const [density, setDensityState] = useState(() => localStorage.getItem("mm_density") || "default");
-  const [oled,    setOledState]    = useState(() => localStorage.getItem("mm_oled") === "1");
+  const [density,   setDensityState]  = useState(() => localStorage.getItem("mm_density") || "default");
+  const [oled,      setOledState]    = useState(() => localStorage.getItem("mm_oled") === "1");
+  const [fontSize,  setFontSize]     = useState(() => localStorage.getItem("mm_font_size") || "default");
 
   const TABS = ["Profile", "Appearance", "Spaces", "Telegram", "Export", "Account", "People", "Trash"];
 
@@ -103,6 +104,12 @@ export default function Settings() {
     if (d === "comfortable")  html.classList.add("density-comfortable");
     localStorage.setItem("mm_density", d);
     setDensityState(d);
+  };
+
+  const applyFontSize = (key) => {
+    setFontSize(key);
+    localStorage.setItem("mm_font_size", key);
+    window.dispatchEvent(new CustomEvent("mm:font-size-changed"));
   };
 
   const toggleOled = () => {
@@ -231,6 +238,35 @@ export default function Settings() {
                       left: oled ? 18 : 2,
                     }} />
             </button>
+          </div>
+
+          {/* Font Size */}
+          <div className="mm-card p-4">
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--mm-text)" }}>Font Size</p>
+            <p className="text-xs mb-3" style={{ color: "var(--mm-muted)" }}>Scale the text size throughout the app</p>
+            <div className="flex gap-2">
+              {[
+                { key: "small",   label: "Small",   desc: "Compact text" },
+                { key: "default", label: "Default", desc: "Balanced"      },
+                { key: "large",   label: "Large",   desc: "Easier to read" },
+              ].map(({ key, label, desc }) => {
+                const active = fontSize === key;
+                return (
+                  <button key={key} onClick={() => applyFontSize(key)}
+                          className="flex-1 px-3 py-3 rounded-xl text-center transition-all"
+                          style={{
+                            background: active ? "rgba(201,169,97,0.12)" : "var(--mm-surface-2)",
+                            border: active ? "1px solid var(--mm-border-gold)" : "1px solid var(--mm-border)",
+                          }}>
+                    <p className="text-sm font-medium mb-0.5"
+                       style={{ color: active ? "var(--mm-gold)" : "var(--mm-text)" }}>
+                      {label}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--mm-muted)" }}>{desc}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Keyboard shortcuts */}

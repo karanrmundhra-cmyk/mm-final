@@ -81,7 +81,7 @@ export default function Login() {
             <img
               src="/mm-logo.png"
               alt="Mind Matters"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scale(1.08)" }}
             />
           </div>
 

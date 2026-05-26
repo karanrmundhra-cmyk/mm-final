@@ -213,9 +213,11 @@ export default function WorldClock() {
     try { return JSON.parse(localStorage.getItem("mm_world_cities") || "null") || DEFAULT_CITIES; }
     catch { return DEFAULT_CITIES; }
   });
-  const [time,       setTime]       = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
-  const [search,     setSearch]     = useState("");
+  const [time,          setTime]          = useState(new Date());
+  const [showPicker,    setShowPicker]    = useState(false);
+  const [search,        setSearch]        = useState("");
+  const [dragClockIdx,  setDragClockIdx]  = useState(null);
+  const [dragOverIdx,   setDragOverIdx]   = useState(null);
 
   /* Single interval drives all 5 clocks */
   useEffect(() => {
@@ -233,6 +235,15 @@ export default function WorldClock() {
 
   const removeCity = (idx) => {
     const next = cities.filter((_, i) => i !== idx);
+    setCities(next);
+    localStorage.setItem("mm_world_cities", JSON.stringify(next));
+  };
+
+  const reorderCity = (fromIdx, toIdx) => {
+    if (fromIdx === toIdx) return;
+    const next = [...cities];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
     setCities(next);
     localStorage.setItem("mm_world_cities", JSON.stringify(next));
   };
@@ -272,11 +283,21 @@ export default function WorldClock() {
 
           return (
             <div key={`${tz}-${idx}`}
+                 draggable
+                 onDragStart={() => setDragClockIdx(idx)}
+                 onDragEnd={() => { setDragClockIdx(null); setDragOverIdx(null); }}
+                 onDragOver={e => { e.preventDefault(); setDragOverIdx(idx); }}
+                 onDrop={e => { e.preventDefault(); if (dragClockIdx !== null) reorderCity(dragClockIdx, idx); setDragClockIdx(null); setDragOverIdx(null); }}
                  className="relative group flex flex-col items-center gap-2 py-3 px-2"
                  style={{
                    background: "var(--mm-surface-2)",
-                   border: "1px solid var(--mm-border)",
+                   border: dragOverIdx === idx && dragClockIdx !== idx
+                     ? "1px solid var(--mm-gold)"
+                     : "1px solid var(--mm-border)",
                    borderRadius: 16,
+                   opacity: dragClockIdx === idx ? 0.45 : 1,
+                   cursor: "grab",
+                   transition: "opacity 0.15s, border-color 0.15s",
                  }}>
               {/* Remove button */}
               <button onClick={() => removeCity(idx)}

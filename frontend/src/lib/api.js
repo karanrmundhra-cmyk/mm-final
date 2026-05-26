@@ -6,7 +6,7 @@ export const API = process.env.REACT_APP_API_URL || `${BACKEND_URL}/api`;
 
 export const api = axios.create({ baseURL: API });
 
-const PROJECT_SCOPED = ["/tasks","/routines","/transactions","/notes","/reminders","/deadlines"];
+const PROJECT_SCOPED = ["/tasks","/routines","/transactions","/notes","/reminders","/deadlines","/dashboard"];
 
 function shouldScope(url) {
   if (!url) return false;
