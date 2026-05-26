@@ -153,7 +153,7 @@ function AffirmationCard() {
          }}>
       <div className="flex items-center justify-between mb-2">
         <p style={{
-          fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+          fontSize: 10, letterSpacing: "0.05em",
           color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif",
         }}>
           Personal Affirmation
@@ -402,7 +402,7 @@ export default function Dashboard() {
                 {s.value}
               </div>
               <div className="mt-1" style={{
-                fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                fontSize: 10, letterSpacing: "0.04em",
                 color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
               }}>
                 {s.label}
@@ -429,7 +429,7 @@ export default function Dashboard() {
               Low-confidence items, duplicates, failed imports
             </p>
           </div>
-          <span className="text-xs uppercase tracking-widest" style={{ color: "var(--mm-gold)" }}>
+          <span className="text-xs" style={{ color: "var(--mm-gold)", letterSpacing: "0.04em" }}>
             Review →
           </span>
         </button>
@@ -498,7 +498,7 @@ export default function Dashboard() {
                   {Object.entries(financeView === "year" && yearlyData ? yearlyData : data.cashflow).map(([cat, val]) => (
                     <button key={cat} onClick={() => navigate("/cash-flow")}
                             className="mm-card mm-row p-4 text-left">
-                      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                      <div style={{ fontSize: 10, letterSpacing: "0.04em",
                                     color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
                         {cat}
                       </div>
@@ -508,7 +508,7 @@ export default function Dashboard() {
                     </button>
                   ))}
                   <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                    <div style={{ fontSize: 10, letterSpacing: "0.04em",
                                   color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
                       Upcoming Payments
                     </div>
@@ -519,7 +519,7 @@ export default function Dashboard() {
                     </div>
                   </button>
                   <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
-                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase",
+                    <div style={{ fontSize: 10, letterSpacing: "0.04em",
                                   color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", marginBottom: 6 }}>
                       Upcoming Receipts
                     </div>
@@ -549,7 +549,6 @@ export default function Dashboard() {
                               style={{
                                 fontSize: 9, padding: "2px 8px", borderRadius: 20,
                                 fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
-                                textTransform: "uppercase",
                                 background: financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
                                 color:      financeView === v ? "#0a0a0a" : "var(--mm-muted)",
                                 border: "none", cursor: "pointer",
@@ -572,7 +571,7 @@ export default function Dashboard() {
                       <span className="w-2 h-2 rounded-full flex-shrink-0"
                             style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
                       <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>{r.title}</span>
-                      <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                      <span style={{ fontSize: 9, letterSpacing: "0.03em",
                                      color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>
                         Reminder
                       </span>
@@ -590,7 +589,7 @@ export default function Dashboard() {
                       <span className="w-2 h-2 rounded-full flex-shrink-0"
                             style={{ background: "var(--mm-muted)", opacity: 0.5 }} />
                       <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                      <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+                      <span style={{ fontSize: 9, letterSpacing: "0.03em",
                                      color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>
                         Deadline
                       </span>
@@ -610,7 +609,7 @@ export default function Dashboard() {
                     "{quote.quote}"
                   </p>
                   {quote.author && (
-                    <p className="text-xs mt-2 uppercase tracking-widest" style={{ color: "var(--mm-muted)" }}>
+                    <p className="text-xs mt-2" style={{ color: "var(--mm-muted)", letterSpacing: "0.04em" }}>
                       — {quote.author}
                     </p>
                   )}
@@ -711,7 +710,7 @@ export default function Dashboard() {
 
             {/* Category */}
             <p style={{
-              fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
+              fontSize: 9, letterSpacing: "0.06em",
               color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
             }}>Category</p>
             <div className="flex flex-wrap gap-1.5 mb-5">
@@ -740,7 +739,7 @@ export default function Dashboard() {
 
             {/* Country */}
             <p style={{
-              fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
+              fontSize: 9, letterSpacing: "0.06em",
               color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
             }}>Country</p>
             <div className="flex flex-wrap gap-1.5 mb-5">

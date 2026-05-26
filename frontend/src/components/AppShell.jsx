@@ -389,7 +389,7 @@ export default function AppShell() {
                     onMouseEnter={e => e.currentTarget.style.color = "var(--mm-gold)"}
                     onMouseLeave={e => e.currentTarget.style.color = "var(--mm-muted)"}>
               <Icon size={18} />
-              <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
+              <span style={{ fontSize: 9, letterSpacing: "0.04em",
                              fontFamily: "'Outfit', sans-serif" }}>{label}</span>
             </button>
           ))}
@@ -427,7 +427,7 @@ export default function AppShell() {
                              color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
                            })}>
                     <Icon size={20} />
-                    <span style={{ fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+                    <span style={{ fontSize: 10, letterSpacing: "0.03em",
                                    fontFamily: "'Outfit', sans-serif" }}>
                       {label}
                     </span>

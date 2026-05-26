@@ -54,8 +54,8 @@ export default function CompletionRing({ done = 0, total = 0, size = 80, stroke 
         </span>
         {label && (
           <span style={{
-            fontSize: 8, color: "var(--mm-muted)", letterSpacing: "0.12em",
-            textTransform: "uppercase", marginTop: 3,
+            fontSize: 8, color: "var(--mm-muted)", letterSpacing: "0.04em",
+            marginTop: 3,
             fontFamily: "'Outfit',sans-serif",
           }}>
             {label}

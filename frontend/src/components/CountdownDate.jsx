@@ -148,7 +148,7 @@ export default function CountdownDate() {
         <button onClick={() => { setLabelDraft(label); setEditLabel(true); }}
                 className="flex items-center gap-1.5 group"
                 style={{
-                  fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
+                  fontSize: 9, letterSpacing: "0.06em",
                   color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
                   background: "none", border: "none", cursor: "pointer",
                 }}>
@@ -171,8 +171,8 @@ export default function CountdownDate() {
           {remaining.days}
         </span>
         <span style={{
-          fontSize: 9, color: "var(--mm-muted)", letterSpacing: "0.2em",
-          textTransform: "uppercase", fontFamily: "'Outfit', sans-serif",
+          fontSize: 9, color: "var(--mm-muted)", letterSpacing: "0.06em",
+          fontFamily: "'Outfit', sans-serif",
         }}>
           {remaining.days === 1 ? "day" : "days"}
         </span>
@@ -203,8 +203,8 @@ export default function CountdownDate() {
                 {pad(v)}
               </span>
               <span style={{
-                fontSize: 7, color: "var(--mm-muted)", letterSpacing: "0.15em",
-                textTransform: "uppercase", fontFamily: "'Outfit', sans-serif", opacity: 0.6,
+                fontSize: 7, color: "var(--mm-muted)", letterSpacing: "0.05em",
+                fontFamily: "'Outfit', sans-serif", opacity: 0.6,
               }}>
                 {l}
               </span>

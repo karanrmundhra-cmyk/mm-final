@@ -132,14 +132,14 @@ export default function Reports() {
               {data.briefing ? (
                 <>
                   <div className="mm-card p-4">
-                    <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--mm-muted)" }}>Today's Briefing</p>
+                    <p className="text-xs mb-2" style={{ color: "var(--mm-muted)", letterSpacing: "0.04em" }}>Today's Briefing</p>
                     <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "var(--mm-text)" }}>
                       {data.briefing.summary || data.briefing}
                     </p>
                   </div>
                   {data.briefing.sections && data.briefing.sections.map((s, i) => (
                     <div key={i} className="mm-card p-4">
-                      <p className="text-xs uppercase tracking-wider mb-2" style={{ color: "var(--mm-muted)" }}>{s.title}</p>
+                      <p className="text-xs mb-2" style={{ color: "var(--mm-muted)", letterSpacing: "0.04em" }}>{s.title}</p>
                       <p className="text-sm leading-relaxed" style={{ color: "var(--mm-text)" }}>{s.content}</p>
                     </div>
                   ))}
@@ -167,7 +167,7 @@ export default function Reports() {
                   </div>
                   {(data.synopsis.monthly || []).length > 0 && (
                     <div className="mm-card p-4">
-                      <p className="text-xs uppercase tracking-wider mb-3" style={{ color: "var(--mm-muted)" }}>Monthly Trend</p>
+                      <p className="text-xs mb-3" style={{ color: "var(--mm-muted)", letterSpacing: "0.04em" }}>Monthly Trend</p>
                       <div className="space-y-2">
                         {data.synopsis.monthly.map((m, i) => (
                           <div key={i} className="flex items-center gap-3">

@@ -162,7 +162,7 @@ export default function CountdownTimer() {
           {!done && (
             <p style={{
               fontSize: 9, color: "var(--mm-muted)",
-              letterSpacing: "0.18em", textTransform: "uppercase",
+              letterSpacing: "0.06em",
               fontFamily: "'Outfit', sans-serif",
             }}>
               {running ? "Timer" : "Paused"}

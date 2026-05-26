@@ -417,8 +417,8 @@ export default function Tasks() {
             {collapsedSecs.has(sec)
               ? <ChevronRight size={11} style={{ color:"var(--mm-muted)" }} />
               : <ChevronDown  size={11} style={{ color:"var(--mm-muted)" }} />}
-            <span className="text-xs font-semibold uppercase tracking-widest"
-                  style={{ color:"var(--mm-muted)", fontFamily:"'Outfit',sans-serif", letterSpacing:"0.12em" }}>
+            <span className="text-xs font-semibold"
+                  style={{ color:"var(--mm-muted)", fontFamily:"'Outfit',sans-serif", letterSpacing:"0.04em" }}>
               {sec}
             </span>
             <span className="text-xs" style={{ color:"var(--mm-muted)", opacity:0.5 }}>{secTasks.length}</span>
