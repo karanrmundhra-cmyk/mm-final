@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Plus, Trash2, Flag, Paperclip, Check, Loader, GripVertical,
   ChevronRight, ChevronDown, MessageSquare, ArrowUp, ArrowDown,
-  Send, X, Copy,
+  Send, X, Copy, Upload, Download, Mic,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -12,7 +12,6 @@ import ConfidenceBadge from "@/components/ConfidenceBadge";
 import Skeleton from "@/components/Skeleton";
 import SwipeRow from "@/components/SwipeRow";
 import OnboardingTip from "@/components/OnboardingTip";
-import DateQuickPick from "@/components/DateQuickPick";
 
 const STATUSES   = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
 const PRIORITIES = ["", "P1", "P2", "P3", "P4"];
@@ -29,16 +28,18 @@ const STATUS_COLORS = {
   "On Hold":     "var(--mm-muted)",
 };
 
-const COLS = "32px 28px 1fr 110px 120px 90px 100px 108px";
+/* column grid — no leading checkbox col, just the check circle */
+const COLS = "28px 28px 1fr 110px 120px 90px 100px 108px";
 
 /* ─── Column-header filter dropdown ─────────────────────────── */
 function ColFilter({ label, col, filter, setFilter, values, open, setOpen }) {
   const active = !!filter[col];
   return (
     <div className="relative inline-flex items-center gap-0.5 select-none">
-      <button onClick={() => setOpen(open === col ? null : col)}
-              className="flex items-center gap-0.5 hover:opacity-100 transition-opacity"
-              style={{ color: active ? "var(--mm-gold)" : "inherit", opacity: active ? 1 : 0.7 }}>
+      <button
+        onClick={() => setOpen(open === col ? null : col)}
+        className="flex items-center gap-0.5 hover:opacity-100 transition-opacity"
+        style={{ color: active ? "var(--mm-gold)" : "inherit", opacity: active ? 1 : 0.7 }}>
         {label}
         {active && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 ml-0.5"
                          style={{ background:"var(--mm-gold)" }} />}
@@ -65,7 +66,7 @@ function ColFilter({ label, col, filter, setFilter, values, open, setOpen }) {
   );
 }
 
-/* ─── Person picker (typeahead from People list) ─────────────── */
+/* ─── Person picker (typeahead) ──────────────────────────────── */
 function PersonCell({ task, people, update }) {
   const [open, setOpen] = useState(false);
   const filtered = people.filter(p =>
@@ -96,32 +97,62 @@ function PersonCell({ task, people, update }) {
   );
 }
 
+/* ─── Excel-style dropdown cell for new-row ─────────────────── */
+function DropCell({ value, onChange, options, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const filtered = options.filter(o => !value || o.toLowerCase().includes(value.toLowerCase())).slice(0, 8);
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 160)}
+        className="mm-input-ghost text-xs w-full"
+        placeholder={placeholder || "—"} />
+      {open && filtered.length > 0 && (
+        <div className="absolute top-full left-0 z-50 mt-0.5 py-1 rounded-xl shadow-2xl"
+             style={{ background:"var(--mm-surface-2)", border:"1px solid var(--mm-border-gold)",
+                      minWidth:140, maxHeight:160, overflowY:"auto" }}>
+          {filtered.map(o => (
+            <button key={o} className="w-full text-left px-3 py-1.5 text-xs hover:opacity-80 transition-opacity"
+                    style={{ color: value===o ? "var(--mm-gold)" : "var(--mm-text)" }}
+                    onMouseDown={() => { onChange(o); setOpen(false); }}>
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main component ─────────────────────────────────────────── */
 export default function Tasks() {
-  const [tasks,     setTasks]     = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [aiText,    setAiText]    = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [preview,   setPreview]   = useState(null);
-  const [newRow,    setNewRow]    = useState({ ...EMPTY });
-  const [filter,    setFilter]    = useState({ status:"", group:"", name:"" });
-  const [groups,    setGroups]    = useState([]);
-  const [selected,  setSelected]  = useState(new Set());
-  const [dragId,    setDragId]    = useState(null);
-  const [dragOverId,setDragOverId]= useState(null);
-
-  // features
-  const [people,           setPeople]           = useState([]);
-  const [expanded,         setExpanded]         = useState(new Set());
-  const [commentOpen,      setCommentOpen]      = useState(null);
-  const [newComment,       setNewComment]       = useState("");
-  const [newSubtask,       setNewSubtask]       = useState({});
-  const [collapsedSecs,    setCollapsedSecs]    = useState(new Set());
-  const [userSections,     setUserSections]     = useState([]);
-  const [addingSec,        setAddingSec]        = useState(false);
-  const [newSecName,       setNewSecName]       = useState("");
-  const [colFilter,        setColFilter]        = useState(null);
-  const [datePickOpen,     setDatePickOpen]     = useState(false);
+  const [tasks,        setTasks]        = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [aiText,       setAiText]       = useState("");
+  const [aiLoading,    setAiLoading]    = useState(false);
+  const [preview,      setPreview]      = useState(null);
+  const [newRow,       setNewRow]       = useState({ ...EMPTY });
+  const [filter,       setFilter]       = useState({ status:"", name:"" });
+  const [activeGroup,  setActiveGroup]  = useState(""); // group pill filter
+  const [groups,       setGroups]       = useState([]);
+  const [selected,     setSelected]     = useState(new Set());
+  const [dragId,       setDragId]       = useState(null);
+  const [dragOverId,   setDragOverId]   = useState(null);
+  const [people,       setPeople]       = useState([]);
+  const [expanded,     setExpanded]     = useState(new Set());
+  const [commentOpen,  setCommentOpen]  = useState(null);
+  const [newComment,   setNewComment]   = useState("");
+  const [newSubtask,   setNewSubtask]   = useState({});
+  const [collapsedSecs,setCollapsedSecs]= useState(new Set());
+  const [userSections, setUserSections] = useState([]);
+  const [colFilter,    setColFilter]    = useState(null);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [addingGroup,  setAddingGroup]  = useState(false);
+  const [voiceActive,  setVoiceActive]  = useState(false);
+  const importRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -137,6 +168,12 @@ export default function Tasks() {
     api.get("/people").then(r => setPeople(r.data || [])).catch(() => {});
   }, []);
 
+  /* ── All groups (from tasks + user-created) ── */
+  const allGroups = useMemo(
+    () => [...new Set([...userSections, ...groups])],
+    [userSections, groups]
+  );
+
   /* ── AI parse ── */
   const parseAi = async () => {
     if (!aiText.trim()) return;
@@ -144,12 +181,12 @@ export default function Tasks() {
     try {
       const { data } = await api.post("/parse/task", { text:aiText });
       setPreview({ fields:[
-        { key:"task",    label:"Title",   value:data.task,               confidence:data.confidence },
-        { key:"date",    label:"Due date",value:data.date,               confidence:data.confidence },
-        { key:"name",    label:"Person",  value:data.name,               confidence:"medium" },
-        { key:"group",   label:"Group",   value:data.group,              confidence:"medium" },
-        { key:"status",  label:"Status",  value:data.status||"Pending",  confidence:"high" },
-        { key:"details", label:"Details", value:data.details,            confidence:"medium" },
+        { key:"task",    label:"Title",    value:data.task,              confidence:data.confidence },
+        { key:"date",    label:"Due date", value:data.date,              confidence:data.confidence },
+        { key:"name",    label:"Person",   value:data.name,              confidence:"medium" },
+        { key:"group",   label:"Group",    value:data.group,             confidence:"medium" },
+        { key:"status",  label:"Status",   value:data.status||"Pending", confidence:"high" },
+        { key:"details", label:"Details",  value:data.details,           confidence:"medium" },
       ], raw:data });
     } catch { toast.error("Parse failed"); }
     setAiLoading(false);
@@ -172,6 +209,42 @@ export default function Tasks() {
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add task"); }
   };
 
+  /* ── Voice ── */
+  const handleVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { toast.error("Speech recognition not supported"); return; }
+    const rec = new SR();
+    rec.lang = "en-IN";
+    rec.onstart  = () => setVoiceActive(true);
+    rec.onresult = (e) => { setAiText(e.results[0][0].transcript); setVoiceActive(false); };
+    rec.onerror  = () => setVoiceActive(false);
+    rec.onend    = () => setVoiceActive(false);
+    rec.start();
+  };
+
+  /* ── Import / Export ── */
+  const exportCsv = () => window.open(`${api.defaults.baseURL}/export/tasks.csv`, "_blank");
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      await api.post("/import/tasks", fd);
+      toast.success("Tasks imported");
+      load();
+    } catch { toast.error("Import failed"); }
+    e.target.value = "";
+  };
+
+  /* ── Groups ── */
+  const createGroup = () => {
+    if (!newGroupName.trim()) return;
+    setUserSections(s => [...new Set([...s, newGroupName.trim()])]);
+    setNewRow(r => ({...r, group:newGroupName.trim()}));
+    setNewGroupName(""); setAddingGroup(false);
+  };
+
   /* ── Core ── */
   const update = async (id, patch) => {
     setTasks(ts => ts.map(t => t.id === id ? {...t,...patch} : t));
@@ -184,16 +257,13 @@ export default function Tasks() {
 
   const del = (id) => {
     const task = tasks.find(t => t.id === id);
-    setTasks(ts => ts.filter(t => t.id !== id)); // optimistic
+    setTasks(ts => ts.filter(t => t.id !== id));
     let undid = false;
     toast("Moved to trash", {
-      action: {
-        label: "Undo",
-        onClick: () => {
-          undid = true;
-          setTasks(ts => [...ts, task].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
-        },
-      },
+      action: { label:"Undo", onClick:() => {
+        undid = true;
+        setTasks(ts => [...ts, task].sort((a,b) => (a.order_index||0) - (b.order_index||0)));
+      }},
       duration: 4000,
     });
     setTimeout(() => { if (!undid) api.delete(`/tasks/${id}`).catch(() => load()); }, 4500);
@@ -202,9 +272,8 @@ export default function Tasks() {
   const duplicate = async (task) => {
     try {
       const { id, ...rest } = task;
-      await api.post("/tasks", { ...rest, task: `${task.task} (copy)` });
-      toast.success("Task duplicated");
-      load();
+      await api.post("/tasks", { ...rest, task:`${task.task} (copy)` });
+      toast.success("Task duplicated"); load();
     } catch { toast.error("Failed to duplicate"); }
   };
 
@@ -221,17 +290,12 @@ export default function Tasks() {
   const moveUp = (taskId) => {
     const idx = visible.findIndex(t => t.id === taskId);
     if (idx <= 0) return;
-    const r = [...visible];
-    [r[idx-1], r[idx]] = [r[idx], r[idx-1]];
-    applyReorder(r);
+    const r = [...visible]; [r[idx-1],r[idx]] = [r[idx],r[idx-1]]; applyReorder(r);
   };
-
   const moveDown = (taskId) => {
     const idx = visible.findIndex(t => t.id === taskId);
     if (idx >= visible.length - 1) return;
-    const r = [...visible];
-    [r[idx], r[idx+1]] = [r[idx+1], r[idx]];
-    applyReorder(r);
+    const r = [...visible]; [r[idx],r[idx+1]] = [r[idx+1],r[idx]]; applyReorder(r);
   };
 
   /* ── Drag ── */
@@ -293,19 +357,15 @@ export default function Tasks() {
     setNewComment("");
   };
 
-  /* ── Sections ── */
-  const createSection = () => {
-    if (!newSecName.trim()) return;
-    setUserSections(s => [...new Set([...s, newSecName.trim()])]);
-    setNewRow(r => ({...r, group:newSecName.trim()}));
-    setNewSecName(""); setAddingSec(false);
-  };
-  const toggleSection = (sec) => setCollapsedSecs(s => { const n=new Set(s); n.has(sec)?n.delete(sec):n.add(sec); return n; });
+  /* ── Section collapse ── */
+  const toggleSection = (sec) => setCollapsedSecs(s => {
+    const n = new Set(s); n.has(sec) ? n.delete(sec) : n.add(sec); return n;
+  });
 
   /* ── Derived ── */
   const visible = tasks.filter(t => {
     if (filter.status && t.status !== filter.status) return false;
-    if (filter.group  && t.group  !== filter.group)  return false;
+    if (activeGroup   && t.group  !== activeGroup)   return false;
     if (filter.name   && !t.name?.toLowerCase().includes(filter.name.toLowerCase())) return false;
     return true;
   }).sort((a,b) => {
@@ -346,20 +406,165 @@ export default function Tasks() {
           <p className="mm-page-sub">{pending} pending · {visible.length} total</p>
         </div>
         <div className="flex gap-2">
-          <select value={filter.status}
-                  onChange={e => setFilter(f => ({...f, status:e.target.value}))}
-                  className="mm-filter-select">
-            <option value="">All Status</option>
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
-          </select>
-          <select value={filter.group}
-                  onChange={e => setFilter(f => ({...f, group:e.target.value}))}
-                  className="mm-filter-select">
-            <option value="">All Groups</option>
-            {groups.map(g => <option key={g}>{g}</option>)}
-          </select>
+          <label className="mm-btn-ghost flex items-center gap-1.5 cursor-pointer" title="Import CSV">
+            <Upload size={12} /> Import
+            <input ref={importRef} type="file" accept=".csv,.xlsx" className="hidden" onChange={handleImport} />
+          </label>
+          <button onClick={exportCsv} className="mm-btn-ghost flex items-center gap-1.5" title="Export CSV">
+            <Download size={12} /> Export
+          </button>
         </div>
       </div>
+
+      {/* ── Chief Of Staff bar ── */}
+      <div className="mb-4 rounded-2xl overflow-hidden"
+           style={{ border:"1px solid var(--mm-border-gold)", background:"var(--mm-surface)" }}>
+
+        {/* Group chips row */}
+        <div className="flex flex-wrap items-center gap-2 px-4 pt-3 pb-2"
+             style={{ borderBottom:"1px solid var(--mm-border)" }}>
+          {allGroups.map(g => (
+            <span key={g}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
+                  style={{
+                    background: "rgba(212,175,55,0.10)",
+                    border: "1px solid var(--mm-border-gold)",
+                    color: "var(--mm-gold)",
+                    fontFamily: "'Outfit',sans-serif",
+                  }}>
+              Group: {g}
+              <button
+                onClick={() => {
+                  setUserSections(s => s.filter(x => x !== g));
+                  setGroups(s => s.filter(x => x !== g));
+                  if (activeGroup === g) setActiveGroup("");
+                }}
+                style={{ color:"var(--mm-muted)", lineHeight:1 }}>
+                <X size={9} />
+              </button>
+            </span>
+          ))}
+
+          {/* New group inline */}
+          {addingGroup ? (
+            <div className="flex items-center gap-1">
+              <input
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+                onKeyDown={e => { if (e.key==="Enter") createGroup(); if (e.key==="Escape") setAddingGroup(false); }}
+                placeholder="Group name…"
+                autoFocus
+                className="mm-form-input text-xs"
+                style={{ width:130, padding:"4px 10px" }} />
+              <button onClick={createGroup} className="mm-btn-gold text-xs px-3 py-1">Add</button>
+              <button onClick={() => setAddingGroup(false)} className="mm-icon-btn" style={{ fontSize:14 }}>×</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingGroup(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-opacity hover:opacity-100"
+              style={{
+                border: "1px dashed var(--mm-border-gold)",
+                color: "var(--mm-muted)",
+                fontFamily: "'Outfit',sans-serif",
+                opacity: 0.6,
+              }}>
+              <Plus size={10} /> New group
+            </button>
+          )}
+        </div>
+
+        {/* Input + Voice + Parse */}
+        <div className="flex items-center gap-0">
+          <input
+            value={aiText}
+            onChange={e => setAiText(e.target.value)}
+            onKeyDown={e => e.key==="Enter" && parseAi()}
+            placeholder='e.g. #Work Call Brinda for revising the invoice'
+            className="flex-1 bg-transparent outline-none px-4 py-3 text-sm"
+            style={{ color:"var(--mm-text)", fontFamily:"'Outfit',sans-serif" }} />
+          <button
+            onClick={handleVoice}
+            title="Voice input"
+            style={{
+              padding:"0 16px",
+              height:48,
+              background: voiceActive ? "rgba(212,175,55,0.15)" : "transparent",
+              border:"none",
+              borderLeft:"1px solid var(--mm-border)",
+              color: voiceActive ? "var(--mm-gold)" : "var(--mm-muted)",
+              cursor:"pointer",
+              display:"flex", alignItems:"center",
+            }}>
+            <Mic size={16} style={{ animation: voiceActive ? "pulse 1s infinite" : "none" }} />
+          </button>
+          <button
+            onClick={parseAi}
+            disabled={!aiText.trim() || aiLoading}
+            style={{
+              padding:"0 24px",
+              height:48,
+              background:"var(--mm-gold)",
+              border:"none",
+              borderLeft:"1px solid rgba(212,175,55,0.3)",
+              color:"#0a0a0a",
+              fontFamily:"'Outfit',sans-serif",
+              fontWeight:600,
+              fontSize:14,
+              cursor:"pointer",
+              display:"flex", alignItems:"center", gap:6,
+              opacity: (!aiText.trim() || aiLoading) ? 0.5 : 1,
+            }}>
+            {aiLoading ? <Loader size={13} className="animate-spin" /> : null}
+            {aiLoading ? "Parsing…" : "Parse"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Group filter pills ── */}
+      {allGroups.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <button
+            onClick={() => setActiveGroup("")}
+            className="px-3 py-1 rounded-full text-xs transition-all"
+            style={{
+              background: !activeGroup ? "var(--mm-gold)" : "var(--mm-surface-2)",
+              color:      !activeGroup ? "#0a0a0a" : "var(--mm-muted)",
+              border:     !activeGroup ? "none" : "1px solid var(--mm-border)",
+              fontFamily: "'Outfit',sans-serif",
+              fontWeight: !activeGroup ? 600 : 400,
+            }}>
+            All
+          </button>
+          {allGroups.map(g => (
+            <button
+              key={g}
+              onClick={() => setActiveGroup(activeGroup === g ? "" : g)}
+              className="px-3 py-1 rounded-full text-xs transition-all"
+              style={{
+                background: activeGroup===g ? "var(--mm-gold)" : "var(--mm-surface-2)",
+                color:      activeGroup===g ? "#0a0a0a" : "var(--mm-muted)",
+                border:     activeGroup===g ? "none" : "1px solid var(--mm-border)",
+                fontFamily: "'Outfit',sans-serif",
+                fontWeight: activeGroup===g ? 600 : 400,
+              }}>
+              {g}
+            </button>
+          ))}
+          <button
+            onClick={() => setAddingGroup(true)}
+            className="px-3 py-1 rounded-full text-xs transition-opacity hover:opacity-100"
+            style={{
+              border:"1px dashed var(--mm-border)",
+              color:"var(--mm-muted)",
+              fontFamily:"'Outfit',sans-serif",
+              background:"transparent",
+              opacity:0.5,
+            }}>
+            + New group
+          </button>
+        </div>
+      )}
 
       {/* ── Bulk action bar ── */}
       {selected.size > 0 && (
@@ -384,25 +589,12 @@ export default function Tasks() {
       {/* ── Onboarding tip ── */}
       <OnboardingTip page="tasks" />
 
-      {/* ── AI bar ── */}
-      <div className="flex gap-0 mb-5">
-        <input value={aiText} onChange={e => setAiText(e.target.value)}
-               onKeyDown={e => e.key==="Enter" && parseAi()}
-               placeholder='Describe a task — "Call Priya about Q2 deck tomorrow #Finance"'
-               className="mm-ai-input" />
-        <button onClick={parseAi} disabled={!aiText.trim()||aiLoading}
-                className="mm-btn-gold px-5 disabled:opacity-40 flex items-center gap-2">
-          {aiLoading ? <Loader size={13} className="animate-spin" /> : null}
-          {aiLoading ? "Parsing…" : "Parse"}
-        </button>
-      </div>
-
       {/* ── Empty ── */}
       {visible.length === 0 && (
         <div className="mm-empty">
           <div className="mm-divider" style={{ width:48 }} />
           <p className="mm-empty-title">No tasks</p>
-          <p className="mm-empty-desc">Add a task above or fill in the row below.</p>
+          <p className="mm-empty-desc">Use Chief Of Staff above or fill in the row below.</p>
         </div>
       )}
 
@@ -440,7 +632,7 @@ export default function Tasks() {
                            values={[...new Set(secTasks.map(t=>t.name).filter(Boolean))]}
                            open={colFilter} setOpen={setColFilter} />
                 <ColFilter label="Group"  col="group"  filter={filter} setFilter={setFilter}
-                           values={groups}
+                           values={allGroups}
                            open={colFilter} setOpen={setColFilter} />
                 <ColFilter label="Status" col="status" filter={filter} setFilter={setFilter}
                            values={STATUSES}
@@ -450,7 +642,7 @@ export default function Tasks() {
 
               {secTasks.length === 0 && (
                 <div className="px-4 py-4 text-xs text-center" style={{ color:"var(--mm-muted)" }}>
-                  No tasks in this section —
+                  No tasks in this section —{" "}
                   <button onClick={() => setNewRow(r => ({...r, group:sec==="No Section"?"":sec}))}
                           className="ml-1 underline hover:opacity-80">add one</button>
                 </div>
@@ -479,28 +671,23 @@ export default function Tasks() {
                            borderTop: dragOverId===t.id ? "2px solid var(--mm-gold)" : undefined,
                          }}>
 
-                      {/* Checkbox + check */}
-                      <div className="flex items-center gap-1">
-                        <input type="checkbox" checked={selected.has(t.id)}
-                               onChange={() => toggleSelect(t.id)}
-                               style={{ width:12,height:12,accentColor:"var(--mm-gold)",cursor:"pointer" }} />
-                        <button onClick={() => toggle(t)} className={`mm-check ${done?"done":""}`}>
-                          {done && <Check size={10} style={{ color:"var(--mm-gold)" }} />}
-                        </button>
-                      </div>
+                      {/* Check circle only — no white checkbox */}
+                      <button onClick={() => toggle(t)} className={`mm-check ${done?"done":""}`}>
+                        {done && <Check size={10} style={{ color:"var(--mm-gold)" }} />}
+                      </button>
 
                       {/* Subtask expand chevron */}
-                      <button onClick={() => setExpanded(s => { const n=new Set(s); n.has(t.id)?n.delete(t.id):n.add(t.id); return n; })}
-                              title="Expand sub-tasks"
-                              className="flex items-center justify-center transition-transform"
-                              style={{ color:"var(--mm-muted)", transform:isExpanded?"rotate(90deg)":"none" }}>
+                      <button
+                        onClick={() => setExpanded(s => { const n=new Set(s); n.has(t.id)?n.delete(t.id):n.add(t.id); return n; })}
+                        title="Expand sub-tasks"
+                        className="flex items-center justify-center transition-transform"
+                        style={{ color:"var(--mm-muted)", transform:isExpanded?"rotate(90deg)":"none" }}>
                         <ChevronRight size={11} />
                       </button>
 
                       {/* Task title + badges */}
                       <div className="flex items-center gap-1.5 min-w-0">
                         {t.flagged && <Flag size={11} style={{ color:"var(--mm-gold)",flexShrink:0 }} />}
-                        {/* Priority badge — click to cycle */}
                         {t.priority && (
                           <button
                             onClick={() => {
@@ -521,7 +708,6 @@ export default function Tasks() {
                             </div>
                           )}
                         </div>
-                        {/* Estimate pill — click to cycle */}
                         {t.estimate && (
                           <button
                             onClick={() => {
@@ -546,11 +732,13 @@ export default function Tasks() {
                         )}
                       </div>
 
-                      {/* Due date */}
-                      <input type="date" value={t.date||""}
-                             onChange={e => update(t.id,{date:e.target.value})}
-                             className="mm-input-ghost text-xs"
-                             style={{ color: over?"var(--mm-muted)":"var(--mm-text)" }} />
+                      {/* Due date — gold calendar icon via colorScheme + filter */}
+                      <input
+                        type="date"
+                        value={t.date||""}
+                        onChange={e => update(t.id,{date:e.target.value})}
+                        className="mm-input-ghost text-xs mm-date-gold"
+                        style={{ color: over?"var(--mm-muted)":"var(--mm-text)" }} />
 
                       {/* Person picker */}
                       <PersonCell task={t} people={people} update={update} />
@@ -566,11 +754,10 @@ export default function Tasks() {
                         {STATUSES.map(s => <option key={s}>{s}</option>)}
                       </select>
 
-                      {/* Actions: ↑↓ priority estimate flag comment duplicate trash grip */}
+                      {/* Actions */}
                       <div className="flex items-center gap-0.5 justify-end">
                         <button onClick={() => moveUp(t.id)}   title="Move up"   className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowUp   size={10} /></button>
                         <button onClick={() => moveDown(t.id)} title="Move down" className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowDown size={10} /></button>
-                        {/* Priority cycle */}
                         <button
                           onClick={() => {
                             const idx = PRIORITIES.indexOf(t.priority || "");
@@ -582,7 +769,6 @@ export default function Tasks() {
                             {t.priority || "P—"}
                           </span>
                         </button>
-                        {/* Estimate cycle */}
                         <button
                           onClick={() => {
                             const idx = ESTIMATES.indexOf(t.estimate || "");
@@ -620,7 +806,7 @@ export default function Tasks() {
                     {isExpanded && (
                       <div className="border-b" style={{ borderColor:"var(--mm-border)", background:"var(--mm-surface-2)" }}>
                         {subtasks.map(sub => (
-                          <div key={sub.id} className="flex items-center gap-2 pl-14 pr-4 py-1.5">
+                          <div key={sub.id} className="flex items-center gap-2 pl-12 pr-4 py-1.5">
                             <button onClick={() => toggleSubtask(t.id, sub.id)}
                                     className={`mm-check flex-shrink-0 ${sub.done?"done":""}`}
                                     style={{ width:14,height:14 }}>
@@ -636,8 +822,7 @@ export default function Tasks() {
                             </button>
                           </div>
                         ))}
-                        {/* Add sub-task input */}
-                        <div className="flex items-center gap-2 pl-14 pr-4 py-1.5">
+                        <div className="flex items-center gap-2 pl-12 pr-4 py-1.5">
                           <div className="w-3.5 h-3.5 flex-shrink-0 rounded border"
                                style={{ borderColor:"var(--mm-border)" }} />
                           <input value={newSubtask[t.id]||""}
@@ -697,109 +882,70 @@ export default function Tasks() {
         </div>
       ))}
 
-      {/* ── Add Section ── */}
-      <div className="mb-3">
-        {addingSec ? (
-          <div className="flex items-center gap-2 px-1">
-            <input value={newSecName}
-                   onChange={e => setNewSecName(e.target.value)}
-                   onKeyDown={e => { if(e.key==="Enter") createSection(); if(e.key==="Escape") setAddingSec(false); }}
-                   placeholder="Section name…"
-                   autoFocus
-                   className="mm-form-input text-xs flex-1" style={{ maxWidth:200 }} />
-            <button onClick={createSection}   className="mm-btn-gold px-4 py-1.5 text-xs">Create</button>
-            <button onClick={() => setAddingSec(false)} className="mm-icon-btn">×</button>
-          </div>
-        ) : (
-          <button onClick={() => setAddingSec(true)}
-                  className="flex items-center gap-1.5 text-xs px-2 py-1 transition-opacity hover:opacity-100"
-                  style={{ color:"var(--mm-muted)", opacity:0.55 }}>
-            <Plus size={11} /> Add Section
-          </button>
-        )}
-      </div>
-
-      {/* ── New row — matches table exactly ── */}
-      <div className="mm-card overflow-hidden">
+      {/* ── New row — part of the table ── */}
+      <div className="mm-card overflow-hidden mb-4">
+        {/* New row header */}
         <div className="hidden md:grid px-3 py-1.5 mm-label"
              style={{ gridTemplateColumns:COLS, borderBottom:"1px solid var(--mm-border)" }}>
-          <span></span><span></span>
-          <span style={{ color:"var(--mm-gold)" }}>New task</span>
-          <span>Due</span><span>Person</span><span>Group</span><span>Status</span>
+          <span></span>
+          <span></span>
+          <span style={{ color:"var(--mm-gold)" }}>New Task</span>
+          <span>Due</span>
+          <span>Person</span>
+          <span>Group</span>
+          <span>Status</span>
           <span>Priority</span>
         </div>
         <div className="grid items-center px-3 py-2"
              style={{ gridTemplateColumns:COLS, minWidth:740 }}>
+          {/* Check circle placeholder */}
           <div className="flex items-center justify-center">
             <div className="mm-check" style={{ opacity:0.3 }} />
           </div>
           <span />
+          {/* Task title */}
           <input value={newRow.task}
                  onChange={e => setNewRow(r=>({...r,task:e.target.value}))}
                  onKeyDown={e => e.key==="Enter" && addManual()}
                  placeholder="Task title…"
                  className="mm-input-ghost text-sm" />
-          <div className="relative">
-            <input type="date" value={newRow.date}
-                   onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
-                   onFocus={() => setDatePickOpen(true)}
-                   onBlur={() => setTimeout(() => setDatePickOpen(false), 200)}
-                   className="mm-input-ghost text-xs w-full" />
-            {datePickOpen && (
-              <div className="absolute left-0 z-50 mt-1 p-2 rounded-xl shadow-2xl"
-                   style={{ background:"var(--mm-surface-2)", border:"1px solid var(--mm-border-gold)", minWidth:160 }}>
-                {[
-                  { label:"Today",    fn:() => { const d=new Date(); return d.toISOString().slice(0,10); } },
-                  { label:"Tomorrow", fn:() => { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); } },
-                  { label:"This Fri", fn:() => { const d=new Date(); const diff=(5-d.getDay()+7)%7||7; d.setDate(d.getDate()+diff); return d.toISOString().slice(0,10); } },
-                  { label:"+7 days",  fn:() => { const d=new Date(); d.setDate(d.getDate()+7); return d.toISOString().slice(0,10); } },
-                ].map(({ label, fn }) => (
-                  <button key={label}
-                          onMouseDown={() => { setNewRow(r=>({...r,date:fn()})); setDatePickOpen(false); }}
-                          className="w-full text-left px-3 py-1.5 text-xs rounded-lg transition-colors hover:opacity-80"
-                          style={{ color:"var(--mm-text)" }}>
-                    {label}
-                  </button>
-                ))}
-                {newRow.date && (
-                  <button onMouseDown={() => { setNewRow(r=>({...r,date:""})); setDatePickOpen(false); }}
-                          className="w-full text-left px-3 py-1.5 text-xs rounded-lg"
-                          style={{ color:"var(--mm-muted)" }}>
-                    Clear
-                  </button>
-                )}
-              </div>
-            )}
+          {/* Due date — gold calendar icon */}
+          <input
+            type="date"
+            value={newRow.date}
+            onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
+            className="mm-input-ghost text-xs w-full mm-date-gold"
+            style={{ colorScheme:"dark" }} />
+          {/* Person — Excel dropdown */}
+          <DropCell
+            value={newRow.name}
+            onChange={v => setNewRow(r=>({...r,name:v}))}
+            options={[...new Set(people.map(p=>p.name).filter(Boolean))]}
+            placeholder="Person" />
+          {/* Group — Excel dropdown */}
+          <DropCell
+            value={newRow.group}
+            onChange={v => setNewRow(r=>({...r,group:v}))}
+            options={allGroups}
+            placeholder="Group" />
+          {/* Status — Excel dropdown */}
+          <DropCell
+            value={newRow.status}
+            onChange={v => setNewRow(r=>({...r,status:v}))}
+            options={STATUSES}
+            placeholder="Status" />
+          {/* Priority + Add button */}
+          <div className="flex items-center gap-1">
+            <DropCell
+              value={newRow.priority}
+              onChange={v => setNewRow(r=>({...r,priority:v}))}
+              options={PRIORITIES.filter(Boolean)}
+              placeholder="P—" />
+            <button onClick={addManual}
+                    className="mm-btn-gold flex items-center justify-center gap-1 text-xs px-3 py-1.5 flex-shrink-0">
+              <Plus size={11} /> Add
+            </button>
           </div>
-          <input value={newRow.name}
-                 onChange={e => setNewRow(r=>({...r,name:e.target.value}))}
-                 placeholder="Person"
-                 className="mm-input-ghost text-xs" />
-          <input value={newRow.group}
-                 onChange={e => setNewRow(r=>({...r,group:e.target.value}))}
-                 placeholder="Group"
-                 list="group-list"
-                 className="mm-input-ghost text-xs" />
-          <datalist id="group-list">
-            {groups.map(g => <option key={g} value={g} />)}
-          </datalist>
-          <select value={newRow.status}
-                  onChange={e => setNewRow(r=>({...r,status:e.target.value}))}
-                  className="mm-input-ghost text-xs mm-status-select"
-                  style={{ color:STATUS_COLORS[newRow.status]||"var(--mm-muted)" }}>
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
-          </select>
-          {/* Priority for new row */}
-          <select value={newRow.priority}
-                  onChange={e => setNewRow(r => ({...r, priority:e.target.value}))}
-                  className="mm-input-ghost text-xs mm-status-select"
-                  style={{ color: newRow.priority ? "var(--mm-gold)" : "var(--mm-muted)" }}>
-            {PRIORITIES.map(p => <option key={p} value={p}>{p || "P—"}</option>)}
-          </select>
-          <button onClick={addManual}
-                  className="mm-btn-gold flex items-center justify-center gap-1 text-xs px-3 py-1.5">
-            <Plus size={11} /> Add
-          </button>
         </div>
       </div>
 

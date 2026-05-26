@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
   Bell, BarChart2, Settings, LogOut,
@@ -45,6 +45,7 @@ const BOTTOM_NAV = NAV.slice(0, 5);
 export default function AppShell() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("mm_sidebar_collapsed") === "1");
   const [pendingReview, setPendingReview] = useState(0);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -183,7 +184,7 @@ export default function AppShell() {
           so position:fixed is relative to the viewport with no parent interference */}
       <div className="fixed top-4 right-5 z-[100] pointer-events-auto flex flex-col items-center gap-2">
         <ProjectSelector />
-        {weather && <WeatherCompact weather={weather} />}
+        {location.pathname === "/" && weather && <WeatherCompact weather={weather} />}
       </div>
 
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>

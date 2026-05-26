@@ -80,8 +80,7 @@ html, body {
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--mm-muted);
 }
 
@@ -182,8 +181,7 @@ html, body {
   font-family: 'Outfit', sans-serif;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   border: none;
   border-radius: 20px;
   padding: 10px 22px;
@@ -200,8 +198,7 @@ html, body {
   font-family: 'Outfit', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   border: 1px solid var(--mm-border);
   border-radius: 20px;
   padding: 9px 18px;
@@ -225,14 +222,14 @@ html, body {
 
 /* ── STATUS SELECT ─────────────────────────────────────────────────────── */
 .mm-status-select {
-  font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.03em;
   background: transparent; border: none; outline: none; cursor: pointer; padding: 0;
   font-family: 'Outfit', sans-serif;
 }
 
 /* ── FILTER SELECT ─────────────────────────────────────────────────────── */
 .mm-filter-select {
-  font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.03em;
   padding: 6px 14px; border: 1px solid var(--mm-border); color: var(--mm-muted);
   background: var(--mm-surface-2); outline: none; border-radius: 20px; cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
@@ -242,7 +239,7 @@ html, body {
 
 /* ── FILTER TAB ────────────────────────────────────────────────────────── */
 .mm-filter-tab {
-  font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  font-size: 10px; font-weight: 500; letter-spacing: 0.03em;
   padding: 6px 14px; border: 1px solid var(--mm-border); color: var(--mm-muted);
   background: transparent; cursor: pointer; border-radius: 20px;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
@@ -286,7 +283,7 @@ html, body {
 
 /* ── PAGE HEADER ───────────────────────────────────────────────────────── */
 .mm-page-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 400; color: var(--mm-text); letter-spacing: -0.01em; }
-.mm-page-sub   { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mm-muted); margin-top: 4px; }
+.mm-page-sub   { font-size: 10px; letter-spacing: 0.04em; color: var(--mm-muted); margin-top: 4px; }
 
 /* ── FORM INPUT ────────────────────────────────────────────────────────── */
 .mm-form-input {
@@ -329,7 +326,7 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
 /* ── TIME ESTIMATE PILL ─────────────────────────────────────────────────── */
 .mm-est-pill {
   display: inline-flex; align-items: center; gap: 2px;
-  font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 9px; letter-spacing: 0.03em;
   padding: 2px 7px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
   font-family: 'Outfit', sans-serif;
   background: rgba(212,175,55,0.1); color: var(--mm-gold);
@@ -351,13 +348,24 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
 
 /* ── DATE QUICK-PICK PILLS ──────────────────────────────────────────────── */
 .mm-date-pill {
-  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: 9px; letter-spacing: 0.03em;
   padding: 2px 8px; border-radius: 10px; cursor: pointer; flex-shrink: 0;
   border: 1px solid var(--mm-border); color: var(--mm-muted);
   font-family: 'Outfit', sans-serif;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .mm-date-pill:hover, .mm-date-pill.active { border-color: var(--mm-border-gold); color: var(--mm-gold); background: rgba(212,175,55,0.08); }
+
+/* ── GOLD CALENDAR PICKER ───────────────────────────────────────────────── */
+/* Applied via className="mm-date-gold" on date inputs */
+.mm-date-gold::-webkit-calendar-picker-indicator {
+  filter: invert(73%) sepia(40%) saturate(600%) hue-rotate(5deg) brightness(95%);
+  opacity: 0.85;
+  cursor: pointer;
+}
+.mm-date-gold::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
 
 /* ── QUICK NOTE ─────────────────────────────────────────────────────────── */
 .mm-quick-note textarea {
