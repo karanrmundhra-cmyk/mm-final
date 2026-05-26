@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Loader, Download, Check, Trash2, BarChart2, RefreshCw, AlertTriangle } from "lucide-react";
 import DigestWidget from "@/components/DigestWidget";
 import { api } from "@/lib/api";
@@ -8,7 +9,8 @@ import { formatAmount } from "@/lib/utils";
 const TABS = ["Inbox", "Briefing", "Synopsis", "Signals", "Pending Review"];
 
 export default function Reports() {
-  const [tab, setTab] = useState("Inbox");
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab || "Inbox");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({});
   const [pendingItems, setPendingItems] = useState([]);

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle, ChevronDown, ChevronUp, Check,
-  Star, ClipboardList, Plus, X, GripVertical,
+  ClipboardList, Plus, X, GripVertical,
   Calendar, TrendingUp,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -27,7 +27,7 @@ const FIXED_NEWS_TABS = [
 
 /* ── Default draggable section order ─────────────────────────── */
 const DEFAULT_SECTION_ORDER = [
-  "overdue", "today", "soon", "routines",
+  "overdue", "today", "routines",
   "cashflow", "reminders_deadlines", "quote",
   "news", "worldclock", "timers",
 ];
@@ -131,8 +131,7 @@ function fmtDate(str) {
    ─────────────────────────────────────────────────────────────── */
 function WeatherBadge({ weather }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 flex-shrink-0"
-         style={{ paddingTop: 44 }}>
+    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
       <div style={{
         width: 68, height: 68, borderRadius: "50%",
         border: "1.5px solid var(--mm-border-gold)",
@@ -247,6 +246,7 @@ export default function Dashboard() {
   const [dragId,        setDragId]        = useState(null);
   const [dragOverId,    setDragOverId]    = useState(null);
   const [weather,       setWeather]       = useState(null);
+  const [showNewsCategoryPicker, setShowNewsCategoryPicker] = useState(false);
 
   /* Clock */
   useEffect(() => {
@@ -273,7 +273,7 @@ export default function Dashboard() {
         if (!c) return;
         setWeather({
           temp:  c.temp_C,
-          desc:  (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" "),
+          desc:  (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" ").replace(/\b\w/g, ch => ch.toUpperCase()),
           emoji: wxEmoji(c.weatherCode),
         });
       })
@@ -342,17 +342,6 @@ export default function Dashboard() {
   };
 
   /* Derived */
-  const top3 = [...(data?.due_today || [])]
-    .filter(t => !completedIds.has(t.id))
-    .sort((a, b) => {
-      const pOrder = { P1: 0, P2: 1, P3: 2, P4: 3, "": 4 };
-      const pa = pOrder[a.priority ?? ""] ?? 4, pb = pOrder[b.priority ?? ""] ?? 4;
-      if (pa !== pb) return pa - pb;
-      if (a.flagged !== b.flagged) return a.flagged ? -1 : 1;
-      return 0;
-    })
-    .slice(0, 3);
-
   const spendingInsight = (() => {
     if (!data?.cashflow) return null;
     const exp = data.cashflow["Expense"] || 0;
@@ -392,17 +381,17 @@ export default function Dashboard() {
     <div className="px-6 py-8 space-y-7" style={{ maxWidth: "100%" }}>
 
       {/* ── Hero: Greeting (left) + Weather circle (right) ── */}
-      <div className="flex items-start gap-6">
+      <div className="flex items-center gap-6">
 
         {/* Left: Date + Greeting + Gold line */}
         <div className="flex-1 min-w-0">
           <p style={{
-            fontSize: 11, color: "var(--mm-muted)", letterSpacing: "0.18em",
-            textTransform: "uppercase", fontFamily: "'Outfit', sans-serif", marginBottom: 14,
+            fontSize: 11, color: "var(--mm-muted)", letterSpacing: "0.12em",
+            fontFamily: "'Outfit', sans-serif", marginBottom: 14,
           }}>
             {now.toLocaleDateString("en-US", {
               weekday: "long", month: "long", day: "numeric", year: "numeric",
-            }).toUpperCase()}
+            })}
             {" · "}
             {now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
           </p>
@@ -479,7 +468,7 @@ export default function Dashboard() {
 
       {/* ── Pending review ── */}
       {data?.pending_review_count > 0 && (
-        <button onClick={() => navigate("/reports")}
+        <button onClick={() => navigate("/reports", { state: { tab: "Pending Review" } })}
                 className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left"
                 style={{
                   background: "rgba(212,175,55,0.06)",
@@ -500,35 +489,6 @@ export default function Dashboard() {
         </button>
       )}
 
-      {/* ── Top 3 Focus ── */}
-      {top3.length > 0 && (
-        <div className="mm-card p-4"
-             style={{ borderColor: "var(--mm-border-gold)", background: "rgba(212,175,55,0.03)" }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Star size={12} style={{ color: "var(--mm-gold)" }} />
-            <span style={{
-              fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
-              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif",
-            }}>
-              Top 3 For Today
-            </span>
-          </div>
-          <div className="space-y-2">
-            {top3.map((t, i) => (
-              <button key={t.id} onClick={() => completeTask(t.id)}
-                      className="w-full flex items-center gap-3 text-left group" title="Mark complete">
-                <div className="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all group-hover:border-[var(--mm-gold)]"
-                     style={{ borderColor: "var(--mm-border)" }}>
-                  <span className="text-xs font-semibold" style={{ color: "var(--mm-muted)" }}>{i + 1}</span>
-                </div>
-                <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                {t.priority && <span className={`mm-est-pill mm-${t.priority.toLowerCase()}`}>{t.priority}</span>}
-                {t.estimate  && <span className="mm-est-pill">{t.estimate}</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── Draggable sections ── */}
       {sectionOrder.map(sectionId => {
@@ -558,19 +518,7 @@ export default function Dashboard() {
           }
 
           case "soon":
-            return data?.due_soon?.length > 0 ? DS("soon", S("soon", "Coming Up",
-              <div className="mm-card overflow-hidden">
-                {data.due_soon.slice(0, 3).map(t => (
-                  <button key={t.id} onClick={() => navigate("/tasks")}
-                          className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
-                          style={{ borderColor: "var(--mm-border)" }}>
-                    <span className="w-2 h-2 rounded-full flex-shrink-0"
-                          style={{ background: "var(--mm-border)" }} />
-                    <span className="flex-1 text-sm" style={{ color: "var(--mm-text)" }}>{t.task}</span>
-                    <span className="text-xs" style={{ color: "var(--mm-muted)" }}>{fmtDate(t.date)}</span>
-                  </button>
-                ))}
-              </div>)) : null;
+            return null; // Coming Up section removed
 
           case "routines":
             return data?.routines?.length > 0 ? DS("routines", S("routines", "Today's Routines",
@@ -724,21 +672,60 @@ export default function Dashboard() {
                 <AffirmationCard />
               </>)) : null;
 
-          case "news":
+          case "news": {
+            const currentCategoryLabel = isOthersTab
+              ? "Others (Custom RSS)"
+              : (FIXED_NEWS_TABS[activeNewsTab]?.label || "General");
             return DS("news", S("news", "News",
               <div className="space-y-3">
-                <div className="flex items-center gap-1 flex-wrap">
-                  {FIXED_NEWS_TABS.map((tab, i) => (
-                    <button key={tab.id} onClick={() => setActiveNewsTab(i)}
-                            className={`mm-filter-tab ${activeNewsTab === i && !isOthersTab ? "active" : ""}`}>
-                      {tab.label}
-                    </button>
-                  ))}
-                  <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
-                          className={`mm-filter-tab ${isOthersTab ? "active" : ""}`}>
-                    Others
-                  </button>
+                {/* Compact category selector */}
+                <div className="relative">
+                  <div
+                    className="mm-card flex items-center justify-between px-4 py-2.5 cursor-pointer"
+                    onClick={() => setShowNewsCategoryPicker(v => !v)}
+                    style={{ userSelect: "none" }}>
+                    <span className="text-sm" style={{ color: "var(--mm-text)" }}>
+                      {currentCategoryLabel}
+                    </span>
+                    <div className="flex items-center gap-1.5" style={{ color: "var(--mm-gold)" }}>
+                      <span style={{ fontSize: 11, fontFamily: "'Outfit', sans-serif", letterSpacing: "0.06em" }}>Edit</span>
+                      <ChevronDown size={11}
+                        style={{ transform: showNewsCategoryPicker ? "rotate(180deg)" : "none",
+                                 transition: "transform 0.2s" }} />
+                    </div>
+                  </div>
+                  {showNewsCategoryPicker && (
+                    <div className="absolute top-full left-0 right-0 mt-1 z-30 overflow-hidden animate-fade-in"
+                         style={{
+                           background: "var(--mm-surface)",
+                           border: "1px solid var(--mm-border)",
+                           borderRadius: 12,
+                           boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+                         }}>
+                      {FIXED_NEWS_TABS.map((tab, i) => (
+                        <button key={tab.id}
+                                onClick={() => { setActiveNewsTab(i); setShowNewsCategoryPicker(false); }}
+                                className="w-full text-left px-4 py-2.5 text-sm mm-row transition-colors"
+                                style={{
+                                  color: activeNewsTab === i && !isOthersTab
+                                    ? "var(--mm-gold)" : "var(--mm-muted)",
+                                }}>
+                          {tab.label}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => { setActiveNewsTab(FIXED_NEWS_TABS.length); setShowNewsCategoryPicker(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm mm-row transition-colors"
+                        style={{
+                          borderTop: "1px solid var(--mm-border)",
+                          color: isOthersTab ? "var(--mm-gold)" : "var(--mm-muted)",
+                        }}>
+                        Others (Custom RSS)
+                      </button>
+                    </div>
+                  )}
                 </div>
+
                 {isOthersTab && (
                   <div className="flex gap-2">
                     <input value={customRss} onChange={e => setCustomRss(e.target.value)}
@@ -748,6 +735,7 @@ export default function Dashboard() {
                             className="mm-btn-gold px-4 text-xs">Save</button>
                   </div>
                 )}
+
                 <div className="mm-card overflow-hidden">
                   {news.length === 0
                     ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
@@ -765,6 +753,7 @@ export default function Dashboard() {
                   }
                 </div>
               </div>));
+          }
 
           case "worldclock":
             return DS("worldclock", S("worldclock", "World Clock", <WorldClock />));

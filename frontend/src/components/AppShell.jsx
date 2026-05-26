@@ -175,7 +175,7 @@ export default function AppShell() {
               }}>
                 Mind Matters
               </div>
-              <div className="mm-label" style={{ fontSize: 9, letterSpacing: "0.22em", marginTop: 2 }}>
+              <div className="mm-label" style={{ fontSize: 9, letterSpacing: "0.22em", marginTop: 2, textTransform: "none" }}>
                 Personal OS
               </div>
             </div>
@@ -217,7 +217,7 @@ export default function AppShell() {
                 <SidebarBtn icon={Plus}   label="Quick Add"      onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"         onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note"     onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="Chief of Staff" onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Zap}    label="Chief Of Staff" onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
@@ -285,7 +285,7 @@ export default function AppShell() {
                 <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="Chief of Staff"    onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Zap}    label="Chief Of Staff"    onClick={() => setShowAi(true)} />
                 <SyncBtn />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
