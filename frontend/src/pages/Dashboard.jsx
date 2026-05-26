@@ -398,13 +398,14 @@ export default function Dashboard() {
             { label: "Done Today", value: data.stats.done_today,    color: "var(--mm-gold)" },
             { label: "Reminders",  value: data.stats.reminders_due, color: "var(--mm-gold)" },
           ].map(s => (
-            <div key={s.label} className="mm-card p-4 flex flex-col items-center justify-center text-center">
-              <div className="text-3xl font-light mm-font-display" style={{ color: s.color }}>
+            <div key={s.label} className="mm-card flex flex-col items-center justify-center text-center"
+                 style={{ padding: "20px 12px", minHeight: 90 }}>
+              <div className="text-3xl font-light mm-font-display" style={{ color: s.color, lineHeight: 1 }}>
                 {s.value}
               </div>
-              <div className="mt-1" style={{
-                fontSize: 10, letterSpacing: "0.04em",
-                color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
+              <div style={{
+                marginTop: 6, fontSize: 10, letterSpacing: "0.04em",
+                color: "var(--mm-muted)", fontFamily: "'Inter','Outfit',sans-serif", fontWeight: 500,
               }}>
                 {s.label}
               </div>

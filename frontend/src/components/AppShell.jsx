@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
   Bell, BarChart2, Settings, LogOut,
   ChevronLeft, ChevronRight, Search, Plus, Mic, Zap,
-  Download, LayoutGrid, X,
+  Download, LayoutGrid, X, Sun, Moon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { subscribeSync } from "@/lib/syncQueue";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import Logo from "@/components/Logo";
 import QuickAdd from "@/components/QuickAdd";
 import GlobalSearch from "@/components/GlobalSearch";
 import AiChat from "@/components/AiChat";
@@ -59,6 +60,7 @@ export default function AppShell() {
   const [showInstall,    setShowInstall]    = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [weather,        setWeather]        = useState(null);
+  const [theme,          setTheme]          = useState(() => localStorage.getItem("mm_theme") || "dark");
 
   // Allow Settings page to open the shortcuts modal via custom event
   useEffect(() => {
@@ -117,18 +119,41 @@ export default function AppShell() {
     return () => clearInterval(iv);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Weather — wttr.in, no API key */
+  /* Theme — apply class to root element */
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "light") {
+      root.classList.add("light");
+    } else {
+      root.classList.remove("light");
+    }
+    localStorage.setItem("mm_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
+
+  /* Weather — wttr.in, no API key. Fetches current + 3-day forecast. */
   useEffect(() => {
     fetch("https://wttr.in/?format=j1")
       .then(r => r.json())
       .then(d => {
         const c = d.current_condition?.[0];
         if (!c) return;
-        setWeather({
-          temp:  c.temp_C,
-          emoji: wxEmoji(c.weatherCode),
-          desc:  (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" ")
+        const forecast = (d.weather || []).map(day => ({
+          date:  day.date,
+          high:  day.maxtempC,
+          low:   day.mintempC,
+          emoji: wxEmoji(day.hourly?.[4]?.weatherCode || "116"),
+          desc:  (day.hourly?.[4]?.weatherDesc?.[0]?.value || "")
+                   .split(" ").slice(0, 3).join(" ")
                    .replace(/\b\w/g, ch => ch.toUpperCase()),
+        }));
+        setWeather({
+          temp:     c.temp_C,
+          emoji:    wxEmoji(c.weatherCode),
+          desc:     (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" ")
+                      .replace(/\b\w/g, ch => ch.toUpperCase()),
+          forecast,
         });
       })
       .catch(() => {});
@@ -258,6 +283,9 @@ export default function AppShell() {
                 <SidebarBtn icon={Mic}    label="Voice Note"     onClick={() => setShowVoice(true)} />
                 <SidebarBtn icon={Zap}    label="Chief Of Staff" onClick={() => setShowAi(true)} />
                 <SyncBtn />
+                <SidebarBtn icon={theme === "dark" ? Sun : Moon}
+                            label={theme === "dark" ? "Light Mode" : "Dark Mode"}
+                            onClick={toggleTheme} />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
                         style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
@@ -324,8 +352,11 @@ export default function AppShell() {
                 <SidebarBtn icon={Plus}   label="Quick Add"  onClick={() => setShowQuickAdd(true)} />
                 <SidebarBtn icon={Search} label="Search"     onClick={() => setShowSearch(true)} />
                 <SidebarBtn icon={Mic}    label="Voice Note" onClick={() => setShowVoice(true)} />
-                <SidebarBtn icon={Zap}    label="Chief Of Staff"    onClick={() => setShowAi(true)} />
+                <SidebarBtn icon={Zap}    label="Chief Of Staff" onClick={() => setShowAi(true)} />
                 <SyncBtn />
+                <SidebarBtn icon={theme === "dark" ? Sun : Moon}
+                            label={theme === "dark" ? "Light Mode" : "Dark Mode"}
+                            onClick={toggleTheme} />
                 <button onClick={toggleCollapse}
                         className="relative flex items-center justify-center p-2 transition-all group"
                         style={{ color: "var(--mm-muted)", opacity: 0.5, borderRadius: 10 }}
@@ -475,25 +506,9 @@ export default function AppShell() {
   );
 }
 
-/* ── MM Logo — uses the actual rkm-logo.png from /public ─────── */
+/* MMLogo alias — now delegates to the imported Logo SVG component */
 function MMLogo({ size = 46 }) {
-  /* The PNG is a 1179×2556 portrait; the circular monogram is centred
-     at roughly the horizontal midpoint and vertical centre.
-     background-size scales the image so the ring fills the container. */
-  return (
-    <div
-      aria-label="Mind Matters Logo"
-      style={{
-        width: size,
-        height: size,
-        flexShrink: 0,
-        backgroundImage: "url(/rkm-logo.png)",
-        backgroundSize: `${Math.round(size * 1.62)}px auto`,
-        backgroundPosition: "center 50%",
-        backgroundRepeat: "no-repeat",
-      }}
-    />
-  );
+  return <Logo size={size} />;
 }
 
 /* ── Shared tooltip ─────────────────────────────────────────────
@@ -600,25 +615,108 @@ const SHORTCUTS = [
   { keys: ["Enter"],       desc: "Submit / save form" },
 ];
 
-/* ── Compact weather badge — sits inline with ProjectSelector ── */
+/* ── Compact weather badge + 3-day forecast popup on click ────── */
 function WeatherCompact({ weather }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  /* close on outside click */
+  useEffect(() => {
+    if (!open) return;
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, [open]);
+
+  const fmtDate = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
   return (
-    <div style={{
-      width: 52, height: 52, borderRadius: "50%",
-      border: "1.5px solid var(--mm-border-gold)",
-      background: "rgba(212,175,55,0.04)",
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", gap: 2,
-      flexShrink: 0, cursor: "default",
-    }}
-    title={`${weather.desc} · ${weather.temp}°C`}>
-      <span style={{ fontSize: 19, lineHeight: 1 }}>{weather.emoji}</span>
-      <span style={{
-        fontSize: 10, fontFamily: "'Outfit', sans-serif",
-        color: "var(--mm-text)", fontWeight: 300,
-      }}>
-        {weather.temp}°
-      </span>
+    <div ref={ref} style={{ position: "relative" }}>
+      {/* Badge */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: 52, height: 52, borderRadius: "50%",
+          border: `1.5px solid ${open ? "var(--mm-gold)" : "var(--mm-border-gold)"}`,
+          background: open ? "rgba(201,169,97,0.10)" : "rgba(201,169,97,0.04)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 2,
+          flexShrink: 0, cursor: "pointer",
+          transition: "border-color 0.2s, background 0.2s",
+        }}
+        title={`${weather.desc} · ${weather.temp}°C — click for forecast`}>
+        <span style={{ fontSize: 19, lineHeight: 1 }}>{weather.emoji}</span>
+        <span style={{ fontSize: 10, fontFamily: "'Inter','Outfit',sans-serif", color: "var(--mm-text)", fontWeight: 300 }}>
+          {weather.temp}°
+        </span>
+      </button>
+
+      {/* Forecast popup */}
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 10px)",
+          right: 0,
+          zIndex: 300,
+          background: "var(--mm-surface)",
+          border: "1px solid var(--mm-border-gold)",
+          borderRadius: 16,
+          padding: "14px 16px",
+          boxShadow: "var(--elev-3)",
+          minWidth: 220,
+          animation: "scaleIn 0.18s ease",
+        }}>
+          {/* Current */}
+          <div style={{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid var(--mm-border)" }}>
+            <div style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Inter',sans-serif", marginBottom: 4 }}>
+              Now
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 28 }}>{weather.emoji}</span>
+              <div>
+                <div style={{ fontSize: 20, fontFamily: "'Cormorant Garamond',serif", color: "var(--mm-text)", fontWeight: 300 }}>
+                  {weather.temp}°C
+                </div>
+                <div style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Inter',sans-serif" }}>
+                  {weather.desc}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3-day forecast */}
+          {(weather.forecast || []).map((day, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "6px 0",
+              borderBottom: i < (weather.forecast.length - 1) ? "1px solid var(--mm-border)" : "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>{day.emoji}</span>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--mm-text)", fontFamily: "'Inter',sans-serif" }}>
+                    {i === 0 ? "Today" : i === 1 ? "Tomorrow" : fmtDate(day.date)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--mm-muted)", fontFamily: "'Inter',sans-serif" }}>
+                    {day.desc}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right", fontFamily: "'Inter',sans-serif" }}>
+                <span style={{ fontSize: 12, color: "var(--mm-text)" }}>{day.high}°</span>
+                <span style={{ fontSize: 10, color: "var(--mm-muted)", marginLeft: 4 }}>{day.low}°</span>
+              </div>
+            </div>
+          ))}
+
+          <div style={{ marginTop: 8, fontSize: 9, color: "var(--mm-muted-2)", fontFamily: "'Inter',sans-serif", textAlign: "center" }}>
+            Powered by wttr.in
+          </div>
+        </div>
+      )}
     </div>
   );
 }

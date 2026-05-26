@@ -1,61 +1,94 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── MIND MATTERS — LUXURY DESIGN SYSTEM ─────────────────────────────────
-   Gold:        #D4AF37  (Pure Gold)
-   Background:  #0B0B0C  (Near Black)
-   Surface:     #111114  (Deep Charcoal)
-   Surface-2:   #16161A  (Mid Layer)
-   Text:        #F0EDE8  (Warm White)
-   Radius:      Cards 24px · Inputs 18px · Buttons 20px · Modals 32px
-   Display:     Cormorant Garamond (elegant, editorial)
-   Body:        Outfit (clean, geometric)
-   Elevation:   5-level shadow depth system (no hard borders)
+/* ─── MIND MATTERS — Brand Book v1.0 ──────────────────────────────────────
+   Big 4 Consulting × Apple UX  ·  Calm · Intelligent · In Control
+   Gold:      #C9A961  (Brand Gold)
+   Highlight: #E4C98C  (Gold Bright)
+   BG:        #09090B  (Near-black, violet whisper)
+   Text:      #F5EFDD  (Warm Ivory)
+   Body:      Inter  ·  Display: Outfit  ·  Editorial: Cormorant Garamond
+   Gradient:  linear-gradient(to right, #E4C98C, #C9A961)
 ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --mm-bg:          #0B0B0C;
-  --mm-surface:     #111114;
-  --mm-surface-2:   #16161A;
-  --mm-surface-3:   #1C1C22;
-  --mm-border:      rgba(255,255,255,0.06);
-  --mm-border-gold: rgba(212,175,55,0.35);
-  --mm-text:        #F0EDE8;
-  --mm-muted:       rgba(240,237,232,0.4);
-  --mm-gold:        #D4AF37;
-  --mm-gold-light:  #E8C84A;
-  --mm-gold-dark:   #B8972E;
+  /* ── Backgrounds ── */
+  --mm-bg:          #09090B;
+  --mm-bg-2:        #0E0D0A;
+  --mm-surface:     #141412;
+  --mm-surface-2:   #1A1916;
+  --mm-surface-3:   #211F1B;
+
+  /* ── Borders ── */
+  --mm-border:      rgba(201,169,97,0.14);
+  --mm-border-gold: rgba(201,169,97,0.32);
+  --mm-border-2:    rgba(201,169,97,0.32);
+
+  /* ── Text ── */
+  --mm-text:        #F5EFDD;
+  --mm-muted:       #B7A98A;
+  --mm-muted-2:     #7A715E;
+
+  /* ── Gold palette ── */
+  --mm-gold:        #C9A961;
+  --mm-gold-bright: #E4C98C;
+  --mm-gold-light:  #E4C98C;
+  --mm-gold-dark:   #9A7D3A;
+  --mm-gold-soft:   #7A6A44;
+  --mm-gold-glow:   rgba(201,169,97,0.35);
+
+  /* ── Brand gradient ── */
+  --mm-gradient:    linear-gradient(to right, #E4C98C, #C9A961);
+
+  /* ── Status ── */
   --mm-error:       #E05252;
-  --mm-success:     #52C77A;
+  --mm-success:     #22C55E;
   --mm-warning:     #E0A052;
 
-  /* Elevation — replaces borders for depth */
-  --elev-1:     0 2px 8px rgba(0,0,0,0.4);
-  --elev-2:     0 4px 20px rgba(0,0,0,0.5);
-  --elev-3:     0 8px 40px rgba(0,0,0,0.6);
-  --elev-4:     0 16px 64px rgba(0,0,0,0.7);
-  --elev-modal: 0 24px 80px rgba(0,0,0,0.8);
+  /* ── Elevation ── */
+  --elev-1:     0 2px 8px rgba(0,0,0,0.45);
+  --elev-2:     0 4px 20px rgba(0,0,0,0.55);
+  --elev-3:     0 8px 40px rgba(0,0,0,0.65);
+  --elev-4:     0 16px 64px rgba(0,0,0,0.72);
+  --elev-modal: 0 24px 80px rgba(0,0,0,0.82);
 
-  /* Easing */
+  /* ── Easing ── */
   --spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
+/* ── Light mode — all tokens remapped, surfaces are solid (no glass bug) ── */
 .light {
-  --mm-bg:           #F5F2ED;
-  --mm-surface:      #FFFFFF;
-  --mm-surface-2:    #EDE9E2;
-  --mm-surface-3:    #E4DED5;
-  --mm-border:       rgba(0,0,0,0.06);
-  --mm-border-gold:  rgba(180,140,40,0.35);
-  --mm-text:         #0B0B0C;
-  --mm-muted:        rgba(11,11,12,0.4);
-  --mm-gold:         #B8972E;
-  --mm-gold-light:   #D4AF37;
-  --mm-gold-dark:    #9A7D24;
+  --mm-bg:          #FFFFFF;
+  --mm-bg-2:        #F5F5F0;
+  --mm-surface:     #F8F7F3;
+  --mm-surface-2:   #EEECEA;
+  --mm-surface-3:   #E5E3DF;
+
+  --mm-border:      rgba(139,122,46,0.18);
+  --mm-border-gold: rgba(139,122,46,0.40);
+  --mm-border-2:    rgba(139,122,46,0.40);
+
+  --mm-text:        #0F0F0F;
+  --mm-muted:       #5A5248;
+  --mm-muted-2:     #8A8078;
+
+  --mm-gold:        #8B7A2E;
+  --mm-gold-bright: #6B5A1E;
+  --mm-gold-light:  #A08C38;
+  --mm-gold-dark:   #6B5A1E;
+  --mm-gold-soft:   #C9A961;
+  --mm-gold-glow:   rgba(139,122,46,0.20);
+  --mm-gradient:    linear-gradient(to right, #A08C38, #8B7A2E);
+
+  --elev-1:     0 2px 8px rgba(0,0,0,0.08);
+  --elev-2:     0 4px 20px rgba(0,0,0,0.10);
+  --elev-3:     0 8px 40px rgba(0,0,0,0.12);
+  --elev-4:     0 16px 64px rgba(0,0,0,0.14);
+  --elev-modal: 0 24px 80px rgba(0,0,0,0.18);
 }
 
 /* ── RESET ─────────────────────────────────────────────────────────────── */
@@ -64,17 +97,47 @@
 html, body {
   background: var(--mm-bg);
   color: var(--mm-text);
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', 'Outfit', sans-serif;
   font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 /* ── TYPOGRAPHY ────────────────────────────────────────────────────────── */
 .mm-font-display { font-family: 'Cormorant Garamond', Georgia, serif; }
 .mm-font-serif   { font-family: 'Cormorant Garamond', Georgia, serif; }
-.mm-font-body    { font-family: 'Outfit', sans-serif; }
+.mm-font-body    { font-family: 'Inter', 'Outfit', sans-serif; }
+
+/* ── GLASS SURFACE (brand book §5) ────────────────────────────────────── */
+.mm-glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+.light .mm-glass {
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(139,122,46,0.18);
+}
+.mm-glass-hover {
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.mm-glass-hover:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(201,169,97,0.2);
+}
+
+/* ── BRAND GRADIENT TEXT ───────────────────────────────────────────────── */
+.mm-gradient-text {
+  background: var(--mm-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 .mm-label {
   font-family: 'Outfit', sans-serif;
