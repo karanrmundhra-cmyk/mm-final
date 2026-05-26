@@ -30,7 +30,7 @@ export default function EditablePreview({ title = "Review before saving", fields
              background:"var(--mm-surface)",
              border:"1px solid var(--mm-border-gold)",
              borderRadius: 32,
-             boxShadow: "0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,175,55,0.08)",
+             boxShadow: "0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,169,97,0.08)",
            }}>
 
         {/* Header */}
@@ -76,7 +76,7 @@ export default function EditablePreview({ title = "Review before saving", fields
                           style={{
                             color:"var(--mm-text)", minHeight:32, borderRadius:12,
                           }}
-                          onMouseEnter={e => e.currentTarget.style.background = "rgba(212,175,55,0.06)"}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(201,169,97,0.06)"}
                           onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     {values[f.key] || <span style={{ color:"var(--mm-muted)" }}>—</span>}
                   </button>

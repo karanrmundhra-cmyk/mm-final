@@ -6,11 +6,11 @@ import {
 } from "lucide-react";
 
 const ITEM_META = {
-  task:        { icon: CheckSquare, color: "#D4AF37" },
-  routine:     { icon: RefreshCw,   color: "#D4AF37" },
-  transaction: { icon: DollarSign,  color: "#D4AF37" },
-  note:        { icon: FileText,    color: "#D4AF37" },
-  reminder:    { icon: Bell,        color: "#D4AF37" },
+  task:        { icon: CheckSquare, color: "#C9A961" },
+  routine:     { icon: RefreshCw,   color: "#C9A961" },
+  transaction: { icon: DollarSign,  color: "#C9A961" },
+  note:        { icon: FileText,    color: "#C9A961" },
+  reminder:    { icon: Bell,        color: "#C9A961" },
 };
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -226,7 +226,7 @@ export default function People() {
               </div>
               {selected?.id === p.id && items.length > 0 && (
                 <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-                      style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
+                      style={{ background:"rgba(201,169,97,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
                   {items.length}
                 </span>
               )}
@@ -485,7 +485,7 @@ export default function People() {
                       </span>
                       {c._duplicate && (
                         <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full"
-                              style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
+                              style={{ background:"rgba(201,169,97,0.12)", color:"var(--mm-gold)", fontSize:10 }}>
                           <AlertTriangle size={9} /> {c._dup_reason}
                         </span>
                       )}

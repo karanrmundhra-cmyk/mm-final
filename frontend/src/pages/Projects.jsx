@@ -9,12 +9,12 @@ import Skeleton from "@/components/Skeleton";
 import { useNavigate } from "react-router-dom";
 
 const PROJECT_COLORS = [
-  "#D4AF37","#C9A961","#B8960C","#E8CC6B",
+  "#C9A961","#C9A961","#B8960C","#E8CC6B",
   "#F0EDE8","#A89880","#887060","#706050",
-  "#D4AF37","#C9A961","#A89880","#706050",
+  "#C9A961","#C9A961","#A89880","#706050",
 ];
 
-const EMPTY = { name: "", color: "#D4AF37", description: "" };
+const EMPTY = { name: "", color: "#C9A961", description: "" };
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -153,7 +153,7 @@ export default function Projects() {
                     width: 28, height: 28, borderRadius: "50%",
                     background: c,
                     border: newForm.color === c ? "2px solid var(--mm-gold)" : "2px solid transparent",
-                    boxShadow: newForm.color === c ? `0 0 0 2px rgba(212,175,55,0.3)` : "none",
+                    boxShadow: newForm.color === c ? `0 0 0 2px rgba(201,169,97,0.3)` : "none",
                     transition: "all 0.15s",
                   }} />
               ))}

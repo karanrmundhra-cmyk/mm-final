@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
 const TYPE_META = {
-  task:        { icon: CheckSquare, color: "#D4AF37", label: "Task", route: "/tasks" },
-  routine:     { icon: RefreshCw,   color: "#D4AF37", label: "Routine", route: "/routines" },
-  transaction: { icon: DollarSign,  color: "#D4AF37", label: "Transaction", route: "/cash-flow" },
-  note:        { icon: FileText,    color: "#D4AF37", label: "Note", route: "/notes" },
-  reminder:    { icon: Bell,        color: "#D4AF37", label: "Reminder", route: "/reminders" },
-  person:      { icon: Users,       color: "#D4AF37", label: "Person", route: "/people" },
-  document:    { icon: Vault,       color: "#D4AF37", label: "Document", route: "/vault" },
+  task:        { icon: CheckSquare, color: "var(--mm-gold)", label: "Task", route: "/tasks" },
+  routine:     { icon: RefreshCw,   color: "var(--mm-gold)", label: "Routine", route: "/routines" },
+  transaction: { icon: DollarSign,  color: "var(--mm-gold)", label: "Transaction", route: "/cash-flow" },
+  note:        { icon: FileText,    color: "var(--mm-gold)", label: "Note", route: "/notes" },
+  reminder:    { icon: Bell,        color: "var(--mm-gold)", label: "Reminder", route: "/reminders" },
+  person:      { icon: Users,       color: "var(--mm-gold)", label: "Person", route: "/people" },
+  document:    { icon: Vault,       color: "var(--mm-gold)", label: "Document", route: "/vault" },
 };
 
 function RefreshCw(props) {
@@ -131,7 +131,7 @@ export default function GlobalSearch({ onClose }) {
                         <button key={t.id} onClick={() => { navigate("/tasks"); onClose(); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
                           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                               style={{ background:"rgba(212,175,55,0.1)" }}>
+                               style={{ background:"rgba(201,169,97,0.1)" }}>
                             <span style={{ color:"var(--mm-gold)", fontSize:12 }}>✓</span>
                           </div>
                           <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{t.task}</span>
@@ -147,7 +147,7 @@ export default function GlobalSearch({ onClose }) {
                         <button key={r.id} onClick={() => { navigate("/reminders"); onClose(); }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-white/5">
                           <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                               style={{ background:"rgba(212,175,55,0.15)" }}>
+                               style={{ background:"rgba(201,169,97,0.15)" }}>
                             <span style={{ color:"var(--mm-gold)", fontSize:12 }}>🔔</span>
                           </div>
                           <span className="flex-1 text-sm" style={{ color:"var(--mm-text)" }}>{r.title}</span>

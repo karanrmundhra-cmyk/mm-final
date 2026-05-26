@@ -171,7 +171,7 @@ html, body {
   background: transparent;
   border-radius: 24px;
   border: 1px solid var(--mm-border-gold);
-  box-shadow: 0 0 0 1px rgba(212,175,55,0.1), var(--elev-2);
+  box-shadow: 0 0 0 1px rgba(201,169,97,0.1), var(--elev-2);
 }
 
 /* ── GHOST INPUT ───────────────────────────────────────────────────────── */
@@ -186,8 +186,8 @@ html, body {
   border-radius: 8px;
   transition: background 0.2s var(--ease-out);
 }
-.mm-input-ghost:hover  { background: rgba(212,175,55,0.05); }
-.mm-input-ghost:focus  { outline: none; background: rgba(212,175,55,0.08); }
+.mm-input-ghost:hover  { background: rgba(201,169,97,0.05); }
+.mm-input-ghost:focus  { outline: none; background: rgba(201,169,97,0.08); }
 .mm-input-ghost option { background: #16161A; color: #F0EDE8; }
 
 /* ── TABLE ─────────────────────────────────────────────────────────────── */
@@ -200,8 +200,8 @@ html, body {
 /* ── SCROLLBAR ─────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.4); }
+::-webkit-scrollbar-thumb { background: rgba(201,169,97,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,169,97,0.4); }
 
 /* ── GOLD DIVIDER ──────────────────────────────────────────────────────── */
 .mm-divider {
@@ -212,7 +212,7 @@ html, body {
 
 /* ── GOLD GLOW ─────────────────────────────────────────────────────────── */
 .mm-glow {
-  background: radial-gradient(circle at center, rgba(212,175,55,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(201,169,97,0.1) 0%, transparent 70%);
 }
 
 /* ── ANIMATIONS ────────────────────────────────────────────────────────── */
@@ -220,7 +220,7 @@ html, body {
 @keyframes slideUp   { from { transform: translateY(16px); opacity: 0 }  to { transform: translateY(0); opacity: 1 } }
 @keyframes scaleIn   { from { transform: scale(0.95); opacity: 0 }       to { transform: scale(1); opacity: 1 } }
 @keyframes slideRight{ from { transform: translateX(-10px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
-@keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(212,175,55,0.3) } 50% { box-shadow: 0 0 16px 4px rgba(212,175,55,0.15) } }
+@keyframes glowPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(201,169,97,0.3) } 50% { box-shadow: 0 0 16px 4px rgba(201,169,97,0.15) } }
 @keyframes checkSnap { 0% { transform: scale(1) } 40% { transform: scale(1.22) } 70% { transform: scale(0.93) } 100% { transform: scale(1) } }
 
 .animate-fade-in    { animation: fadeIn 0.3s var(--spring); }
@@ -250,9 +250,9 @@ html, body {
   padding: 10px 22px;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s var(--spring), box-shadow 0.2s;
-  box-shadow: 0 4px 16px rgba(212,175,55,0.25);
+  box-shadow: 0 4px 16px rgba(201,169,97,0.25);
 }
-.mm-btn-gold:hover  { opacity: 0.9; box-shadow: 0 6px 24px rgba(212,175,55,0.35); }
+.mm-btn-gold:hover  { opacity: 0.9; box-shadow: 0 6px 24px rgba(201,169,97,0.35); }
 .mm-btn-gold:active { transform: scale(0.98); }
 
 .mm-btn-ghost {
@@ -272,7 +272,7 @@ html, body {
 .mm-btn-ghost:active { transform: scale(0.98); }
 
 /* ── ROW HOVER ─────────────────────────────────────────────────────────── */
-.mm-row:hover { background: rgba(212,175,55,0.04); }
+.mm-row:hover { background: rgba(201,169,97,0.04); }
 
 /* ── ICON BUTTON ───────────────────────────────────────────────────────── */
 .mm-icon-btn {
@@ -298,7 +298,7 @@ html, body {
   transition: border-color 0.2s, color 0.2s;
   font-family: 'Outfit', sans-serif;
 }
-.mm-filter-select:focus { border-color: rgba(212,175,55,0.35); }
+.mm-filter-select:focus { border-color: rgba(201,169,97,0.35); }
 
 /* ── FILTER TAB ────────────────────────────────────────────────────────── */
 .mm-filter-tab {
@@ -311,7 +311,7 @@ html, body {
 .mm-filter-tab:hover  { border-color: var(--mm-border-gold); color: var(--mm-gold); }
 .mm-filter-tab.active {
   border-color: var(--mm-gold); color: var(--mm-gold);
-  background: rgba(212,175,55,0.08);
+  background: rgba(201,169,97,0.08);
 }
 
 /* ── AI INPUT ──────────────────────────────────────────────────────────── */
@@ -321,7 +321,7 @@ html, body {
   color: var(--mm-text); outline: none; border-radius: 18px 0 0 18px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.mm-ai-input:focus        { border-color: rgba(212,175,55,0.4); box-shadow: 0 0 0 3px rgba(212,175,55,0.08); }
+.mm-ai-input:focus        { border-color: rgba(201,169,97,0.4); box-shadow: 0 0 0 3px rgba(201,169,97,0.08); }
 .mm-ai-input::placeholder { color: var(--mm-muted); }
 
 /* ── EMPTY STATE ───────────────────────────────────────────────────────── */
@@ -336,12 +336,12 @@ html, body {
   transition: border-color 0.2s var(--spring), background 0.2s var(--spring),
               transform 0.2s var(--spring), box-shadow 0.2s;
 }
-.mm-check:hover { border-color: rgba(212,175,55,0.5); transform: scale(1.1); }
+.mm-check:hover { border-color: rgba(201,169,97,0.5); transform: scale(1.1); }
 .mm-check.done  {
   border-color: var(--mm-gold);
-  background: rgba(212,175,55,0.15);
+  background: rgba(201,169,97,0.15);
   animation: checkSnap 0.4s var(--spring);
-  box-shadow: 0 0 10px rgba(212,175,55,0.2);
+  box-shadow: 0 0 10px rgba(201,169,97,0.2);
 }
 
 /* ── PAGE HEADER ───────────────────────────────────────────────────────── */
@@ -355,7 +355,7 @@ html, body {
   color: var(--mm-text); outline: none; border-radius: 18px; width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.mm-form-input:focus        { border-color: rgba(212,175,55,0.4); box-shadow: 0 0 0 3px rgba(212,175,55,0.08); }
+.mm-form-input:focus        { border-color: rgba(201,169,97,0.4); box-shadow: 0 0 0 3px rgba(201,169,97,0.08); }
 .mm-form-input::placeholder { color: var(--mm-muted); }
 
 /* ── SAFE AREA ─────────────────────────────────────────────────────────── */
@@ -392,10 +392,10 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
   font-size: 9px; letter-spacing: 0.03em;
   padding: 2px 7px; border-radius: 8px; flex-shrink: 0; cursor: pointer;
   font-family: 'Outfit', sans-serif;
-  background: rgba(212,175,55,0.1); color: var(--mm-gold);
+  background: rgba(201,169,97,0.1); color: var(--mm-gold);
   transition: background 0.15s, color 0.15s;
 }
-.mm-est-pill:hover { background: rgba(212,175,55,0.2); }
+.mm-est-pill:hover { background: rgba(201,169,97,0.2); }
 .mm-est-pill.unset { background: rgba(255,255,255,0.04); color: var(--mm-muted); }
 
 /* ── HABIT HEATMAP ──────────────────────────────────────────────────────── */
@@ -417,7 +417,7 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
   font-family: 'Outfit', sans-serif;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.mm-date-pill:hover, .mm-date-pill.active { border-color: var(--mm-border-gold); color: var(--mm-gold); background: rgba(212,175,55,0.08); }
+.mm-date-pill:hover, .mm-date-pill.active { border-color: var(--mm-border-gold); color: var(--mm-gold); background: rgba(201,169,97,0.08); }
 
 /* ── GOLD CALENDAR PICKER ───────────────────────────────────────────────── */
 /* Applied via className="mm-date-gold" on date inputs */
@@ -441,7 +441,7 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
 /* ── REVIEW BANNER ──────────────────────────────────────────────────────── */
 .mm-review-banner {
   border: 1px solid var(--mm-border-gold); border-radius: 20px; padding: 16px 20px;
-  background: linear-gradient(135deg, rgba(212,175,55,0.07) 0%, transparent 100%);
+  background: linear-gradient(135deg, rgba(201,169,97,0.07) 0%, transparent 100%);
 }
 
 /* ── ROW LIFT (stronger hover for table rows) ───────────────────────────── */
@@ -449,8 +449,8 @@ html.density-comfortable .mm-form-input { padding: 14px 20px; }
 .mm-row-lift:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 1; }
 
 /* ── ADDITIONAL ANIMATIONS ──────────────────────────────────────────────── */
-@keyframes completeFlash { 0% { background:transparent } 35% { background:rgba(212,175,55,0.14) } 100% { background:transparent } }
-@keyframes overdueRing   { 0%,100% { box-shadow:0 0 0 0 rgba(212,175,55,0) } 55% { box-shadow:0 0 0 3px rgba(212,175,55,0.28) } }
+@keyframes completeFlash { 0% { background:transparent } 35% { background:rgba(201,169,97,0.14) } 100% { background:transparent } }
+@keyframes overdueRing   { 0%,100% { box-shadow:0 0 0 0 rgba(201,169,97,0) } 55% { box-shadow:0 0 0 3px rgba(201,169,97,0.28) } }
 @keyframes streakPop     { 0%{transform:scale(1)rotate(0deg)} 25%{transform:scale(1.45)rotate(-4deg)} 60%{transform:scale(1.2)rotate(2deg)} 100%{transform:scale(1)rotate(0deg)} }
 @keyframes ringDraw      { from{stroke-dashoffset:var(--dash-total,999)} to{stroke-dashoffset:var(--dash-offset,0)} }
 

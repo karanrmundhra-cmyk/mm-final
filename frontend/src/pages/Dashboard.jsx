@@ -148,7 +148,7 @@ function AffirmationCard() {
     <div className="px-5 py-4 mt-3"
          style={{
            borderLeft: "3px solid var(--mm-border-gold)",
-           background: "rgba(212,175,55,0.04)",
+           background: "rgba(201,169,97,0.04)",
            borderRadius: "0 16px 16px 0",
          }}>
       <div className="flex items-center justify-between mb-2">
@@ -242,6 +242,14 @@ export default function Dashboard() {
     } catch {}
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  /* Year-to-date totals — fetch once when user switches to Year view */
+  useEffect(() => {
+    if (financeView !== "year") return;
+    api.get("/cashflow/totals")
+      .then(r => setYearlyData(r.data))
+      .catch(() => {});
+  }, [financeView]);
 
   /* News */
   const isOthersTab = activeNewsTab === FIXED_NEWS_TABS.length;
@@ -419,7 +427,7 @@ export default function Dashboard() {
         <button onClick={() => navigate("/reports", { state: { tab: "Pending Review" } })}
                 className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left"
                 style={{
-                  background: "rgba(212,175,55,0.06)",
+                  background: "rgba(201,169,97,0.06)",
                   border: "1px solid var(--mm-border-gold)", borderRadius: 16,
                 }}>
           <AlertTriangle size={15} style={{ color: "var(--mm-gold)", flexShrink: 0 }} />
@@ -478,7 +486,7 @@ export default function Dashboard() {
                     <div className="w-4 h-4 flex items-center justify-center border flex-shrink-0"
                          style={{
                            borderColor: r.done_today ? "var(--mm-gold)" : "var(--mm-border)",
-                           background:  r.done_today ? "rgba(212,175,55,0.12)" : "transparent",
+                           background:  r.done_today ? "rgba(201,169,97,0.12)" : "transparent",
                            borderRadius: "50%",
                          }}>
                       {r.done_today && <span style={{ color: "var(--mm-gold)", fontSize: 9, fontWeight: 700 }}>✓</span>}
@@ -571,7 +579,7 @@ export default function Dashboard() {
                             className="mm-row w-full flex items-center gap-3 px-4 py-3 text-left border-b"
                             style={{ borderColor: "var(--mm-border)" }}>
                       <span className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(212,175,55,0.5)" }} />
+                            style={{ background: "var(--mm-gold)", boxShadow: "0 0 5px rgba(201,169,97,0.5)" }} />
                       <span className="flex-1 text-sm truncate" style={{ color: "var(--mm-text)" }}>{r.title}</span>
                       <span style={{ fontSize: 9, letterSpacing: "0.03em",
                                      color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif", flexShrink: 0 }}>

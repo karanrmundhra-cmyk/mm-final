@@ -219,7 +219,7 @@ export default function Reports() {
               ) : (
                 <>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-xl mb-2"
-                       style={{ background: "rgba(212,175,55,0.06)", border: "1px solid var(--mm-border-gold)" }}>
+                       style={{ background: "rgba(201,169,97,0.06)", border: "1px solid var(--mm-border-gold)" }}>
                     <AlertTriangle size={14} style={{ color: "var(--mm-gold)" }} />
                     <p className="text-xs" style={{ color: "var(--mm-gold)" }}>
                       {pendingItems.length} item{pendingItems.length !== 1 ? "s" : ""} need review — low-confidence AI parses, duplicates, or failed imports.
@@ -249,7 +249,7 @@ export default function Reports() {
                         <div className="flex gap-1.5 flex-shrink-0">
                           <button onClick={() => approve(item.id)}
                                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs"
-                                  style={{ background: "rgba(212,175,55,0.08)", color: "var(--mm-gold)", border: "1px solid var(--mm-border-gold)" }}>
+                                  style={{ background: "rgba(201,169,97,0.08)", color: "var(--mm-gold)", border: "1px solid var(--mm-border-gold)" }}>
                             <Check size={11} /> Approve
                           </button>
                           <button onClick={() => discard(item.id)}

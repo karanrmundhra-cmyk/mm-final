@@ -81,7 +81,7 @@ export default function Vault() {
         <div className="space-y-1.5 mb-5">
           {expired.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
-                 style={{ background:"rgba(212,175,55,0.04)", border:"1px solid var(--mm-border)",
+                 style={{ background:"rgba(201,169,97,0.04)", border:"1px solid var(--mm-border)",
                           borderLeft:"3px solid var(--mm-border)", borderRadius:12 }}>
               <AlertTriangle size={13} style={{ color:"var(--mm-muted)", flexShrink:0 }} />
               <span className="text-sm" style={{ color:"var(--mm-muted)" }}>
@@ -91,7 +91,7 @@ export default function Vault() {
           ))}
           {expiring.map(d => (
             <div key={d.id} className="flex items-center gap-3 px-4 py-2.5"
-                 style={{ background:"rgba(212,175,55,0.06)", border:"1px solid var(--mm-border-gold)",
+                 style={{ background:"rgba(201,169,97,0.06)", border:"1px solid var(--mm-border-gold)",
                           borderLeft:"3px solid var(--mm-gold)", borderRadius:12 }}>
               <AlertTriangle size={13} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
               <span className="text-sm" style={{ color:"var(--mm-gold)" }}>

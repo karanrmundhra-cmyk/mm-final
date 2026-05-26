@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { timeAgo } from "@/lib/utils";
 
 const TYPE_LABELS = { task: "Task", routine: "Routine", transaction: "Transaction", note: "Note", reminder: "Reminder", person: "Person", document: "Document" };
-const TYPE_COLORS = { task: "#D4AF37", routine: "#D4AF37", transaction: "#D4AF37", note: "#D4AF37", reminder: "#D4AF37", person: "#D4AF37", document: "#D4AF37" };
+const TYPE_COLORS = { task: "#C9A961", routine: "#C9A961", transaction: "#C9A961", note: "#C9A961", reminder: "#C9A961", person: "#C9A961", document: "#C9A961" };
 
 export default function RecycleBin() {
   const [items, setItems] = useState([]);

@@ -293,7 +293,7 @@ export default function Routines() {
                      width:`${completionPct}%`,
                      background:"linear-gradient(90deg,var(--mm-gold-dark),var(--mm-gold))",
                      borderRadius:"inherit",
-                     boxShadow:"0 0 8px rgba(212,175,55,0.3)",
+                     boxShadow:"0 0 8px rgba(201,169,97,0.3)",
                    }} />
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function Routines() {
             <div className="flex items-center gap-1.5">
               <span className="mm-heat-cell" style={{ background:"var(--mm-surface-3)" }} />
               <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>none</span>
-              <span className="mm-heat-cell" style={{ background:"rgba(212,175,55,0.35)" }} />
+              <span className="mm-heat-cell" style={{ background:"rgba(201,169,97,0.35)" }} />
               <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>partial</span>
               <span className="mm-heat-cell" style={{ background:"var(--mm-gold)" }} />
               <span className="text-xs" style={{ color:"var(--mm-muted)", fontSize:9 }}>all done</span>
@@ -325,11 +325,11 @@ export default function Routines() {
               const bg  = day.total === 0
                 ? "var(--mm-surface-3)"
                 : pct === 0
-                  ? "rgba(212,175,55,0.08)"
+                  ? "rgba(201,169,97,0.08)"
                   : pct < 0.5
-                    ? "rgba(212,175,55,0.25)"
+                    ? "rgba(201,169,97,0.25)"
                     : pct < 1
-                      ? "rgba(212,175,55,0.55)"
+                      ? "rgba(201,169,97,0.55)"
                       : "var(--mm-gold)";
               return (
                 <div key={day.date}
@@ -412,7 +412,7 @@ export default function Routines() {
                     {r.streak > 0 && (
                       <span title={`${r.streak}-day streak`}
                             className="text-xs flex-shrink-0 px-1.5 py-0.5"
-                            style={{ background:"rgba(212,175,55,0.12)", color:"var(--mm-gold)",
+                            style={{ background:"rgba(201,169,97,0.12)", color:"var(--mm-gold)",
                                      borderRadius:8, fontSize:10 }}>
                         🔥{r.streak}
                       </span>

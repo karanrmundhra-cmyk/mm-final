@@ -122,7 +122,7 @@ export default function Calendar({ embedded = false }) {
                         borderRadius: 16,
                         minHeight: 72,
                         background: isSel
-                          ? "rgba(212,175,55,0.12)"
+                          ? "rgba(201,169,97,0.12)"
                           : isToday
                           ? "var(--mm-surface-2)"
                           : "transparent",
@@ -131,7 +131,7 @@ export default function Calendar({ embedded = false }) {
                           : isToday
                           ? "1px solid var(--mm-border)"
                           : "1px solid transparent",
-                        boxShadow: isSel ? "0 0 12px rgba(212,175,55,0.15)" : "none",
+                        boxShadow: isSel ? "0 0 12px rgba(201,169,97,0.15)" : "none",
                       }}>
                 <span className="text-sm font-medium"
                       style={{
@@ -195,7 +195,7 @@ export default function Calendar({ embedded = false }) {
               {selectedReminders.map(r => (
                 <button key={r.id} onClick={() => navigate("/reminders")}
                         className="mm-row w-full flex items-center gap-2.5 px-3 py-2.5 mb-1 text-left"
-                        style={{ borderRadius:12, background:"rgba(212,175,55,0.08)", opacity:r.dismissed?0.5:1 }}>
+                        style={{ borderRadius:12, background:"rgba(201,169,97,0.08)", opacity:r.dismissed?0.5:1 }}>
                   <Bell size={12} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate" style={{ color:"var(--mm-text)" }}>{r.title}</p>

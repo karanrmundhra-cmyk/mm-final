@@ -25,7 +25,7 @@ export default function OnboardingTip({ page }) {
   if (!visible || !TIPS[page]) return null;
   return (
     <div className="flex items-center gap-3 px-4 py-2.5 mb-4 animate-fade-in"
-         style={{ background:"rgba(212,175,55,0.07)", border:"1px solid rgba(212,175,55,0.25)",
+         style={{ background:"rgba(201,169,97,0.07)", border:"1px solid rgba(201,169,97,0.25)",
                   borderRadius:12 }}>
       <Sparkles size={13} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
       <p className="flex-1 text-xs italic" style={{ color:"var(--mm-gold)", opacity:0.85 }}>

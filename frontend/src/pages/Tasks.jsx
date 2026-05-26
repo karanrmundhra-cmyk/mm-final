@@ -152,7 +152,6 @@ export default function Tasks() {
   const [newGroupName, setNewGroupName] = useState("");
   const [addingGroup,  setAddingGroup]  = useState(false);
   const [voiceActive,  setVoiceActive]  = useState(false);
-  const importRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
@@ -224,17 +223,8 @@ export default function Tasks() {
 
   /* ── Import / Export ── */
   const exportCsv = () => window.open(`${api.defaults.baseURL}/export/tasks.csv`, "_blank");
-  const handleImport = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("file", file);
-    try {
-      await api.post("/import/tasks", fd);
-      toast.success("Tasks imported");
-      load();
-    } catch { toast.error("Import failed"); }
-    e.target.value = "";
+  const handleImport = () => {
+    toast.info("Task import coming soon");
   };
 
   /* ── Groups ── */
@@ -406,10 +396,9 @@ export default function Tasks() {
           <p className="mm-page-sub">{pending} pending · {visible.length} total</p>
         </div>
         <div className="flex gap-2">
-          <label className="mm-btn-ghost flex items-center gap-1.5 cursor-pointer" title="Import CSV">
+          <button onClick={handleImport} className="mm-btn-ghost flex items-center gap-1.5" title="Import CSV">
             <Upload size={12} /> Import
-            <input ref={importRef} type="file" accept=".csv,.xlsx" className="hidden" onChange={handleImport} />
-          </label>
+          </button>
           <button onClick={exportCsv} className="mm-btn-ghost flex items-center gap-1.5" title="Export CSV">
             <Download size={12} /> Export
           </button>
@@ -427,7 +416,7 @@ export default function Tasks() {
             <span key={g}
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
                   style={{
-                    background: "rgba(212,175,55,0.10)",
+                    background: "rgba(201,169,97,0.10)",
                     border: "1px solid var(--mm-border-gold)",
                     color: "var(--mm-gold)",
                     fontFamily: "'Outfit',sans-serif",
@@ -489,7 +478,7 @@ export default function Tasks() {
             style={{
               padding:"0 16px",
               height:48,
-              background: voiceActive ? "rgba(212,175,55,0.15)" : "transparent",
+              background: voiceActive ? "rgba(201,169,97,0.15)" : "transparent",
               border:"none",
               borderLeft:"1px solid var(--mm-border)",
               color: voiceActive ? "var(--mm-gold)" : "var(--mm-muted)",
@@ -506,7 +495,7 @@ export default function Tasks() {
               height:48,
               background:"var(--mm-gold)",
               border:"none",
-              borderLeft:"1px solid rgba(212,175,55,0.3)",
+              borderLeft:"1px solid rgba(201,169,97,0.3)",
               color:"#0a0a0a",
               fontFamily:"'Outfit',sans-serif",
               fontWeight:600,
@@ -569,7 +558,7 @@ export default function Tasks() {
       {/* ── Bulk action bar ── */}
       {selected.size > 0 && (
         <div className="flex items-center gap-3 px-4 py-3 mb-4 animate-slide-up"
-             style={{ background:"rgba(212,175,55,0.08)", border:"1px solid var(--mm-border-gold)", borderRadius:16 }}>
+             style={{ background:"rgba(201,169,97,0.08)", border:"1px solid var(--mm-border-gold)", borderRadius:16 }}>
           <span className="text-sm font-medium" style={{ color:"var(--mm-gold)" }}>
             {selected.size} selected
           </span>
@@ -849,7 +838,7 @@ export default function Tasks() {
                         {(t.comments||[]).map(c => (
                           <div key={c.id} className="flex gap-2 mb-2.5">
                             <div className="w-5 h-5 flex-shrink-0 rounded flex items-center justify-center text-xs font-semibold"
-                                 style={{ background:"rgba(212,175,55,0.15)", color:"var(--mm-gold)" }}>
+                                 style={{ background:"rgba(201,169,97,0.15)", color:"var(--mm-gold)" }}>
                               {c.text[0]?.toUpperCase()}
                             </div>
                             <div className="flex-1">

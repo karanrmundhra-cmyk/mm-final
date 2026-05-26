@@ -96,7 +96,7 @@ export default function App() {
         toastOptions={{
           style: {
             background: "rgba(17,17,20,0.97)",
-            border: "1px solid rgba(212,175,55,0.3)",
+            border: "1px solid rgba(201,169,97,0.3)",
             color: "#F0EDE8",
             backdropFilter: "blur(16px)",
             borderRadius: "16px",

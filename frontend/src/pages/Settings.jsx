@@ -191,7 +191,7 @@ export default function Settings() {
                   <button key={key} onClick={() => applyDensity(key)}
                           className="flex-1 px-3 py-3 rounded-xl text-center transition-all"
                           style={{
-                            background: active ? "rgba(212,175,55,0.12)" : "var(--mm-surface-2)",
+                            background: active ? "rgba(201,169,97,0.12)" : "var(--mm-surface-2)",
                             border: active ? "1px solid var(--mm-border-gold)" : "1px solid var(--mm-border)",
                           }}>
                     <p className="text-sm font-medium mb-0.5" style={{ color: active ? "var(--mm-gold)" : "var(--mm-text)" }}>

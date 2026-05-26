@@ -27,7 +27,7 @@ export default class ErrorBoundary extends React.Component {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-64 gap-5 px-6 text-center">
         <div className="w-12 h-12 flex items-center justify-center"
-             style={{ background:"rgba(212,175,55,0.08)", borderRadius:16 }}>
+             style={{ background:"rgba(201,169,97,0.08)", borderRadius:16 }}>
           <AlertTriangle size={22} style={{ color:"var(--mm-muted)" }} />
         </div>
         <div>

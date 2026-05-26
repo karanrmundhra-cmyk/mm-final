@@ -39,7 +39,7 @@ export default function CompletionRing({ done = 0, total = 0, size = 80, stroke 
                   strokeDashoffset={circumference}
                   style={{
                     transition: "stroke-dashoffset 1s cubic-bezier(0.25,0.46,0.45,0.94)",
-                    filter: "drop-shadow(0 0 5px rgba(212,175,55,0.45))",
+                    filter: "drop-shadow(0 0 5px rgba(201,169,97,0.45))",
                   }} />
         )}
       </svg>

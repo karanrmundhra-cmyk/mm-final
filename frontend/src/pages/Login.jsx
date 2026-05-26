@@ -61,7 +61,7 @@ export default function Login() {
            style={{
              background: "var(--mm-surface)",
              border: "1px solid var(--mm-border)",
-             boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.06)",
+             boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,169,97,0.06)",
            }}>
 
         {/* ── Logo area ── */}
@@ -74,7 +74,7 @@ export default function Login() {
             borderRadius: "50%",
             overflow: "hidden",
             marginBottom: 22,
-            boxShadow: "0 0 32px rgba(212,175,55,0.2)",
+            boxShadow: "0 0 32px rgba(201,169,97,0.2)",
           }}>
             <img
               src="/rkm-logo.png"
@@ -104,9 +104,8 @@ export default function Login() {
           <p style={{
             fontFamily: "'Outfit', sans-serif",
             fontSize: 10,
-            letterSpacing: "0.28em",
+            letterSpacing: "0.12em",
             color: "var(--mm-muted)",
-            textTransform: "uppercase",
             marginBottom: 20,
           }}>
             Personal Operating System
@@ -124,9 +123,8 @@ export default function Login() {
           <p style={{
             fontFamily: "'Outfit', sans-serif",
             fontSize: 10,
-            letterSpacing: "0.22em",
+            letterSpacing: "0.08em",
             color: "var(--mm-muted)",
-            textTransform: "uppercase",
           }}>
             {mode === "login"  && "Sign In"}
             {mode === "signup" && "Create Account"}
@@ -196,7 +194,7 @@ export default function Login() {
                         marginTop: 8,
                         padding: "13px 0",
                         borderRadius: 50,
-                        background: "linear-gradient(135deg, #e8c96a 0%, #D4AF37 50%, #b8942a 100%)",
+                        background: "linear-gradient(135deg, #E4C98C 0%, #C9A961 50%, #b8942a 100%)",
                         color: "#0A0A0A",
                         fontFamily: "'Outfit', sans-serif",
                         fontSize: 13,
@@ -288,9 +286,8 @@ export default function Login() {
           <p style={{
             fontFamily: "'Outfit', sans-serif",
             fontSize: 9,
-            letterSpacing: "0.26em",
+            letterSpacing: "0.1em",
             color: "var(--mm-muted)",
-            textTransform: "uppercase",
             opacity: 0.6,
           }}>
             Calm · Intelligent · In Control
@@ -322,9 +319,8 @@ function Field({ label, children }) {
         marginBottom: 6,
         fontFamily: "'Outfit', sans-serif",
         fontSize: 9,
-        letterSpacing: "0.2em",
+        letterSpacing: "0.06em",
         color: "var(--mm-muted)",
-        textTransform: "uppercase",
       }}>
         {label}
       </label>

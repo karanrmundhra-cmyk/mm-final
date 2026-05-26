@@ -49,7 +49,7 @@ export default function DigestWidget() {
           </span>
           {digest && (
             <span className="text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(212,175,55,0.1)", color: "var(--mm-gold)", fontSize: 10 }}>
+                  style={{ background: "rgba(201,169,97,0.1)", color: "var(--mm-gold)", fontSize: 10 }}>
               AI Generated
             </span>
           )}
@@ -116,7 +116,7 @@ export default function DigestWidget() {
                 <div className="flex flex-wrap gap-2 mb-4">
                   {digest.stats.top_streaks.map((s, i) => (
                     <span key={i} className="text-xs px-2.5 py-1 rounded-full"
-                          style={{ background: "rgba(212,175,55,0.08)",
+                          style={{ background: "rgba(201,169,97,0.08)",
                                    color: "var(--mm-gold)", fontSize: 11 }}>
                       🔥 {s.activity} · {s.streak}d
                     </span>
@@ -127,7 +127,7 @@ export default function DigestWidget() {
               {/* Expiring docs warning */}
               {digest.stats.expiring_docs > 0 && (
                 <div className="mb-4 px-3 py-2 rounded-xl text-xs"
-                     style={{ background: "rgba(212,175,55,0.06)",
+                     style={{ background: "rgba(201,169,97,0.06)",
                               color: "var(--mm-muted)", border: "1px solid var(--mm-border)" }}>
                   ⚠️ {digest.stats.expiring_docs} document{digest.stats.expiring_docs > 1 ? "s" : ""} expiring within 30 days
                 </div>

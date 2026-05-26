@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Sparkline({ values = [], color = "#D4AF37", width = 72, height = 28 }) {
+export default function Sparkline({ values = [], color = "var(--mm-gold)", width = 72, height = 28 }) {
   const valid = values.filter(v => typeof v === "number");
   if (valid.length < 2) return <div style={{ width, height }} />;
   const max = Math.max(...valid);

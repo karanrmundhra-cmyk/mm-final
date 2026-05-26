@@ -261,8 +261,8 @@ export default function AppShell() {
                            style={({ isActive }) => ({
                              borderRadius: 14,
                              color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
-                             background: isActive ? "rgba(212,175,55,0.1)" : "transparent",
-                             boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
+                             background: isActive ? "rgba(201,169,97,0.1)" : "transparent",
+                             boxShadow: isActive ? "0 2px 12px rgba(201,169,97,0.12)" : "none",
                            })}>
                     <Icon size={15} />
                     {badgeCount > 0 && (
@@ -325,8 +325,8 @@ export default function AppShell() {
                            style={({ isActive }) => ({
                              borderRadius: 14,
                              color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
-                             background: isActive ? "rgba(212,175,55,0.1)" : "transparent",
-                             boxShadow: isActive ? "0 2px 12px rgba(212,175,55,0.12)" : "none",
+                             background: isActive ? "rgba(201,169,97,0.1)" : "transparent",
+                             boxShadow: isActive ? "0 2px 12px rgba(201,169,97,0.12)" : "none",
                            })}>
                     <Icon size={15} className="flex-shrink-0" />
                     <span className="flex-1 text-xs"
@@ -336,7 +336,7 @@ export default function AppShell() {
                     </span>
                     {hasBadge && (
                       <span className="text-xs px-1.5 py-0.5"
-                            style={{ background: "rgba(212,175,55,0.12)", color: "var(--mm-gold)",
+                            style={{ background: "rgba(201,169,97,0.12)", color: "var(--mm-gold)",
                                      fontSize: 9, borderRadius: 8 }}>
                         {badgeCount}
                       </span>
@@ -454,7 +454,7 @@ export default function AppShell() {
                            onClick={() => setShowMobileMenu(false)}
                            className="flex flex-col items-center gap-2 p-3"
                            style={({ isActive }) => ({
-                             background: isActive ? "rgba(212,175,55,0.1)" : "var(--mm-surface-2)",
+                             background: isActive ? "rgba(201,169,97,0.1)" : "var(--mm-surface-2)",
                              borderRadius: 16,
                              color: isActive ? "var(--mm-gold)" : "var(--mm-muted)",
                            })}>
@@ -556,10 +556,10 @@ function SyncBtn() {
   }, []);
 
   const color  = !state.online ? "rgba(240,237,232,0.25)"
-               : state.pending > 0 ? "#D4AF37"        /* syncing → gold */
+               : state.pending > 0 ? "var(--mm-gold)"  /* syncing → gold */
                : "#22C55E";                            /* synced  → green */
   const shadow = !state.online ? "transparent"
-               : state.pending > 0 ? "rgba(212,175,55,0.5)"
+               : state.pending > 0 ? "rgba(201,169,97,0.5)"
                : "rgba(34,197,94,0.45)";
 
   const timeAgoStr = (date) => {

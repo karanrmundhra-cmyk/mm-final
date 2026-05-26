@@ -17,7 +17,7 @@ const EMPTY = {
   date: new Date().toISOString().slice(0,10)
 };
 
-const CAT_COLORS = { Income:"#D4AF37", Expense:"#888880", Asset:"#D4AF37", Liability:"#888880" };
+const CAT_COLORS = { Income:"#C9A961", Expense:"#888880", Asset:"#C9A961", Liability:"#888880" };
 
 const COLS = "44px 120px 1fr 1fr 110px 130px 88px";
 // # | date | vendor | details | category | amount | actions
@@ -234,7 +234,7 @@ export default function CashFlow() {
 
       {/* ── Net Worth card ── */}
       <div className="mm-card p-4 mb-5 flex items-center gap-6"
-           style={{ background:"linear-gradient(135deg,rgba(212,175,55,0.06) 0%,rgba(17,17,20,0) 100%)",
+           style={{ background:"linear-gradient(135deg,rgba(201,169,97,0.06) 0%,rgba(17,17,20,0) 100%)",
                     borderColor:"var(--mm-border-gold)" }}>
         <div>
           <p className="mm-label mb-1">Net Worth</p>
@@ -245,7 +245,7 @@ export default function CashFlow() {
           <p className="text-xs mt-1" style={{ color:"var(--mm-muted)" }}>Assets − Liabilities</p>
         </div>
         <div className="flex-1 grid grid-cols-2 gap-3">
-          <div className="mm-card p-3" style={{ borderColor:"var(--mm-border-gold)", background:"rgba(212,175,55,0.05)" }}>
+          <div className="mm-card p-3" style={{ borderColor:"var(--mm-border-gold)", background:"rgba(201,169,97,0.05)" }}>
             <p className="mm-label mb-1">Assets</p>
             <p className="text-lg mm-font-display font-light" style={{ color:"var(--mm-gold)" }}>
               ₹{formatAmount(totals.Asset||0)}

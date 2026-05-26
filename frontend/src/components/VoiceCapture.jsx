@@ -143,7 +143,7 @@ export default function VoiceCapture({ onClose }) {
               <button
                 onClick={stopRecording}
                 className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(212,175,55,0.1)", border: "2px solid var(--mm-border-gold)" }}>
+                style={{ background: "rgba(201,169,97,0.1)", border: "2px solid var(--mm-border-gold)" }}>
                 <Square size={20} style={{ color: "var(--mm-gold)" }} />
               </button>
             </div>

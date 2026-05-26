@@ -30,7 +30,7 @@ export default function SwipeRow({ onDelete, onComplete, children }) {
       {/* Swipe-right: complete */}
       {onComplete && isRight && (
         <div className="absolute inset-y-0 left-0 flex items-center px-4 pointer-events-none"
-             style={{ background:"rgba(212,175,55,0.18)", width: abs, minWidth:0, transition:"none" }}>
+             style={{ background:"rgba(201,169,97,0.18)", width: abs, minWidth:0, transition:"none" }}>
           <Check size={14} style={{ color:"var(--mm-gold)", opacity: abs > 30 ? 1 : 0 }} />
         </div>
       )}

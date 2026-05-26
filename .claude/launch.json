@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mm-frontend",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd 'frontend' && npx craco start"],
+      "port": 3000
+    }
+  ]
+}
