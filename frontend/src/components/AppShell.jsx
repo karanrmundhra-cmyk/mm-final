@@ -178,7 +178,15 @@ export default function AppShell() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>
+    <>
+      {/* Project selector + weather — rendered OUTSIDE every overflow:hidden container
+          so position:fixed is relative to the viewport with no parent interference */}
+      <div className="fixed top-4 right-5 z-[100] pointer-events-auto flex flex-col items-center gap-2">
+        <ProjectSelector />
+        {weather && <WeatherCompact weather={weather} />}
+      </div>
+
+      <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>
 
       {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
       <aside
@@ -353,13 +361,7 @@ export default function AppShell() {
       </aside>
 
       {/* ── MAIN ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-
-        {/* Project selector + weather — fixed so they never scroll */}
-        <div className="fixed top-4 right-5 z-20 pointer-events-auto flex flex-col items-center gap-2">
-          <ProjectSelector />
-          {weather && <WeatherCompact weather={weather} />}
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Page */}
         <main className="flex-1 overflow-y-auto">
@@ -467,7 +469,8 @@ export default function AppShell() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
