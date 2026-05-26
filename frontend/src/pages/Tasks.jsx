@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import {
   Plus, Trash2, Flag, Paperclip, Check, Loader, GripVertical,
   ChevronRight, ChevronDown, MessageSquare, ArrowUp, ArrowDown,
-  Send, X, Copy, Upload, Download, Mic,
+  Send, X, Copy, Upload, Download, Mic, Bell, FolderOpen, Zap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -16,20 +16,32 @@ import OnboardingTip from "@/components/OnboardingTip";
 const STATUSES   = ["Pending","In Progress","Completed","Follow-Up","Delegate","On Hold"];
 const PRIORITIES = ["", "P1", "P2", "P3", "P4"];
 const ESTIMATES  = ["", "15m", "30m", "1h", "2h", "4h", "1d"];
-const EMPTY      = { task:"", name:"", date:"", status:"Pending", group:"", details:"", flagged:false, priority:"", estimate:"" };
+
+/* Default date to today for every new task */
+const todayISO = () => new Date().toISOString().split("T")[0];
+const EMPTY = { task:"", name:"", date: todayISO(), due_date:"", status:"Pending", group:"", details:"", flagged:false, priority:"", estimate:"" };
 
 const STATUS_COLORS = {
   "Pending":     "var(--mm-muted)",
   "In Progress": "var(--mm-gold)",
-  "Completed":   "var(--mm-gold)",
-  "Done":        "var(--mm-gold)",
+  "Completed":   "#22C55E",
+  "Done":        "#22C55E",
   "Follow-Up":   "var(--mm-gold)",
   "Delegate":    "var(--mm-muted)",
   "On Hold":     "var(--mm-muted)",
 };
 
-/* column grid — no leading checkbox col, just the check circle */
-const COLS = "28px 28px 1fr 110px 120px 90px 100px 108px";
+/* New column order:
+   checkbox | done | date-added | group | to | task | due-date | status | icons */
+const COLS = "20px 30px 90px 100px 120px 1fr 100px 120px 200px";
+
+/* ─── Short date display ─────────────────────────────────────── */
+function fmtDate(str) {
+  if (!str) return "—";
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString("en-IN", { day:"numeric", month:"short" });
+}
 
 /* ─── Column-header filter dropdown ─────────────────────────── */
 function ColFilter({ label, col, filter, setFilter, values, open, setOpen }) {
@@ -97,7 +109,7 @@ function PersonCell({ task, people, update }) {
   );
 }
 
-/* ─── Excel-style dropdown cell for new-row ─────────────────── */
+/* ─── Excel-style dropdown cell ─────────────────────────────── */
 function DropCell({ value, onChange, options, placeholder }) {
   const [open, setOpen] = useState(false);
   const filtered = options.filter(o => !value || o.toLowerCase().includes(value.toLowerCase())).slice(0, 8);
@@ -127,6 +139,30 @@ function DropCell({ value, onChange, options, placeholder }) {
   );
 }
 
+/* ─── Move Group dropdown ────────────────────────────────────── */
+function MoveGroupMenu({ task, allGroups, update, onClose }) {
+  return (
+    <div className="absolute right-0 top-6 z-[200] py-1 rounded-xl shadow-2xl"
+         style={{ background:"var(--mm-surface)", border:"1px solid var(--mm-border-gold)", minWidth:150 }}>
+      <p className="px-3 py-1 text-xs" style={{ color:"var(--mm-gold)", letterSpacing:"0.05em" }}>Move to…</p>
+      {allGroups.map(g => (
+        <button key={g}
+                className="w-full text-left px-3 py-1.5 text-xs hover:opacity-80"
+                style={{ color: g === task.group ? "var(--mm-gold)" : "var(--mm-text)" }}
+                onMouseDown={() => { update(task.id, {group:g}); onClose(); }}>
+          {g}
+        </button>
+      ))}
+      <button
+        className="w-full text-left px-3 py-1.5 text-xs hover:opacity-80"
+        style={{ color:"var(--mm-muted)" }}
+        onMouseDown={() => { update(task.id, {group:""}); onClose(); }}>
+        — No Section
+      </button>
+    </div>
+  );
+}
+
 /* ─── Main component ─────────────────────────────────────────── */
 export default function Tasks() {
   const [tasks,        setTasks]        = useState([]);
@@ -136,7 +172,7 @@ export default function Tasks() {
   const [preview,      setPreview]      = useState(null);
   const [newRow,       setNewRow]       = useState({ ...EMPTY });
   const [filter,       setFilter]       = useState({ status:"", name:"" });
-  const [activeGroup,  setActiveGroup]  = useState(""); // group pill filter
+  const [activeGroup,  setActiveGroup]  = useState("");
   const [groups,       setGroups]       = useState([]);
   const [selected,     setSelected]     = useState(new Set());
   const [dragId,       setDragId]       = useState(null);
@@ -152,6 +188,7 @@ export default function Tasks() {
   const [newGroupName, setNewGroupName] = useState("");
   const [addingGroup,  setAddingGroup]  = useState(false);
   const [voiceActive,  setVoiceActive]  = useState(false);
+  const [moveGroupOpen,setMoveGroupOpen]= useState(null); // task id
 
   const load = useCallback(async () => {
     try {
@@ -167,7 +204,6 @@ export default function Tasks() {
     api.get("/people").then(r => setPeople(r.data || [])).catch(() => {});
   }, []);
 
-  /* ── All groups (from tasks + user-created) ── */
   const allGroups = useMemo(
     () => [...new Set([...userSections, ...groups])],
     [userSections, groups]
@@ -181,13 +217,13 @@ export default function Tasks() {
       const { data } = await api.post("/parse/task", { text:aiText });
       setPreview({ fields:[
         { key:"task",    label:"Title",    value:data.task,              confidence:data.confidence },
-        { key:"date",    label:"Due date", value:data.date,              confidence:data.confidence },
+        { key:"date",    label:"Due Date", value:data.date,              confidence:data.confidence },
         { key:"name",    label:"Person",   value:data.name,              confidence:"medium" },
         { key:"group",   label:"Group",    value:data.group,             confidence:"medium" },
         { key:"status",  label:"Status",   value:data.status||"Pending", confidence:"high" },
         { key:"details", label:"Details",  value:data.details,           confidence:"medium" },
       ], raw:data });
-    } catch { toast.error("Parse failed"); }
+    } catch { toast.error("Parse failed — try rephrasing"); }
     setAiLoading(false);
   };
 
@@ -204,7 +240,7 @@ export default function Tasks() {
     try {
       await api.post("/tasks", newRow);
       toast.success("Task added");
-      setNewRow({ ...EMPTY }); load();
+      setNewRow({ ...EMPTY, date: todayISO() }); load();
     } catch (e) { toast.error(e?.response?.data?.detail || "Failed to add task"); }
   };
 
@@ -222,20 +258,27 @@ export default function Tasks() {
   };
 
   /* ── Import / Export ── */
-  const exportCsv = () => window.open(`${api.defaults.baseURL}/export/tasks.csv`, "_blank");
-  const handleImport = () => {
-    toast.info("Task import coming soon");
+  const exportCsv = async () => {
+    try {
+      const { data } = await api.get("/export/tasks.csv", { responseType:"blob" });
+      const url = URL.createObjectURL(new Blob([data], { type:"text/csv" }));
+      const a   = document.createElement("a");
+      a.href = url; a.download = "tasks.csv"; a.click();
+      URL.revokeObjectURL(url);
+    } catch { toast.error("Export failed — please try again"); }
   };
+  const handleImport = () => toast.info("Task import coming soon");
 
   /* ── Groups ── */
-  const createGroup = () => {
-    if (!newGroupName.trim()) return;
-    setUserSections(s => [...new Set([...s, newGroupName.trim()])]);
-    setNewRow(r => ({...r, group:newGroupName.trim()}));
+  const createGroup = (name) => {
+    const n = (name || newGroupName).trim();
+    if (!n) return;
+    setUserSections(s => [...new Set([...s, n])]);
+    setNewRow(r => ({...r, group:n}));
     setNewGroupName(""); setAddingGroup(false);
   };
 
-  /* ── Core ── */
+  /* ── Core CRUD ── */
   const update = async (id, patch) => {
     setTasks(ts => ts.map(t => t.id === id ? {...t,...patch} : t));
     try { await api.patch(`/tasks/${id}`, patch); } catch {}
@@ -386,85 +429,88 @@ export default function Tasks() {
 
   if (loading) return <Skeleton.Page rows={7} />;
 
+  /* ── Column header row (matches COLS) ── */
+  const ColHeaders = ({ secTasks }) => (
+    <div className="hidden md:grid px-3 py-2 mm-label"
+         style={{ gridTemplateColumns:COLS, borderBottom:"1px solid var(--mm-border)" }}>
+      {/* Multi-select header checkbox */}
+      <div className="flex items-center justify-center">
+        <button
+          onClick={() => selected.size === visible.length ? clearSel() : selectAll()}
+          className="w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-all"
+          style={{
+            borderColor: selected.size > 0 ? "var(--mm-gold)" : "var(--mm-border)",
+            background:  selected.size === visible.length ? "var(--mm-gold)" : "transparent",
+          }}>
+          {selected.size === visible.length && <Check size={8} style={{ color:"#0a0a0a" }} />}
+        </button>
+      </div>
+      <span></span>
+      {/* Date added */}
+      <span>Date</span>
+      {/* Group */}
+      <ColFilter label="Group"  col="group"  filter={filter} setFilter={setFilter}
+                 values={allGroups} open={colFilter} setOpen={setColFilter} />
+      {/* To (person) */}
+      <ColFilter label="To"     col="name"   filter={filter} setFilter={setFilter}
+                 values={[...new Set(secTasks.map(t=>t.name).filter(Boolean))]}
+                 open={colFilter} setOpen={setColFilter} />
+      {/* Task */}
+      <span>Task</span>
+      {/* Due Date */}
+      <ColFilter label="Due"    col="date"   filter={filter} setFilter={setFilter}
+                 values={[...new Set(secTasks.map(t=>t.date).filter(Boolean))].sort()}
+                 open={colFilter} setOpen={setColFilter} />
+      {/* Status */}
+      <ColFilter label="Status" col="status" filter={filter} setFilter={setFilter}
+                 values={STATUSES} open={colFilter} setOpen={setColFilter} />
+      <span></span>
+    </div>
+  );
+
   return (
-    <div className="px-5 py-6 max-w-6xl mx-auto">
+    <div className="px-5 py-6 max-w-7xl mx-auto">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="mm-page-title">Tasks</h1>
-          <p className="mm-page-sub">{pending} pending · {visible.length} total</p>
+          {/* Fix 1: P & T capitalised */}
+          <p className="mm-page-sub">{pending} Pending · {visible.length} Total</p>
         </div>
         <div className="flex gap-2">
+          {/* Fix 2: Import shows "Soon" */}
           <button onClick={handleImport}
                   className="mm-btn-ghost flex items-center gap-1.5"
                   title="Import CSV — Coming Soon"
-                  style={{ opacity: 0.45, cursor: "default" }}>
+                  style={{ opacity:0.45, cursor:"default" }}>
             <Upload size={12} /> Import
-            <span style={{ fontSize: 8, letterSpacing: "0.06em", color: "var(--mm-muted)" }}>Soon</span>
+            <span style={{ fontSize:8, letterSpacing:"0.06em", color:"var(--mm-muted)" }}>Soon</span>
           </button>
+          {/* Fix 3: Export with auth header */}
           <button onClick={exportCsv} className="mm-btn-ghost flex items-center gap-1.5" title="Export CSV">
             <Download size={12} /> Export
           </button>
         </div>
       </div>
 
-      {/* ── Chief Of Staff bar ── */}
-      <div className="mb-4 rounded-2xl overflow-hidden"
+      {/* ═══════════════════════════════════════════
+          SECTION 1 — AI PARSE BAR (always on top)
+          ═══════════════════════════════════════════ */}
+      <div className="mb-3 rounded-2xl overflow-hidden"
            style={{ border:"1px solid var(--mm-border-gold)", background:"var(--mm-surface)" }}>
 
-        {/* Group chips row */}
-        <div className="flex flex-wrap items-center gap-2 px-4 pt-3 pb-2"
+        {/* Label row */}
+        <div className="flex items-center gap-2 px-4 pt-3 pb-2"
              style={{ borderBottom:"1px solid var(--mm-border)" }}>
-          {allGroups.map(g => (
-            <span key={g}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
-                  style={{
-                    background: "rgba(201,169,97,0.10)",
-                    border: "1px solid var(--mm-border-gold)",
-                    color: "var(--mm-gold)",
-                    fontFamily: "'Outfit',sans-serif",
-                  }}>
-              Group: {g}
-              <button
-                onClick={() => {
-                  setUserSections(s => s.filter(x => x !== g));
-                  setGroups(s => s.filter(x => x !== g));
-                  if (activeGroup === g) setActiveGroup("");
-                }}
-                style={{ color:"var(--mm-muted)", lineHeight:1 }}>
-                <X size={9} />
-              </button>
-            </span>
-          ))}
-
-          {/* New group inline */}
-          {addingGroup ? (
-            <div className="flex items-center gap-1">
-              <input
-                value={newGroupName}
-                onChange={e => setNewGroupName(e.target.value)}
-                onKeyDown={e => { if (e.key==="Enter") createGroup(); if (e.key==="Escape") setAddingGroup(false); }}
-                placeholder="Group name…"
-                autoFocus
-                className="mm-form-input text-xs"
-                style={{ width:130, padding:"4px 10px" }} />
-              <button onClick={createGroup} className="mm-btn-gold text-xs px-3 py-1">Add</button>
-              <button onClick={() => setAddingGroup(false)} className="mm-icon-btn" style={{ fontSize:14 }}>×</button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setAddingGroup(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-opacity hover:opacity-100"
-              style={{
-                border: "1px dashed var(--mm-border-gold)",
-                color: "var(--mm-muted)",
-                fontFamily: "'Outfit',sans-serif",
-                opacity: 0.6,
-              }}>
-              <Plus size={10} /> New group
-            </button>
-          )}
+          <Zap size={13} style={{ color:"var(--mm-gold)", flexShrink:0 }} />
+          <span style={{ fontSize:11, letterSpacing:"0.07em", color:"var(--mm-gold)",
+                         fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+            Chief Of Staff — AI Task Parser
+          </span>
+          <span style={{ fontSize:10, color:"var(--mm-muted)", fontFamily:"'Outfit',sans-serif", marginLeft:4 }}>
+            e.g. &nbsp;<em>#Work Call Brinda tomorrow 3pm high priority</em>
+          </span>
         </div>
 
         {/* Input + Voice + Parse */}
@@ -473,21 +519,18 @@ export default function Tasks() {
             value={aiText}
             onChange={e => setAiText(e.target.value)}
             onKeyDown={e => e.key==="Enter" && parseAi()}
-            placeholder='e.g. #Work Call Brinda for revising the invoice'
+            placeholder="Type a task naturally — AI will extract title, date, group, person…"
             className="flex-1 bg-transparent outline-none px-4 py-3 text-sm"
             style={{ color:"var(--mm-text)", fontFamily:"'Outfit',sans-serif" }} />
           <button
             onClick={handleVoice}
             title="Voice input"
             style={{
-              padding:"0 16px",
-              height:48,
+              padding:"0 16px", height:48,
               background: voiceActive ? "rgba(201,169,97,0.15)" : "transparent",
-              border:"none",
-              borderLeft:"1px solid var(--mm-border)",
+              border:"none", borderLeft:"1px solid var(--mm-border)",
               color: voiceActive ? "var(--mm-gold)" : "var(--mm-muted)",
-              cursor:"pointer",
-              display:"flex", alignItems:"center",
+              cursor:"pointer", display:"flex", alignItems:"center",
             }}>
             <Mic size={16} style={{ animation: voiceActive ? "pulse 1s infinite" : "none" }} />
           </button>
@@ -495,67 +538,55 @@ export default function Tasks() {
             onClick={parseAi}
             disabled={!aiText.trim() || aiLoading}
             style={{
-              padding:"0 24px",
-              height:48,
-              background:"var(--mm-gold)",
-              border:"none",
+              padding:"0 28px", height:48,
+              background:"var(--mm-gold)", border:"none",
               borderLeft:"1px solid rgba(201,169,97,0.3)",
-              color:"#0a0a0a",
-              fontFamily:"'Outfit',sans-serif",
-              fontWeight:600,
-              fontSize:14,
-              cursor:"pointer",
+              color:"#0a0a0a", fontFamily:"'Outfit',sans-serif",
+              fontWeight:600, fontSize:14, cursor:"pointer",
               display:"flex", alignItems:"center", gap:6,
               opacity: (!aiText.trim() || aiLoading) ? 0.5 : 1,
             }}>
             {aiLoading ? <Loader size={13} className="animate-spin" /> : null}
-            {aiLoading ? "Parsing…" : "Parse"}
+            {aiLoading ? "Parsing…" : "Parse →"}
           </button>
         </div>
       </div>
 
-      {/* ── Group filter pills ── */}
+      {/* ═══════════════════════════════════════════
+          SECTION 2 — PARSE RESULT PREVIEW
+          ═══════════════════════════════════════════ */}
+      {preview && (
+        <div className="mb-4">
+          <EditablePreview title="Review Task" fields={preview.fields}
+                           onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
+        </div>
+      )}
+
+      {/* ── Group filter pills (between AI and table) ── */}
       {allGroups.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-5">
-          <button
-            onClick={() => setActiveGroup("")}
-            className="px-3 py-1 rounded-full text-xs transition-all"
-            style={{
-              background: !activeGroup ? "var(--mm-gold)" : "var(--mm-surface-2)",
-              color:      !activeGroup ? "#0a0a0a" : "var(--mm-muted)",
-              border:     !activeGroup ? "none" : "1px solid var(--mm-border)",
-              fontFamily: "'Outfit',sans-serif",
-              fontWeight: !activeGroup ? 600 : 400,
-            }}>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <button onClick={() => setActiveGroup("")}
+                  className="px-3 py-1 rounded-full text-xs transition-all"
+                  style={{
+                    background: !activeGroup ? "var(--mm-gold)" : "var(--mm-surface-2)",
+                    color:      !activeGroup ? "#0a0a0a" : "var(--mm-muted)",
+                    border:     !activeGroup ? "none" : "1px solid var(--mm-border)",
+                    fontFamily: "'Outfit',sans-serif", fontWeight: !activeGroup ? 600 : 400,
+                  }}>
             All
           </button>
           {allGroups.map(g => (
-            <button
-              key={g}
-              onClick={() => setActiveGroup(activeGroup === g ? "" : g)}
-              className="px-3 py-1 rounded-full text-xs transition-all"
-              style={{
-                background: activeGroup===g ? "var(--mm-gold)" : "var(--mm-surface-2)",
-                color:      activeGroup===g ? "#0a0a0a" : "var(--mm-muted)",
-                border:     activeGroup===g ? "none" : "1px solid var(--mm-border)",
-                fontFamily: "'Outfit',sans-serif",
-                fontWeight: activeGroup===g ? 600 : 400,
-              }}>
+            <button key={g} onClick={() => setActiveGroup(activeGroup===g?"":g)}
+                    className="px-3 py-1 rounded-full text-xs transition-all"
+                    style={{
+                      background: activeGroup===g ? "var(--mm-gold)" : "var(--mm-surface-2)",
+                      color:      activeGroup===g ? "#0a0a0a" : "var(--mm-muted)",
+                      border:     activeGroup===g ? "none" : "1px solid var(--mm-border)",
+                      fontFamily: "'Outfit',sans-serif", fontWeight: activeGroup===g ? 600 : 400,
+                    }}>
               {g}
             </button>
           ))}
-          <button
-            onClick={() => setAddingGroup(true)}
-            className="px-3 py-1 rounded-full text-xs transition-opacity hover:opacity-100"
-            style={{
-              border:"1px dashed var(--mm-border)",
-              color:"var(--mm-muted)",
-              fontFamily:"'Outfit',sans-serif",
-              background:"transparent",
-              opacity:0.5,
-            }}>
-            + New group
-          </button>
         </div>
       )}
 
@@ -567,31 +598,32 @@ export default function Tasks() {
             {selected.size} selected
           </span>
           <button onClick={bulkComplete} className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5">
-            <Check size={11} /> Mark complete
+            <Check size={11} /> Mark Complete
           </button>
           <button onClick={bulkDelete}
                   className="mm-btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5"
                   style={{ color:"var(--mm-muted)", borderColor:"var(--mm-border)" }}>
-            <Trash2 size={11} /> Delete all
+            <Trash2 size={11} /> Delete All
           </button>
-          <button onClick={selectAll} className="mm-btn-ghost px-3 py-1.5 text-xs">Select all</button>
+          <button onClick={selectAll} className="mm-btn-ghost px-3 py-1.5 text-xs">Select All</button>
           <button onClick={clearSel} className="mm-icon-btn ml-auto" style={{ fontSize:16 }}>×</button>
         </div>
       )}
 
-      {/* ── Onboarding tip ── */}
       <OnboardingTip page="tasks" />
 
       {/* ── Empty ── */}
       {visible.length === 0 && (
         <div className="mm-empty">
           <div className="mm-divider" style={{ width:48 }} />
-          <p className="mm-empty-title">No tasks</p>
-          <p className="mm-empty-desc">Use Chief Of Staff above or fill in the row below.</p>
+          <p className="mm-empty-title">No Tasks</p>
+          <p className="mm-empty-desc">Use the AI parser above or fill in the row below.</p>
         </div>
       )}
 
-      {/* ── Sections ── */}
+      {/* ═══════════════════════════════════════════
+          SECTION 3 — TABLE + SECTIONS
+          ═══════════════════════════════════════════ */}
       {Object.entries(sectioned).map(([sec, secTasks]) => (
         <div key={sec} className="mb-4">
 
@@ -612,26 +644,7 @@ export default function Tasks() {
 
           {!collapsedSecs.has(sec) && (
             <div className="mm-card overflow-hidden">
-              {/* Column headers with filter dropdowns */}
-              <div className="hidden md:grid px-3 py-2 mm-label"
-                   style={{ gridTemplateColumns:COLS, borderBottom:"1px solid var(--mm-border)" }}>
-                <span></span>
-                <span></span>
-                <span>Task</span>
-                <ColFilter label="Due"    col="date"   filter={filter} setFilter={setFilter}
-                           values={[...new Set(secTasks.map(t=>t.date).filter(Boolean))].sort()}
-                           open={colFilter} setOpen={setColFilter} />
-                <ColFilter label="Person" col="name"   filter={filter} setFilter={setFilter}
-                           values={[...new Set(secTasks.map(t=>t.name).filter(Boolean))]}
-                           open={colFilter} setOpen={setColFilter} />
-                <ColFilter label="Group"  col="group"  filter={filter} setFilter={setFilter}
-                           values={allGroups}
-                           open={colFilter} setOpen={setColFilter} />
-                <ColFilter label="Status" col="status" filter={filter} setFilter={setFilter}
-                           values={STATUSES}
-                           open={colFilter} setOpen={setColFilter} />
-                <span></span>
-              </div>
+              <ColHeaders secTasks={secTasks} />
 
               {secTasks.length === 0 && (
                 <div className="px-4 py-4 text-xs text-center" style={{ color:"var(--mm-muted)" }}>
@@ -648,6 +661,7 @@ export default function Tasks() {
                 const subtasksDone = subtasks.filter(s => s.done).length;
                 const isExpanded   = expanded.has(t.id);
                 const commentCount = (t.comments||[]).length;
+                const isSelected   = selected.has(t.id);
 
                 return (
                   <React.Fragment key={t.id}>
@@ -659,26 +673,43 @@ export default function Tasks() {
                          className={`mm-row grid items-center px-3 py-2 border-b ${done?"mm-row-completed":""}`}
                          style={{
                            gridTemplateColumns:COLS,
-                           borderColor:"var(--mm-border)", minWidth:740,
+                           borderColor:"var(--mm-border)", minWidth:920,
                            opacity: dragId===t.id ? 0.4 : 1,
                            borderTop: dragOverId===t.id ? "2px solid var(--mm-gold)" : undefined,
+                           background: isSelected ? "rgba(201,169,97,0.04)" : undefined,
                          }}>
 
-                      {/* Check circle only — no white checkbox */}
+                      {/* COL 1: Multi-select checkbox */}
+                      <div className="flex items-center justify-center">
+                        <button
+                          onClick={() => toggleSelect(t.id)}
+                          className="w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-all"
+                          style={{
+                            borderColor: isSelected ? "var(--mm-gold)" : "var(--mm-border)",
+                            background:  isSelected ? "var(--mm-gold)" : "transparent",
+                          }}>
+                          {isSelected && <Check size={8} style={{ color:"#0a0a0a" }} />}
+                        </button>
+                      </div>
+
+                      {/* COL 2: Done toggle (tick circle) */}
                       <button onClick={() => toggle(t)} className={`mm-check ${done?"done":""}`}>
                         {done && <Check size={10} style={{ color:"var(--mm-gold)" }} />}
                       </button>
 
-                      {/* Subtask expand chevron */}
-                      <button
-                        onClick={() => setExpanded(s => { const n=new Set(s); n.has(t.id)?n.delete(t.id):n.add(t.id); return n; })}
-                        title="Expand sub-tasks"
-                        className="flex items-center justify-center transition-transform"
-                        style={{ color:"var(--mm-muted)", transform:isExpanded?"rotate(90deg)":"none" }}>
-                        <ChevronRight size={11} />
-                      </button>
+                      {/* COL 3: Date added / task date */}
+                      <span className="text-xs" style={{ color:"var(--mm-muted)" }}>
+                        {fmtDate(t.created_at || t.date)}
+                      </span>
 
-                      {/* Task title + badges */}
+                      {/* COL 4: Group (editable) */}
+                      <input value={t.group||""} onChange={e => update(t.id,{group:e.target.value})}
+                             className="mm-input-ghost text-xs" placeholder="—" />
+
+                      {/* COL 5: To — person picker */}
+                      <PersonCell task={t} people={people} update={update} />
+
+                      {/* COL 6: Task title + badges */}
                       <div className="flex items-center gap-1.5 min-w-0">
                         {t.flagged && <Flag size={11} style={{ color:"var(--mm-gold)",flexShrink:0 }} />}
                         {t.priority && (
@@ -694,7 +725,7 @@ export default function Tasks() {
                         )}
                         <div className="flex-1 min-w-0">
                           <input value={t.task} onChange={e => update(t.id,{task:e.target.value})}
-                                 className="mm-input-ghost text-sm w-full" />
+                                 className={`mm-input-ghost text-sm w-full ${done?"line-through opacity-50":""}`} />
                           {subtasks.length > 0 && (
                             <div className="text-xs mt-0.5" style={{ color:"var(--mm-muted)" }}>
                               {subtasksDone}/{subtasks.length} subtasks
@@ -707,89 +738,118 @@ export default function Tasks() {
                               const idx = ESTIMATES.indexOf(t.estimate);
                               update(t.id, { estimate: ESTIMATES[(idx+1) % ESTIMATES.length] });
                             }}
-                            className="mm-est-pill flex-shrink-0"
-                            title="Cycle time estimate">
+                            className="mm-est-pill flex-shrink-0" title="Cycle time estimate">
                             {t.estimate}
                           </button>
                         )}
                         {t.confidence && t.confidence!=="high" &&
                           <ConfidenceBadge level={t.confidence} size="xs" />}
-                        {t.attachments?.length > 0 &&
-                          <Paperclip size={10} style={{ color:"var(--mm-muted)" }} />}
-                        {commentCount > 0 && (
-                          <button onClick={() => setCommentOpen(t.id===commentOpen?null:t.id)}
-                                  className="flex items-center gap-0.5 text-xs flex-shrink-0"
-                                  style={{ color:"var(--mm-gold)" }}>
-                            <MessageSquare size={10} /> {commentCount}
-                          </button>
-                        )}
                       </div>
 
-                      {/* Due date — gold calendar icon via colorScheme + filter */}
+                      {/* COL 7: Due Date */}
                       <input
                         type="date"
                         value={t.date||""}
                         onChange={e => update(t.id,{date:e.target.value})}
                         className="mm-input-ghost text-xs mm-date-gold"
-                        style={{ color: over?"var(--mm-muted)":"var(--mm-text)" }} />
+                        style={{ color: over ? "#F87171" : "var(--mm-text)" }} />
 
-                      {/* Person picker */}
-                      <PersonCell task={t} people={people} update={update} />
-
-                      {/* Group */}
-                      <input value={t.group||""} onChange={e => update(t.id,{group:e.target.value})}
-                             className="mm-input-ghost text-xs" placeholder="—" />
-
-                      {/* Status */}
+                      {/* COL 8: Status */}
                       <select value={t.status} onChange={e => update(t.id,{status:e.target.value})}
                               className="mm-input-ghost text-xs mm-status-select"
                               style={{ color:STATUS_COLORS[t.status]||"var(--mm-muted)" }}>
                         {STATUSES.map(s => <option key={s}>{s}</option>)}
                       </select>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-0.5 justify-end">
-                        <button onClick={() => moveUp(t.id)}   title="Move up"   className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowUp   size={10} /></button>
-                        <button onClick={() => moveDown(t.id)} title="Move down" className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}><ArrowDown size={10} /></button>
+                      {/* COL 9: Actions —
+                          UP · DOWN · ATTACHMENT · SUBTASK · FLAG · REMINDER · COMMENT · MOVE GROUP · DELETE · PRIORITY */}
+                      <div className="relative flex items-center gap-0.5 justify-end">
+                        {/* UP */}
+                        <button onClick={() => moveUp(t.id)} title="Move Up"
+                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
+                          <ArrowUp size={10} />
+                        </button>
+                        {/* DOWN */}
+                        <button onClick={() => moveDown(t.id)} title="Move Down"
+                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
+                          <ArrowDown size={10} />
+                        </button>
+                        {/* ATTACHMENT */}
+                        <button title="Attachment"
+                                className="mm-icon-btn"
+                                style={{ color: t.attachments?.length > 0 ? "var(--mm-gold)" : "var(--mm-muted)" }}
+                                onClick={() => toast.info("Attachment upload coming soon")}>
+                          <Paperclip size={10} />
+                        </button>
+                        {/* SUBTASK (expand) */}
+                        <button
+                          onClick={() => setExpanded(s => { const n=new Set(s); n.has(t.id)?n.delete(t.id):n.add(t.id); return n; })}
+                          title="Sub-tasks"
+                          className="mm-icon-btn"
+                          style={{
+                            color: subtasks.length > 0 ? "var(--mm-gold)" : "var(--mm-muted)",
+                            transform: isExpanded ? "rotate(90deg)" : "none",
+                            transition: "transform 0.15s",
+                          }}>
+                          <ChevronRight size={10} />
+                        </button>
+                        {/* FLAG */}
+                        <button onClick={() => update(t.id,{flagged:!t.flagged})}
+                                title="Flag"
+                                className={`mm-icon-btn ${t.flagged?"active":""}`}
+                                style={{ color: t.flagged ? "var(--mm-gold)" : "var(--mm-muted)" }}>
+                          <Flag size={10} />
+                        </button>
+                        {/* REMINDER */}
+                        <button title="Set Reminder"
+                                className="mm-icon-btn"
+                                style={{ color:"var(--mm-muted)" }}
+                                onClick={() => toast.info("Reminder — go to Reminders page")}>
+                          <Bell size={10} />
+                        </button>
+                        {/* COMMENT */}
+                        <button onClick={() => setCommentOpen(t.id===commentOpen?null:t.id)}
+                                title="Comments"
+                                className="mm-icon-btn"
+                                style={{ color:commentCount>0?"var(--mm-gold)":"var(--mm-muted)" }}>
+                          <MessageSquare size={10} />
+                          {commentCount > 0 && (
+                            <span style={{ fontSize:8, color:"var(--mm-gold)", marginLeft:1 }}>{commentCount}</span>
+                          )}
+                        </button>
+                        {/* MOVE GROUP */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setMoveGroupOpen(moveGroupOpen===t.id ? null : t.id)}
+                            title="Move to Group"
+                            className="mm-icon-btn"
+                            style={{ color:"var(--mm-muted)" }}>
+                            <FolderOpen size={10} />
+                          </button>
+                          {moveGroupOpen === t.id && (
+                            <MoveGroupMenu task={t} allGroups={allGroups} update={update}
+                                           onClose={() => setMoveGroupOpen(null)} />
+                          )}
+                        </div>
+                        {/* DELETE */}
+                        <button onClick={() => del(t.id)} title="Delete"
+                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
+                          <Trash2 size={10} />
+                        </button>
+                        {/* PRIORITY (cycles P1→P2→P3→P4→none) */}
                         <button
                           onClick={() => {
                             const idx = PRIORITIES.indexOf(t.priority || "");
                             update(t.id, { priority: PRIORITIES[(idx+1) % PRIORITIES.length] });
                           }}
                           title={`Priority: ${t.priority || "none"}`}
-                          className={`mm-icon-btn mm-${(t.priority||"").toLowerCase()}`}>
-                          <span style={{ fontSize:9, fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+                          className={`mm-icon-btn mm-${(t.priority||"").toLowerCase()}`}
+                          style={{ color: t.priority ? "var(--mm-gold)" : "var(--mm-muted)", minWidth:18 }}>
+                          <span style={{ fontSize:9, fontFamily:"'Outfit',sans-serif", fontWeight:700 }}>
                             {t.priority || "—"}
                           </span>
                         </button>
-                        <button
-                          onClick={() => {
-                            const idx = ESTIMATES.indexOf(t.estimate || "");
-                            update(t.id, { estimate: ESTIMATES[(idx+1) % ESTIMATES.length] });
-                          }}
-                          title={`Estimate: ${t.estimate || "none"}`}
-                          className="mm-icon-btn" style={{ color:"var(--mm-muted)", fontSize:9 }}>
-                          <span style={{ fontSize:8, fontFamily:"'Outfit',sans-serif" }}>
-                            {t.estimate || "⏱"}
-                          </span>
-                        </button>
-                        <button onClick={() => update(t.id,{flagged:!t.flagged})}
-                                className={`mm-icon-btn ${t.flagged?"active":""}`}>
-                          <Flag size={11} />
-                        </button>
-                        <button onClick={() => setCommentOpen(t.id===commentOpen?null:t.id)}
-                                title="Comments"
-                                className="mm-icon-btn"
-                                style={{ color:commentCount>0?"var(--mm-gold)":"var(--mm-muted)" }}>
-                          <MessageSquare size={11} />
-                        </button>
-                        <button onClick={() => duplicate(t)} title="Duplicate task"
-                                className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
-                          <Copy size={10} />
-                        </button>
-                        <button onClick={() => del(t.id)} className="mm-icon-btn" style={{ color:"var(--mm-muted)" }}>
-                          <Trash2 size={11} />
-                        </button>
+                        {/* DRAG HANDLE */}
                         <GripVertical size={11} style={{ color:"var(--mm-muted)",opacity:0.3,cursor:"grab" }} />
                       </div>
                     </div>
@@ -875,65 +935,57 @@ export default function Tasks() {
         </div>
       ))}
 
-      {/* ── New row — part of the table ── */}
-      <div className="mm-card overflow-hidden mb-4">
-        {/* New row header */}
+      {/* ─── NEW TASK ROW — inline at bottom of table ─────────── */}
+      <div className="mm-card overflow-hidden mb-3">
+        {/* Column headers matching main table */}
         <div className="hidden md:grid px-3 py-1.5 mm-label"
              style={{ gridTemplateColumns:COLS, borderBottom:"1px solid var(--mm-border)" }}>
           <span></span>
           <span></span>
-          <span style={{ color:"var(--mm-gold)" }}>New Task</span>
-          <span>Due</span>
-          <span>Person</span>
+          <span style={{ color:"var(--mm-gold)" }}>Date</span>
           <span>Group</span>
+          <span>To</span>
+          <span style={{ color:"var(--mm-gold)" }}>+ New Task</span>
+          <span>Due Date</span>
           <span>Status</span>
           <span>Priority</span>
         </div>
         <div className="grid items-center px-3 py-2"
-             style={{ gridTemplateColumns:COLS, minWidth:740 }}>
-          {/* Check circle placeholder */}
+             style={{ gridTemplateColumns:COLS, minWidth:920 }}>
+          {/* checkbox placeholder */}
+          <div className="flex items-center justify-center">
+            <div className="w-3.5 h-3.5 rounded-sm border" style={{ borderColor:"var(--mm-border)", opacity:0.3 }} />
+          </div>
+          {/* done circle placeholder */}
           <div className="flex items-center justify-center">
             <div className="mm-check" style={{ opacity:0.3 }} />
           </div>
-          <span />
+          {/* Date — shows today */}
+          <span className="text-xs" style={{ color:"var(--mm-muted)", opacity:0.6 }}>
+            {fmtDate(todayISO())}
+          </span>
+          {/* Group */}
+          <DropCell value={newRow.group} onChange={v => setNewRow(r=>({...r,group:v}))}
+                    options={allGroups} placeholder="Group" />
+          {/* To (person) */}
+          <DropCell value={newRow.name}  onChange={v => setNewRow(r=>({...r,name:v}))}
+                    options={[...new Set(people.map(p=>p.name).filter(Boolean))]} placeholder="Person" />
           {/* Task title */}
           <input value={newRow.task}
                  onChange={e => setNewRow(r=>({...r,task:e.target.value}))}
                  onKeyDown={e => e.key==="Enter" && addManual()}
-                 placeholder="Task title…"
+                 placeholder="Task title…  (press Enter to add)"
                  className="mm-input-ghost text-sm" />
-          {/* Due date — gold calendar icon */}
-          <input
-            type="date"
-            value={newRow.date}
-            onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
-            className="mm-input-ghost text-xs w-full mm-date-gold"
-            style={{ colorScheme:"dark" }} />
-          {/* Person — Excel dropdown */}
-          <DropCell
-            value={newRow.name}
-            onChange={v => setNewRow(r=>({...r,name:v}))}
-            options={[...new Set(people.map(p=>p.name).filter(Boolean))]}
-            placeholder="Person" />
-          {/* Group — Excel dropdown */}
-          <DropCell
-            value={newRow.group}
-            onChange={v => setNewRow(r=>({...r,group:v}))}
-            options={allGroups}
-            placeholder="Group" />
-          {/* Status — Excel dropdown */}
-          <DropCell
-            value={newRow.status}
-            onChange={v => setNewRow(r=>({...r,status:v}))}
-            options={STATUSES}
-            placeholder="Status" />
+          {/* Due date */}
+          <input type="date" value={newRow.date} onChange={e => setNewRow(r=>({...r,date:e.target.value}))}
+                 className="mm-input-ghost text-xs w-full mm-date-gold" style={{ colorScheme:"dark" }} />
+          {/* Status */}
+          <DropCell value={newRow.status} onChange={v => setNewRow(r=>({...r,status:v}))}
+                    options={STATUSES} placeholder="Status" />
           {/* Priority + Add button */}
           <div className="flex items-center gap-1">
-            <DropCell
-              value={newRow.priority}
-              onChange={v => setNewRow(r=>({...r,priority:v}))}
-              options={PRIORITIES.filter(Boolean)}
-              placeholder="P—" />
+            <DropCell value={newRow.priority} onChange={v => setNewRow(r=>({...r,priority:v}))}
+                      options={PRIORITIES.filter(Boolean)} placeholder="P—" />
             <button onClick={addManual}
                     className="mm-btn-gold flex items-center justify-center gap-1 text-xs px-3 py-1.5 flex-shrink-0">
               <Plus size={11} /> Add
@@ -942,10 +994,42 @@ export default function Tasks() {
         </div>
       </div>
 
-      {preview && (
-        <EditablePreview title="Review Task" fields={preview.fields}
-                         onConfirm={saveFromPreview} onDiscard={() => setPreview(null)} />
-      )}
+      {/* ─── ADD SECTION (Todoist-style) ──────────────────────── */}
+      <div style={{ borderTop:"1px solid var(--mm-border)", paddingTop:12 }}>
+        {addingGroup ? (
+          <div className="flex items-center gap-2 py-2">
+            <div className="flex-1 h-px" style={{ background:"var(--mm-border)" }} />
+            <input
+              value={newGroupName}
+              onChange={e => setNewGroupName(e.target.value)}
+              onKeyDown={e => { if (e.key==="Enter") createGroup(); if (e.key==="Escape") setAddingGroup(false); }}
+              placeholder="Section name…"
+              autoFocus
+              className="mm-form-input text-xs"
+              style={{ width:180, padding:"5px 12px" }} />
+            <button onClick={() => createGroup()}
+                    className="mm-btn-gold text-xs px-4 py-1.5">Add Section</button>
+            <button onClick={() => setAddingGroup(false)}
+                    className="mm-icon-btn" style={{ fontSize:15 }}>×</button>
+            <div className="flex-1 h-px" style={{ background:"var(--mm-border)" }} />
+          </div>
+        ) : (
+          <button
+            onClick={() => setAddingGroup(true)}
+            className="flex items-center gap-2 w-full py-2 px-2 transition-opacity hover:opacity-100 group"
+            style={{ opacity:0.45, color:"var(--mm-muted)" }}>
+            <div className="flex-1 h-px group-hover:bg-mm-border-gold transition-all"
+                 style={{ background:"var(--mm-border)" }} />
+            <span className="flex items-center gap-1.5 text-xs whitespace-nowrap"
+                  style={{ fontFamily:"'Outfit',sans-serif", letterSpacing:"0.04em" }}>
+              <Plus size={11} /> Add Section
+            </span>
+            <div className="flex-1 h-px group-hover:bg-mm-border-gold transition-all"
+                 style={{ background:"var(--mm-border)" }} />
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }
