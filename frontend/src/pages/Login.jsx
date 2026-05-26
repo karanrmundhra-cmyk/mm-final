@@ -4,6 +4,7 @@ import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import Logo from "@/components/Logo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -67,25 +68,15 @@ export default function Login() {
         {/* ── Logo area ── */}
         <div className="flex flex-col items-center pt-10 pb-6 px-8">
 
-          {/* RKM circular logo */}
+          {/* MM Monogram logo */}
           <div style={{
             width: 110,
             height: 110,
-            borderRadius: "50%",
-            overflow: "hidden",
             marginBottom: 22,
-            boxShadow: "0 0 32px rgba(201,169,97,0.2)",
+            filter: "drop-shadow(0 0 18px rgba(201,169,97,0.35))",
+            display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <img
-              src="/rkm-logo.png"
-              alt="Mind Matters"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center 35%",
-              }}
-            />
+            <Logo size={110} />
           </div>
 
           {/* Wordmark */}
