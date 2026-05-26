@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, CheckSquare, RefreshCw, Wallet, FileText,
@@ -213,12 +214,20 @@ export default function AppShell() {
 
   return (
     <>
-      {/* Project selector + weather — rendered OUTSIDE every overflow:hidden container
-          so position:fixed is relative to the viewport with no parent interference */}
-      <div className="fixed top-4 right-5 z-[100] pointer-events-auto flex flex-col items-center gap-2">
-        <ProjectSelector />
-        {location.pathname === "/" && weather && <WeatherCompact weather={weather} />}
-      </div>
+      {/* Project selector + weather — rendered via portal on document.body so
+          position:fixed is always relative to the viewport regardless of any
+          ancestor CSS (transforms, contain, etc.) */}
+      {createPortal(
+        <div style={{
+          position: "fixed", top: 16, right: 20, zIndex: 1000,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          pointerEvents: "auto",
+        }}>
+          <ProjectSelector />
+          {location.pathname === "/" && weather && <WeatherCompact weather={weather} />}
+        </div>,
+        document.body
+      )}
 
       <div className="flex h-screen overflow-hidden" style={{ background: "var(--mm-bg)" }}>
 
@@ -236,7 +245,7 @@ export default function AppShell() {
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
           <div style={{ width: 46, height: 46, borderRadius: "50%", overflow: "hidden",
-                        background: "#fff", flexShrink: 0,
+                        background: "#0A0A0A", flexShrink: 0,
                         boxShadow: "0 0 12px rgba(201,169,97,0.2)" }}>
             <img src="/mm-logo.png" alt="Mind Matters"
                  style={{ width: "100%", height: "100%", objectFit: "cover" }} />

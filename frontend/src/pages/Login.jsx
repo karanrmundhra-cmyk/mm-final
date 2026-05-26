@@ -74,7 +74,7 @@ export default function Login() {
             borderRadius: "50%",
             overflow: "hidden",
             marginBottom: 22,
-            background: "#FFFFFF",
+            background: "#0A0A0A",
             boxShadow: "0 0 40px rgba(201,169,97,0.28), 0 0 0 1px rgba(201,169,97,0.18)",
             flexShrink: 0,
           }}>

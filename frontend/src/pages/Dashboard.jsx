@@ -24,8 +24,8 @@ const ALL_NEWS_CATEGORIES = [
   { id: "entertainment", label: "Entertainment" },
 ];
 
-/* 5 customisable slots — slot 5 is always "Others" */
-const DEFAULT_NEWS_SLOTS = ["general", "business", "tech", "sports", "others"];
+/* 5 slots — slots 1-3 user-selectable, slot 4 = country filter, slot 5 = others */
+const DEFAULT_NEWS_SLOTS = ["general", "business", "tech", "country", "others"];
 
 /* ── News countries (for datalist autocomplete) ──────────────── */
 const NEWS_COUNTRIES = [
@@ -83,7 +83,7 @@ const NEWS_COUNTRIES = [
 /* ── Default draggable section order ─────────────────────────── */
 const DEFAULT_SECTION_ORDER = [
   "overdue", "today", "routines",
-  "cashflow", "reminders_deadlines", "quote",
+  "reminders_deadlines", "cashflow", "quote",
   "news", "worldclock", "timers",
 ];
 
@@ -257,7 +257,16 @@ export default function Dashboard() {
       // deduplicate saved order first, then append any new sections not yet in it
       const deduped = [...new Set(saved)];
       const set = new Set(deduped);
-      return [...deduped, ...DEFAULT_SECTION_ORDER.filter(id => !set.has(id))];
+      const merged = [...deduped, ...DEFAULT_SECTION_ORDER.filter(id => !set.has(id))];
+      // ── Migration: ensure reminders_deadlines is before cashflow ──
+      const ri = merged.indexOf("reminders_deadlines");
+      const ci = merged.indexOf("cashflow");
+      if (ri !== -1 && ci !== -1 && ri > ci) {
+        merged.splice(ri, 1);
+        merged.splice(ci, 0, "reminders_deadlines");
+        localStorage.setItem("mm_section_order", JSON.stringify(merged));
+      }
+      return merged;
     } catch { return DEFAULT_SECTION_ORDER; }
   });
   const [dragId,        setDragId]        = useState(null);
@@ -303,8 +312,9 @@ export default function Dashboard() {
   }, [financeView]);
 
   /* News — driven by active slot */
-  const activeSlotId  = newsSlots[activeNewsSlot] || "general";
-  const isOthersSlot  = activeSlotId === "others";
+  const activeSlotId    = newsSlots[activeNewsSlot] || "general";
+  const isOthersSlot    = activeSlotId === "others";
+  const isCountrySlot   = activeSlotId === "country";
   const newsCountryCode = NEWS_COUNTRIES.find(c => c.label === newsCountryLabel)?.code || "";
   useEffect(() => {
     setNews([]);
@@ -322,12 +332,18 @@ export default function Dashboard() {
       }
       return;
     }
-    const params = { category: activeSlotId };
-    if (newsCountryCode) params.gl = newsCountryCode;
-    api.get("/news", { params })
+    if (isCountrySlot) {
+      const params = { category: "general" };
+      if (newsCountryCode) params.gl = newsCountryCode;
+      api.get("/news", { params })
+         .then(r => setNews(r.data.items || r.data || []))
+         .catch(() => {});
+      return;
+    }
+    api.get("/news", { params: { category: activeSlotId } })
        .then(r => setNews(r.data.items || r.data || []))
        .catch(() => {});
-  }, [activeNewsSlot, activeSlotId, isOthersSlot, newsCountryCode, customRss, newsKeywords]); // eslint-disable-line
+  }, [activeNewsSlot, activeSlotId, isOthersSlot, isCountrySlot, newsCountryCode, customRss, newsKeywords]); // eslint-disable-line
 
   const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
   const isOpen = (key) => !collapsed[key];
@@ -581,6 +597,22 @@ export default function Dashboard() {
           case "cashflow":
             return data?.cashflow ? DS("cashflow", S("cashflow", "Financial Overview",
               <>
+                {/* Month / Year toggle — inside children so it hides when collapsed */}
+                <div className="flex gap-1 mb-3" onClick={e => e.stopPropagation()}>
+                  {["month", "year"].map(v => (
+                    <button key={v} onClick={() => setFinanceView(v)}
+                            style={{
+                              fontSize: 9, padding: "2px 8px", borderRadius: 20,
+                              fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
+                              background: financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                              color:      financeView === v ? "#0a0a0a" : "var(--mm-muted)",
+                              border: "none", cursor: "pointer",
+                            }}>
+                      {v === "month" ? "Month" : "Year"}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   {Object.entries(financeView === "year" && yearlyData ? yearlyData : data.cashflow).map(([cat, val]) => (
                     <button key={cat} onClick={() => navigate("/cash-flow")}
@@ -623,25 +655,7 @@ export default function Dashboard() {
                     {spendingInsight}
                   </p>
                 )}
-              </>,
-              {
-                extra: (
-                  <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
-                    {["month", "year"].map(v => (
-                      <button key={v} onClick={() => setFinanceView(v)}
-                              style={{
-                                fontSize: 9, padding: "2px 8px", borderRadius: 20,
-                                fontFamily: "'Outfit', sans-serif", letterSpacing: "0.05em",
-                                background: financeView === v ? "var(--mm-gold)" : "var(--mm-surface-3)",
-                                color:      financeView === v ? "#0a0a0a" : "var(--mm-muted)",
-                                border: "none", cursor: "pointer",
-                              }}>
-                        {v === "month" ? "Month" : "Year"}
-                      </button>
-                    ))}
-                  </div>
-                ),
-              })) : null;
+              </>)) : null;
 
           case "reminders_deadlines":
             return ((data?.reminders?.length > 0) || (data?.due_soon?.length > 0)) ? DS("reminders_deadlines",
@@ -701,13 +715,14 @@ export default function Dashboard() {
               </>)) : null;
 
           case "news": {
-            /* 5-slot tab pills shown in the section header (extra prop) */
+            /* 5-slot tab pills — rendered INSIDE children so they hide when collapsed */
             const newsPills = (
-              <div className="flex gap-1 ml-2 flex-wrap" onClick={e => e.stopPropagation()}>
+              <div className="flex gap-1 flex-wrap mb-3" onClick={e => e.stopPropagation()}>
                 {newsSlots.map((slotId, i) => {
-                  const cat = slotId === "others"
-                    ? { label: "Others" }
-                    : ALL_NEWS_CATEGORIES.find(c => c.id === slotId);
+                  let label;
+                  if (slotId === "others")  label = "Others";
+                  else if (slotId === "country") label = newsCountryLabel || "Global";
+                  else label = ALL_NEWS_CATEGORIES.find(c => c.id === slotId)?.label || slotId;
                   return (
                     <button key={i}
                             onClick={e => { e.stopPropagation(); setActiveNewsSlot(i); }}
@@ -718,7 +733,7 @@ export default function Dashboard() {
                               background: activeNewsSlot === i ? "var(--mm-gold)" : "var(--mm-surface-3)",
                               color:      activeNewsSlot === i ? "#0a0a0a" : "var(--mm-muted)",
                             }}>
-                      {cat?.label || slotId}
+                      {label}
                     </button>
                   );
                 })}
@@ -735,6 +750,9 @@ export default function Dashboard() {
 
             return DS("news", S("news", "News",
               <div className="space-y-3">
+                {/* Tab pills — visible only when section is open */}
+                {newsPills}
+
                 {/* Others slot — RSS + keyword inputs */}
                 {isOthersSlot && (
                   <div className="space-y-2">
@@ -755,7 +773,7 @@ export default function Dashboard() {
                 <div className="mm-card overflow-hidden">
                   {news.length === 0
                     ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>
-                        {isOthersSlot ? "Enter a URL or keywords above and tap Save & Fetch" : "No News Available"}
+                        {isOthersSlot ? "Enter a URL or keywords above, then tap Save & Fetch." : "No News Available"}
                       </p>
                     : news.filter(item => item && typeof item === "string" && item.trim().length > 5 && item !== "Google News").map((item, i) => (
                         <a key={i}
@@ -770,7 +788,7 @@ export default function Dashboard() {
                       ))
                   }
                 </div>
-              </div>, { extra: newsPills }));
+              </div>));
           }
 
           case "worldclock":
@@ -811,12 +829,12 @@ export default function Dashboard() {
               <button onClick={() => setShowNewsPicker(false)} className="mm-icon-btn" style={{ fontSize: 18 }}>×</button>
             </div>
 
-            {/* 4 editable slots */}
+            {/* 3 editable slots (slot 4 = Country, slot 5 = Others — both fixed) */}
             <p style={{ fontSize: 9, letterSpacing: "0.06em", color: "var(--mm-gold)",
                         fontFamily: "'Outfit', sans-serif", marginBottom: 12 }}>
-              Tab Slots (Slot 5 Is Always "Others")
+              Tab Slots
             </p>
-            {newsSlots.slice(0, 4).map((slotId, slotIdx) => (
+            {newsSlots.slice(0, 3).map((slotId, slotIdx) => (
               <div key={slotIdx} className="mb-4">
                 <p style={{ fontSize: 9, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
                             letterSpacing: "0.05em", marginBottom: 6 }}>

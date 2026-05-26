@@ -76,7 +76,7 @@ export default function CountdownTimer() {
             type="number" min="1" max="999"
             value={customVal}
             onChange={e => setCustomVal(e.target.value)}
-            placeholder="Custom minutes…"
+            placeholder="Custom Minutes…"
             className="mm-form-input flex-1 text-xs"
             onKeyDown={e => {
               if (e.key === "Enter" && parseFloat(customVal) > 0) {
