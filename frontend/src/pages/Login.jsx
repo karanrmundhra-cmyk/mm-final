@@ -4,7 +4,6 @@ import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import Logo from "@/components/Logo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,15 +67,22 @@ export default function Login() {
         {/* ── Logo area ── */}
         <div className="flex flex-col items-center pt-10 pb-6 px-8">
 
-          {/* MM Monogram logo */}
+          {/* MM Monogram logo — actual brand PNG */}
           <div style={{
-            width: 110,
-            height: 110,
+            width: 116,
+            height: 116,
+            borderRadius: "50%",
+            overflow: "hidden",
             marginBottom: 22,
-            filter: "drop-shadow(0 0 18px rgba(201,169,97,0.35))",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "#FFFFFF",
+            boxShadow: "0 0 40px rgba(201,169,97,0.28), 0 0 0 1px rgba(201,169,97,0.18)",
+            flexShrink: 0,
           }}>
-            <Logo size={110} />
+            <img
+              src="/mm-logo.png"
+              alt="Mind Matters"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           </div>
 
           {/* Wordmark */}
