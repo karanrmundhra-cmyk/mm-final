@@ -202,9 +202,10 @@ export default function Dashboard() {
     try {
       const saved = JSON.parse(localStorage.getItem("mm_section_order"));
       if (!saved) return DEFAULT_SECTION_ORDER;
-      // merge: keep saved order but append any new sections not yet in it
-      const set = new Set(saved);
-      return [...saved, ...DEFAULT_SECTION_ORDER.filter(id => !set.has(id))];
+      // deduplicate saved order first, then append any new sections not yet in it
+      const deduped = [...new Set(saved)];
+      const set = new Set(deduped);
+      return [...deduped, ...DEFAULT_SECTION_ORDER.filter(id => !set.has(id))];
     } catch { return DEFAULT_SECTION_ORDER; }
   });
   const [dragId,        setDragId]        = useState(null);
