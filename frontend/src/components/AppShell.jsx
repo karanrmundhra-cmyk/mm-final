@@ -235,8 +235,12 @@ export default function AppShell() {
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 flex-shrink-0"
              style={{ height: 68, borderBottom: "1px solid var(--mm-border)" }}>
-          {/* SVG monogram — guaranteed correct regardless of PNG crop */}
-          <MMLogo size={46} />
+          <div style={{ width: 46, height: 46, borderRadius: "50%", overflow: "hidden",
+                        background: "#fff", flexShrink: 0,
+                        boxShadow: "0 0 12px rgba(201,169,97,0.2)" }}>
+            <img src="/mm-logo.png" alt="Mind Matters"
+                 style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
           {!collapsed && (
             <div className="min-w-0">
               <div style={{
