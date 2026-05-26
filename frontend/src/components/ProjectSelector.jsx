@@ -59,7 +59,7 @@ export default function ProjectSelector() {
                 <button onClick={() => setAdding(true)}
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5"
                         style={{ color: "var(--mm-muted)" }}>
-                  <Plus size={12} /> New project
+                  <Plus size={12} /> New Space
                 </button>
               )}
             </div>

@@ -103,19 +103,6 @@ function getWeekNumber(d = new Date()) {
   return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
 }
 
-/* BMP-only Unicode weather symbols — no supplementary-plane emoji,
-   no variation selectors → guaranteed to render in all browsers.      */
-function wxEmoji(code) {
-  const c = parseInt(code, 10);
-  if (c === 113) return "☀";   // clear
-  if ([116, 119, 122].includes(c)) return "⛅"; // partly cloudy
-  if ([143, 248, 260].includes(c)) return "☁";  // fog / haze → cloud
-  if ([200, 386, 389, 392, 395].includes(c)) return "⚡"; // thunder
-  if ([227, 230, 335, 338, 371, 374].includes(c)) return "❄"; // snow
-  if (c >= 176) return "☂";   // rain
-  return "⛅";
-}
-
 /* Format API date strings (YYYY-MM-DD or ISO) → "26 May" */
 function fmtDate(str) {
   if (!str) return "";
@@ -125,43 +112,6 @@ function fmtDate(str) {
 }
 
 
-/* ── Weather badge ────────────────────────────────────────────────
-   paddingTop pushes the circle below the floating ProjectSelector
-   badge (top-4 + ~32px height = ~48px).
-   ─────────────────────────────────────────────────────────────── */
-function WeatherBadge({ weather }) {
-  return (
-    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-      <div style={{
-        width: 68, height: 68, borderRadius: "50%",
-        border: "1.5px solid var(--mm-border-gold)",
-        background: "rgba(212,175,55,0.04)",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: 3,
-      }}>
-        {/* Explicit emoji font prevents white-box rendering */}
-        <span style={{
-          fontSize: 24, lineHeight: 1,
-          fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif',
-        }}>
-          {weather.emoji}
-        </span>
-        <span style={{
-          fontSize: 12, fontWeight: 300, fontFamily: "'Outfit', sans-serif",
-          color: "var(--mm-text)", letterSpacing: "0.02em",
-        }}>
-          {weather.temp}°C
-        </span>
-      </div>
-      <span style={{
-        fontSize: 9, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
-        maxWidth: 72, textAlign: "center", lineHeight: 1.3,
-      }}>
-        {weather.desc}
-      </span>
-    </div>
-  );
-}
 
 /* ── Personal Affirmation card ───────────────────────────────────── */
 function AffirmationCard() {
@@ -245,7 +195,6 @@ export default function Dashboard() {
   });
   const [dragId,        setDragId]        = useState(null);
   const [dragOverId,    setDragOverId]    = useState(null);
-  const [weather,       setWeather]       = useState(null);
   const [showNewsCategoryPicker, setShowNewsCategoryPicker] = useState(false);
 
   /* Clock */
@@ -264,21 +213,6 @@ export default function Dashboard() {
     setShowReview(false);
   };
 
-  /* Weather — wttr.in, no API key needed */
-  useEffect(() => {
-    fetch("https://wttr.in/?format=j1")
-      .then(r => r.json())
-      .then(d => {
-        const c = d.current_condition?.[0];
-        if (!c) return;
-        setWeather({
-          temp:  c.temp_C,
-          desc:  (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" ").replace(/\b\w/g, ch => ch.toUpperCase()),
-          emoji: wxEmoji(c.weatherCode),
-        });
-      })
-      .catch(() => {});
-  }, []);
 
   /* Dashboard data + quote */
   const load = useCallback(async () => {
@@ -380,11 +314,9 @@ export default function Dashboard() {
   return (
     <div className="px-6 py-8 space-y-7" style={{ maxWidth: "100%" }}>
 
-      {/* ── Hero: Greeting (left) + Weather circle (right) ── */}
-      <div className="flex items-center gap-6">
-
-        {/* Left: Date + Greeting + Gold line */}
-        <div className="flex-1 min-w-0">
+      {/* ── Hero: Greeting ── */}
+      <div>
+        <div className="min-w-0">
           <p style={{
             fontSize: 11, color: "var(--mm-muted)", letterSpacing: "0.12em",
             fontFamily: "'Outfit', sans-serif", marginBottom: 14,
@@ -416,9 +348,6 @@ export default function Dashboard() {
             background: "linear-gradient(90deg, var(--mm-gold), transparent)",
           }} />
         </div>
-
-        {/* Right: Weather circle (where the 0% ring was) */}
-        {weather && <WeatherBadge weather={weather} />}
       </div>
 
       {/* ── Weekly Review Banner ── */}

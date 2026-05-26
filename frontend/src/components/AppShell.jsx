@@ -17,6 +17,18 @@ import ProjectSelector from "@/components/ProjectSelector";
 import VoiceCapture from "@/components/VoiceCapture";
 import QuickNote from "@/components/QuickNote";
 
+/* ── BMP-only weather symbols (no supplementary-plane emoji) ── */
+function wxEmoji(code) {
+  const c = parseInt(code, 10);
+  if (c === 113) return "☀";
+  if ([116, 119, 122].includes(c)) return "⛅";
+  if ([143, 248, 260].includes(c)) return "☁";
+  if ([200, 386, 389, 392, 395].includes(c)) return "⚡";
+  if ([227, 230, 335, 338, 371, 374].includes(c)) return "❄";
+  if (c >= 176) return "☂";
+  return "⛅";
+}
+
 const NAV = [
   { to: "/",          icon: LayoutDashboard, label: "Dashboard",  key: "1" },
   { to: "/tasks",     icon: CheckSquare,     label: "Tasks",      key: "2" },
@@ -45,6 +57,7 @@ export default function AppShell() {
   const [installPrompt,  setInstallPrompt]  = useState(null);
   const [showInstall,    setShowInstall]    = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [weather,        setWeather]        = useState(null);
 
   // Allow Settings page to open the shortcuts modal via custom event
   useEffect(() => {
@@ -102,6 +115,23 @@ export default function AppShell() {
     const iv = setInterval(check, 60000);
     return () => clearInterval(iv);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Weather — wttr.in, no API key */
+  useEffect(() => {
+    fetch("https://wttr.in/?format=j1")
+      .then(r => r.json())
+      .then(d => {
+        const c = d.current_condition?.[0];
+        if (!c) return;
+        setWeather({
+          temp:  c.temp_C,
+          emoji: wxEmoji(c.weatherCode),
+          desc:  (c.weatherDesc?.[0]?.value || "").split(" ").slice(0, 3).join(" ")
+                   .replace(/\b\w/g, ch => ch.toUpperCase()),
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   /* PWA install prompt — #7 */
   useEffect(() => {
@@ -325,8 +355,9 @@ export default function AppShell() {
       {/* ── MAIN ────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
 
-        {/* Project selector floats at top-right over the page content */}
-        <div className="absolute top-4 right-5 z-20 pointer-events-auto">
+        {/* Weather + Project selector float at top-right, vertically centred together */}
+        <div className="absolute top-4 right-5 z-20 pointer-events-auto flex items-center gap-3">
+          {weather && <WeatherCompact weather={weather} />}
           <ProjectSelector />
         </div>
 
@@ -564,6 +595,29 @@ const SHORTCUTS = [
   { keys: ["Esc"],         desc: "Close any modal" },
   { keys: ["Enter"],       desc: "Submit / save form" },
 ];
+
+/* ── Compact weather badge — sits inline with ProjectSelector ── */
+function WeatherCompact({ weather }) {
+  return (
+    <div style={{
+      width: 52, height: 52, borderRadius: "50%",
+      border: "1.5px solid var(--mm-border-gold)",
+      background: "rgba(212,175,55,0.04)",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center", gap: 2,
+      flexShrink: 0, cursor: "default",
+    }}
+    title={`${weather.desc} · ${weather.temp}°C`}>
+      <span style={{ fontSize: 19, lineHeight: 1 }}>{weather.emoji}</span>
+      <span style={{
+        fontSize: 10, fontFamily: "'Outfit', sans-serif",
+        color: "var(--mm-text)", fontWeight: 300,
+      }}>
+        {weather.temp}°
+      </span>
+    </div>
+  );
+}
 
 function ShortcutsModal({ onClose }) {
   return (
