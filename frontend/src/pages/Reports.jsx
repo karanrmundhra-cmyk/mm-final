@@ -34,7 +34,8 @@ export default function Reports() {
       } else if (t === "Pending Review") {
         setPendingLoading(true);
         const { data: d } = await api.get("/pending-review");
-        setPendingItems(d);
+        /* API may return an array or {items:[]} shape — normalise to array */
+        setPendingItems(Array.isArray(d) ? d : (d?.items || d?.results || d?.data || []));
         setPendingLoading(false);
       }
     } catch {}

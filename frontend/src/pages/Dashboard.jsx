@@ -12,7 +12,7 @@ import WorldClock from "@/components/WorldClock";
 import CountdownTimer from "@/components/CountdownTimer";
 import CountdownDate from "@/components/CountdownDate";
 
-/* ── Fixed news tabs (no customisation needed) ───────────────── */
+/* ── News categories ─────────────────────────────────────────── */
 const FIXED_NEWS_TABS = [
   { id: "general",       label: "General"       },
   { id: "business",      label: "Business"      },
@@ -22,7 +22,21 @@ const FIXED_NEWS_TABS = [
   { id: "science",       label: "Science"       },
   { id: "health",        label: "Health"        },
   { id: "entertainment", label: "Entertainment" },
-  { id: "india",         label: "India"         },
+];
+
+/* ── News countries ──────────────────────────────────────────── */
+const NEWS_COUNTRIES = [
+  { code: "",   label: "Global"      },
+  { code: "in", label: "India"       },
+  { code: "us", label: "USA"         },
+  { code: "gb", label: "UK"          },
+  { code: "au", label: "Australia"   },
+  { code: "ca", label: "Canada"      },
+  { code: "ae", label: "UAE"         },
+  { code: "sg", label: "Singapore"   },
+  { code: "de", label: "Germany"     },
+  { code: "fr", label: "France"      },
+  { code: "jp", label: "Japan"       },
 ];
 
 /* ── Default draggable section order ─────────────────────────── */
@@ -195,7 +209,8 @@ export default function Dashboard() {
   });
   const [dragId,        setDragId]        = useState(null);
   const [dragOverId,    setDragOverId]    = useState(null);
-  const [showNewsCategoryPicker, setShowNewsCategoryPicker] = useState(false);
+  const [showNewsPicker, setShowNewsPicker] = useState(false);
+  const [newsCountry,   setNewsCountry]   = useState(() => localStorage.getItem("mm_news_country") || "");
 
   /* Clock */
   useEffect(() => {
@@ -239,10 +254,12 @@ export default function Dashboard() {
     }
     const tab = FIXED_NEWS_TABS[activeNewsTab];
     if (!tab) return;
-    api.get("/news", { params: { category: tab.id } })
+    const params = { category: tab.id };
+    if (newsCountry) params.gl = newsCountry;
+    api.get("/news", { params })
        .then(r => setNews(r.data.items || []))
        .catch(() => {});
-  }, [activeNewsTab, customRss, isOthersTab]);
+  }, [activeNewsTab, customRss, isOthersTab, newsCountry]);
 
   const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
   const isOpen = (key) => !collapsed[key];
@@ -602,58 +619,24 @@ export default function Dashboard() {
               </>)) : null;
 
           case "news": {
-            const currentCategoryLabel = isOthersTab
-              ? "Others (Custom RSS)"
-              : (FIXED_NEWS_TABS[activeNewsTab]?.label || "General");
+            const catLabel     = isOthersTab ? "Custom RSS" : (FIXED_NEWS_TABS[activeNewsTab]?.label || "General");
+            const countryLabel = NEWS_COUNTRIES.find(c => c.code === newsCountry)?.label || "Global";
             return DS("news", S("news", "News",
               <div className="space-y-3">
-                {/* Compact category selector */}
-                <div className="relative">
-                  <div
-                    className="mm-card flex items-center justify-between px-4 py-2.5 cursor-pointer"
-                    onClick={() => setShowNewsCategoryPicker(v => !v)}
-                    style={{ userSelect: "none" }}>
-                    <span className="text-sm" style={{ color: "var(--mm-text)" }}>
-                      {currentCategoryLabel}
-                    </span>
-                    <div className="flex items-center gap-1.5" style={{ color: "var(--mm-gold)" }}>
-                      <span style={{ fontSize: 11, fontFamily: "'Outfit', sans-serif", letterSpacing: "0.06em" }}>Edit</span>
-                      <ChevronDown size={11}
-                        style={{ transform: showNewsCategoryPicker ? "rotate(180deg)" : "none",
-                                 transition: "transform 0.2s" }} />
-                    </div>
+                {/* Source bar — click to open picker */}
+                <button
+                  onClick={() => setShowNewsPicker(true)}
+                  className="mm-card w-full flex items-center justify-between px-4 py-2.5"
+                  style={{ textAlign: "left", userSelect: "none" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm" style={{ color: "var(--mm-text)" }}>{catLabel}</span>
+                    <span style={{ color: "var(--mm-muted)", fontSize: 11, opacity: 0.5 }}>·</span>
+                    <span className="text-sm" style={{ color: "var(--mm-muted)" }}>{countryLabel}</span>
                   </div>
-                  {showNewsCategoryPicker && (
-                    <div className="absolute top-full left-0 right-0 mt-1 z-30 overflow-hidden animate-fade-in"
-                         style={{
-                           background: "var(--mm-surface)",
-                           border: "1px solid var(--mm-border)",
-                           borderRadius: 12,
-                           boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
-                         }}>
-                      {FIXED_NEWS_TABS.map((tab, i) => (
-                        <button key={tab.id}
-                                onClick={() => { setActiveNewsTab(i); setShowNewsCategoryPicker(false); }}
-                                className="w-full text-left px-4 py-2.5 text-sm mm-row transition-colors"
-                                style={{
-                                  color: activeNewsTab === i && !isOthersTab
-                                    ? "var(--mm-gold)" : "var(--mm-muted)",
-                                }}>
-                          {tab.label}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => { setActiveNewsTab(FIXED_NEWS_TABS.length); setShowNewsCategoryPicker(false); }}
-                        className="w-full text-left px-4 py-2.5 text-sm mm-row transition-colors"
-                        style={{
-                          borderTop: "1px solid var(--mm-border)",
-                          color: isOthersTab ? "var(--mm-gold)" : "var(--mm-muted)",
-                        }}>
-                        Others (Custom RSS)
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  <span className="text-xs" style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
+                    Edit
+                  </span>
+                </button>
 
                 {isOthersTab && (
                   <div className="flex gap-2">
@@ -698,6 +681,103 @@ export default function Dashboard() {
             return null;
         }
       })}
+
+      {/* ── News picker modal ── */}
+      {showNewsPicker && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center"
+             style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(14px)" }}
+             onClick={() => setShowNewsPicker(false)}>
+          <div className="w-full max-w-lg animate-slide-up"
+               style={{
+                 background: "var(--mm-surface)",
+                 borderRadius: "24px 24px 0 0",
+                 border: "1px solid var(--mm-border-gold)",
+                 borderBottom: "none",
+                 padding: 24,
+               }}
+               onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <h3 style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: 20, fontWeight: 400, color: "var(--mm-text)",
+              }}>
+                News Preferences
+              </h3>
+              <button onClick={() => setShowNewsPicker(false)}
+                      className="mm-icon-btn" style={{ fontSize: 18 }}>×</button>
+            </div>
+
+            {/* Category */}
+            <p style={{
+              fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
+              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
+            }}>Category</p>
+            <div className="flex flex-wrap gap-1.5 mb-5">
+              {FIXED_NEWS_TABS.map((tab, i) => (
+                <button key={tab.id}
+                        onClick={() => setActiveNewsTab(i)}
+                        className="mm-filter-tab"
+                        style={{
+                          background: activeNewsTab === i && !isOthersTab ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                          color:      activeNewsTab === i && !isOthersTab ? "#0a0a0a" : "var(--mm-muted)",
+                          border: "none",
+                        }}>
+                  {tab.label}
+                </button>
+              ))}
+              <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
+                      className="mm-filter-tab"
+                      style={{
+                        background: isOthersTab ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                        color:      isOthersTab ? "#0a0a0a" : "var(--mm-muted)",
+                        border: "none",
+                      }}>
+                Custom RSS
+              </button>
+            </div>
+
+            {/* Country */}
+            <p style={{
+              fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase",
+              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
+            }}>Country</p>
+            <div className="flex flex-wrap gap-1.5 mb-5">
+              {NEWS_COUNTRIES.map(c => (
+                <button key={c.code}
+                        onClick={() => {
+                          setNewsCountry(c.code);
+                          localStorage.setItem("mm_news_country", c.code);
+                        }}
+                        className="mm-filter-tab"
+                        style={{
+                          background: newsCountry === c.code ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                          color:      newsCountry === c.code ? "#0a0a0a" : "var(--mm-muted)",
+                          border: "none",
+                        }}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {isOthersTab && (
+              <div className="flex gap-2 mb-4">
+                <input value={customRss} onChange={e => setCustomRss(e.target.value)}
+                       placeholder="Paste a custom RSS feed URL…"
+                       className="mm-form-input flex-1 text-xs" />
+                <button onClick={() => { localStorage.setItem("mm_news_custom_url", customRss); }}
+                        className="mm-btn-gold px-4 text-xs">Save</button>
+              </div>
+            )}
+
+            <button onClick={() => setShowNewsPicker(false)}
+                    className="mm-btn-gold w-full py-2.5">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

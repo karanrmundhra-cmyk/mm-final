@@ -133,7 +133,7 @@ export default function CountdownTimer() {
           position: "absolute", inset: 0,
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
-          gap: 5,
+          gap: 8,
         }}>
           {!done && (
             <div className="flex items-center gap-1.5"
@@ -148,7 +148,7 @@ export default function CountdownTimer() {
 
           <p style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: done ? 36 : 58,
+            fontSize: done ? 36 : 52,
             fontWeight: 300,
             color: done ? "#22C55E" : "var(--mm-text)",
             lineHeight: 1,
@@ -160,18 +160,13 @@ export default function CountdownTimer() {
           </p>
 
           {!done && (
-            <>
-              <p style={{
-                fontSize: 9, color: "var(--mm-muted)",
-                letterSpacing: "0.18em", textTransform: "uppercase",
-                fontFamily: "'Outfit', sans-serif",
-              }}>
-                {running ? "Timer" : "Paused"}
-              </p>
-              <p style={{ fontSize: 9, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif" }}>
-                Radial (Default)
-              </p>
-            </>
+            <p style={{
+              fontSize: 9, color: "var(--mm-muted)",
+              letterSpacing: "0.18em", textTransform: "uppercase",
+              fontFamily: "'Outfit', sans-serif",
+            }}>
+              {running ? "Timer" : "Paused"}
+            </p>
           )}
         </div>
       </div>

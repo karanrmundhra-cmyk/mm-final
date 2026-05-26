@@ -158,14 +158,15 @@ export default function CountdownDate() {
       )}
 
       {/* Days — large display number */}
-      <div className="flex flex-col items-center" style={{ gap: 0 }}>
+      <div className="flex flex-col items-center" style={{ gap: 4 }}>
         <span style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontSize: 64,
+          fontSize: 56,
           fontWeight: 300,
           lineHeight: 1,
           color: "var(--mm-text)",
           letterSpacing: "-0.025em",
+          display: "block",
         }}>
           {remaining.days}
         </span>
