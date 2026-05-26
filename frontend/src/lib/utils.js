@@ -6,7 +6,7 @@ export function cn(...inputs) {
 }
 
 export function formatAmount(n) {
-  return new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2 }).format(n || 0);
+  return new Intl.NumberFormat("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0);
 }
 
 export function timeAgo(iso) {

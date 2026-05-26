@@ -61,6 +61,14 @@ export default function AppShell() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [weather,        setWeather]        = useState(null);
   const [theme,          setTheme]          = useState(() => localStorage.getItem("mm_theme") || "dark");
+  const [spaceKey,       setSpaceKey]       = useState(0);
+
+  // Remount page content when user switches space — forces data refetch
+  useEffect(() => {
+    const handler = () => setSpaceKey(k => k + 1);
+    window.addEventListener("mm:project-changed", handler);
+    return () => window.removeEventListener("mm:project-changed", handler);
+  }, []);
 
   // Allow Settings page to open the shortcuts modal via custom event
   useEffect(() => {
@@ -372,7 +380,7 @@ export default function AppShell() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium truncate"
                        style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
-                    {user?.first_name} {user?.last_name}
+                    {user?.first_name || (user?.name || "").split(" ")[0] || "—"}
                   </div>
                   <div className="truncate" style={{ fontSize: 10, color: "var(--mm-muted)" }}>
                     {user?.email}
@@ -395,8 +403,8 @@ export default function AppShell() {
       {/* ── MAIN ────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Page */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Page — key changes on space switch to force full data refetch */}
+        <main key={spaceKey} className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
 

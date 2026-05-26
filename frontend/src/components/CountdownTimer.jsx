@@ -65,7 +65,7 @@ export default function CountdownTimer() {
               <span className="text-3xl font-light mm-font-display" style={{ color: "var(--mm-gold)" }}>
                 {m}
               </span>
-              <span className="mm-label">min</span>
+              <span className="mm-label">Min</span>
             </button>
           ))}
         </div>

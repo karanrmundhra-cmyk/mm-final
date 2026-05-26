@@ -13,7 +13,7 @@ import CountdownTimer from "@/components/CountdownTimer";
 import CountdownDate from "@/components/CountdownDate";
 
 /* ── News categories ─────────────────────────────────────────── */
-const FIXED_NEWS_TABS = [
+const ALL_NEWS_CATEGORIES = [
   { id: "general",       label: "General"       },
   { id: "business",      label: "Business"      },
   { id: "tech",          label: "Tech"          },
@@ -24,19 +24,60 @@ const FIXED_NEWS_TABS = [
   { id: "entertainment", label: "Entertainment" },
 ];
 
-/* ── News countries ──────────────────────────────────────────── */
+/* 5 customisable slots — slot 5 is always "Others" */
+const DEFAULT_NEWS_SLOTS = ["general", "business", "tech", "sports", "others"];
+
+/* ── News countries (for datalist autocomplete) ──────────────── */
 const NEWS_COUNTRIES = [
-  { code: "",   label: "Global"      },
-  { code: "in", label: "India"       },
-  { code: "us", label: "USA"         },
-  { code: "gb", label: "UK"          },
-  { code: "au", label: "Australia"   },
-  { code: "ca", label: "Canada"      },
-  { code: "ae", label: "UAE"         },
-  { code: "sg", label: "Singapore"   },
-  { code: "de", label: "Germany"     },
-  { code: "fr", label: "France"      },
-  { code: "jp", label: "Japan"       },
+  { code: "",   label: "Global"           },
+  { code: "in", label: "India"            },
+  { code: "us", label: "United States"    },
+  { code: "gb", label: "United Kingdom"   },
+  { code: "au", label: "Australia"        },
+  { code: "ca", label: "Canada"           },
+  { code: "ae", label: "UAE"              },
+  { code: "sg", label: "Singapore"        },
+  { code: "de", label: "Germany"          },
+  { code: "fr", label: "France"           },
+  { code: "jp", label: "Japan"            },
+  { code: "cn", label: "China"            },
+  { code: "br", label: "Brazil"           },
+  { code: "za", label: "South Africa"     },
+  { code: "ng", label: "Nigeria"          },
+  { code: "eg", label: "Egypt"            },
+  { code: "pk", label: "Pakistan"         },
+  { code: "bd", label: "Bangladesh"       },
+  { code: "ru", label: "Russia"           },
+  { code: "it", label: "Italy"            },
+  { code: "es", label: "Spain"            },
+  { code: "mx", label: "Mexico"           },
+  { code: "id", label: "Indonesia"        },
+  { code: "ar", label: "Argentina"        },
+  { code: "sa", label: "Saudi Arabia"     },
+  { code: "tr", label: "Turkey"           },
+  { code: "th", label: "Thailand"         },
+  { code: "ph", label: "Philippines"      },
+  { code: "my", label: "Malaysia"         },
+  { code: "nl", label: "Netherlands"      },
+  { code: "se", label: "Sweden"           },
+  { code: "ch", label: "Switzerland"      },
+  { code: "no", label: "Norway"           },
+  { code: "nz", label: "New Zealand"      },
+  { code: "kr", label: "South Korea"      },
+  { code: "il", label: "Israel"           },
+  { code: "ke", label: "Kenya"            },
+  { code: "gh", label: "Ghana"            },
+  { code: "pt", label: "Portugal"         },
+  { code: "pl", label: "Poland"           },
+  { code: "ua", label: "Ukraine"          },
+  { code: "ir", label: "Iran"             },
+  { code: "iq", label: "Iraq"             },
+  { code: "qe", label: "Qatar"            },
+  { code: "kw", label: "Kuwait"           },
+  { code: "lk", label: "Sri Lanka"        },
+  { code: "np", label: "Nepal"            },
+  { code: "vn", label: "Vietnam"          },
+  { code: "tw", label: "Taiwan"           },
 ];
 
 /* ── Default draggable section order ─────────────────────────── */
@@ -185,11 +226,22 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [data,          setData]          = useState(null);
-  const [news,          setNews]          = useState([]);
-  const [activeNewsTab, setActiveNewsTab] = useState(0);   // index into FIXED_NEWS_TABS; length = Others
-  const [customRss,     setCustomRss]     = useState(() => localStorage.getItem("mm_news_custom_url") || "");
-  const [quote,         setQuote]         = useState(null);
+  const [data,           setData]          = useState(null);
+  const [news,           setNews]          = useState([]);
+  /* News slots — 5 customisable pills; index 4 is always "others" */
+  const [newsSlots,      setNewsSlots]     = useState(() => {
+    try { return JSON.parse(localStorage.getItem("mm_news_slots")) || DEFAULT_NEWS_SLOTS; }
+    catch { return DEFAULT_NEWS_SLOTS; }
+  });
+  const [activeNewsSlot, setActiveNewsSlot] = useState(0);
+  const [customRss,      setCustomRss]     = useState(() => localStorage.getItem("mm_news_custom_url") || "");
+  const [newsKeywords,   setNewsKeywords]  = useState(() => localStorage.getItem("mm_news_keywords") || "");
+  /* Country stored as label for easy datalist UX */
+  const [newsCountryLabel, setNewsCountryLabel] = useState(() => {
+    const code = localStorage.getItem("mm_news_country") || "";
+    return NEWS_COUNTRIES.find(c => c.code === code)?.label || "Global";
+  });
+  const [quote,          setQuote]         = useState(null);
   const [collapsed,     setCollapsed]     = useState({});
   const [now,           setNow]           = useState(new Date());
   const [completedIds,  setCompletedIds]  = useState(new Set());
@@ -211,7 +263,6 @@ export default function Dashboard() {
   const [dragId,        setDragId]        = useState(null);
   const [dragOverId,    setDragOverId]    = useState(null);
   const [showNewsPicker, setShowNewsPicker] = useState(false);
-  const [newsCountry,   setNewsCountry]   = useState(() => localStorage.getItem("mm_news_country") || "");
 
   /* Clock */
   useEffect(() => {
@@ -251,24 +302,32 @@ export default function Dashboard() {
       .catch(() => {});
   }, [financeView]);
 
-  /* News */
-  const isOthersTab = activeNewsTab === FIXED_NEWS_TABS.length;
+  /* News — driven by active slot */
+  const activeSlotId  = newsSlots[activeNewsSlot] || "general";
+  const isOthersSlot  = activeSlotId === "others";
+  const newsCountryCode = NEWS_COUNTRIES.find(c => c.label === newsCountryLabel)?.code || "";
   useEffect(() => {
-    if (isOthersTab) {
-      if (!customRss) return;
-      api.get("/news", { params: { custom_url: customRss } })
-         .then(r => setNews(r.data.items || []))
-         .catch(() => {});
+    setNews([]);
+    if (isOthersSlot) {
+      if (customRss) {
+        api.get("/news", { params: { custom_url: customRss } })
+           .then(r => setNews(r.data.items || r.data || []))
+           .catch(() => {});
+      } else if (newsKeywords) {
+        const params = { q: newsKeywords };
+        if (newsCountryCode) params.gl = newsCountryCode;
+        api.get("/news", { params })
+           .then(r => setNews(r.data.items || r.data || []))
+           .catch(() => {});
+      }
       return;
     }
-    const tab = FIXED_NEWS_TABS[activeNewsTab];
-    if (!tab) return;
-    const params = { category: tab.id };
-    if (newsCountry) params.gl = newsCountry;
+    const params = { category: activeSlotId };
+    if (newsCountryCode) params.gl = newsCountryCode;
     api.get("/news", { params })
-       .then(r => setNews(r.data.items || []))
+       .then(r => setNews(r.data.items || r.data || []))
        .catch(() => {});
-  }, [activeNewsTab, customRss, isOthersTab, newsCountry]);
+  }, [activeNewsSlot, activeSlotId, isOthersSlot, newsCountryCode, customRss, newsKeywords]); // eslint-disable-line
 
   const toggle = (key) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
   const isOpen = (key) => !collapsed[key];
@@ -363,7 +422,7 @@ export default function Dashboard() {
           }}>
             {timeGreeting()},{" "}
             <em style={{ fontStyle: "italic", fontWeight: 400, color: "var(--mm-gold)", letterSpacing: "0.01em" }}>
-              {user?.first_name}{user?.last_name ? ` ${user.last_name}` : ""}
+              {user?.first_name || (user?.name || "Friend").split(" ")[0]}
             </em>
             <span style={{ color: "var(--mm-text)" }}>.</span>
           </h1>
@@ -470,10 +529,25 @@ export default function Dashboard() {
 
           case "today": {
             const rows = data?.due_today?.filter(t => !completedIds.has(t.id)) || [];
-            return rows.length > 0 ? DS("today", S("today", "Today's Tasks",
+            return DS("today", S("today", "Today's Tasks",
               <div className="mm-card overflow-hidden">
-                {rows.map(t => <TaskCheckRow key={t.id} t={t} to="/tasks" />)}
-              </div>, { count: rows.length })) : null;
+                {rows.length > 0
+                  ? rows.map(t => <TaskCheckRow key={t.id} t={t} to="/tasks" />)
+                  : (
+                    <button onClick={() => navigate("/tasks")}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/3 transition-colors">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: "var(--mm-gold)", opacity: 0.25 }} />
+                      <span className="text-sm" style={{ color: "var(--mm-muted)" }}>
+                        No Tasks Due Today
+                        {data?.stats?.pending > 0 && (
+                          <span style={{ opacity: 0.6 }}> · {data.stats.pending} pending</span>
+                        )}
+                      </span>
+                    </button>
+                  )
+                }
+              </div>, { count: rows.length }));
           }
 
           case "soon":
@@ -526,9 +600,7 @@ export default function Dashboard() {
                       Upcoming Payments
                     </div>
                     <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                      {data.upcoming_payments !== undefined && data.upcoming_payments !== null
-                        ? `₹${formatAmount(data.upcoming_payments)}`
-                        : <span style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Outfit',sans-serif" }}>No Upcoming Payments</span>}
+                      ₹{formatAmount(data.upcoming_payments || 0)}
                     </div>
                   </button>
                   <button onClick={() => navigate("/cash-flow")} className="mm-card mm-row p-4 text-left">
@@ -537,9 +609,7 @@ export default function Dashboard() {
                       Upcoming Receipts
                     </div>
                     <div className="text-xl font-light mm-font-display" style={{ color: "var(--mm-text)" }}>
-                      {data.upcoming_receipts !== undefined && data.upcoming_receipts !== null
-                        ? `₹${formatAmount(data.upcoming_receipts)}`
-                        : <span style={{ fontSize: 11, color: "var(--mm-muted)", fontFamily: "'Outfit',sans-serif" }}>No Upcoming Receipts</span>}
+                      ₹{formatAmount(data.upcoming_receipts || 0)}
                     </div>
                   </button>
                 </div>
@@ -631,38 +701,62 @@ export default function Dashboard() {
               </>)) : null;
 
           case "news": {
-            const catLabel     = isOthersTab ? "Custom RSS" : (FIXED_NEWS_TABS[activeNewsTab]?.label || "General");
-            const countryLabel = NEWS_COUNTRIES.find(c => c.code === newsCountry)?.label || "Global";
+            /* 5-slot tab pills shown in the section header (extra prop) */
+            const newsPills = (
+              <div className="flex gap-1 ml-2 flex-wrap" onClick={e => e.stopPropagation()}>
+                {newsSlots.map((slotId, i) => {
+                  const cat = slotId === "others"
+                    ? { label: "Others" }
+                    : ALL_NEWS_CATEGORIES.find(c => c.id === slotId);
+                  return (
+                    <button key={i}
+                            onClick={e => { e.stopPropagation(); setActiveNewsSlot(i); }}
+                            style={{
+                              fontSize: 9, padding: "2px 9px", borderRadius: 20, border: "none",
+                              fontFamily: "'Outfit', sans-serif", letterSpacing: "0.04em",
+                              cursor: "pointer",
+                              background: activeNewsSlot === i ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                              color:      activeNewsSlot === i ? "#0a0a0a" : "var(--mm-muted)",
+                            }}>
+                      {cat?.label || slotId}
+                    </button>
+                  );
+                })}
+                <button onClick={e => { e.stopPropagation(); setShowNewsPicker(true); }}
+                        style={{
+                          fontSize: 9, padding: "2px 8px", borderRadius: 20, cursor: "pointer",
+                          background: "transparent", border: "1px solid var(--mm-border)",
+                          color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
+                        }}>
+                  Edit
+                </button>
+              </div>
+            );
+
             return DS("news", S("news", "News",
               <div className="space-y-3">
-                {/* Source bar — click to open picker */}
-                <button
-                  onClick={() => setShowNewsPicker(true)}
-                  className="mm-card w-full flex items-center justify-between px-4 py-2.5"
-                  style={{ textAlign: "left", userSelect: "none" }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm" style={{ color: "var(--mm-text)" }}>{catLabel}</span>
-                    <span style={{ color: "var(--mm-muted)", fontSize: 11, opacity: 0.5 }}>·</span>
-                    <span className="text-sm" style={{ color: "var(--mm-muted)" }}>{countryLabel}</span>
-                  </div>
-                  <span className="text-xs" style={{ color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif" }}>
-                    Edit
-                  </span>
-                </button>
-
-                {isOthersTab && (
-                  <div className="flex gap-2">
+                {/* Others slot — RSS + keyword inputs */}
+                {isOthersSlot && (
+                  <div className="space-y-2">
                     <input value={customRss} onChange={e => setCustomRss(e.target.value)}
-                           placeholder="Paste a custom RSS feed URL…"
-                           className="mm-form-input flex-1 text-xs" />
-                    <button onClick={() => localStorage.setItem("mm_news_custom_url", customRss)}
-                            className="mm-btn-gold px-4 text-xs">Save</button>
+                           placeholder="Custom RSS feed URL (optional)…"
+                           className="mm-form-input text-xs w-full" />
+                    <input value={newsKeywords} onChange={e => setNewsKeywords(e.target.value)}
+                           placeholder="Research keywords (e.g. AI, climate, Bitcoin)…"
+                           className="mm-form-input text-xs w-full" />
+                    <button onClick={() => {
+                              localStorage.setItem("mm_news_custom_url", customRss);
+                              localStorage.setItem("mm_news_keywords", newsKeywords);
+                            }}
+                            className="mm-btn-gold px-4 text-xs">Save & Fetch</button>
                   </div>
                 )}
 
                 <div className="mm-card overflow-hidden">
                   {news.length === 0
-                    ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>No news available</p>
+                    ? <p className="p-4 text-sm" style={{ color: "var(--mm-muted)" }}>
+                        {isOthersSlot ? "Enter a URL or keywords above and tap Save & Fetch" : "No News Available"}
+                      </p>
                     : news.filter(item => item && typeof item === "string" && item.trim().length > 5 && item !== "Google News").map((item, i) => (
                         <a key={i}
                            href={`https://www.google.com/search?q=${encodeURIComponent(item)}`}
@@ -676,7 +770,7 @@ export default function Dashboard() {
                       ))
                   }
                 </div>
-              </div>));
+              </div>, { extra: newsPills }));
           }
 
           case "worldclock":
@@ -705,86 +799,71 @@ export default function Dashboard() {
                  borderRadius: "24px 24px 0 0",
                  border: "1px solid var(--mm-border-gold)",
                  borderBottom: "none",
-                 padding: 24,
+                 padding: 24, maxHeight: "82vh", overflowY: "auto",
                }}
                onClick={e => e.stopPropagation()}>
 
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
-              <h3 style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 20, fontWeight: 400, color: "var(--mm-text)",
-              }}>
-                News Preferences
+              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 400, color: "var(--mm-text)" }}>
+                Customise News Tabs
               </h3>
-              <button onClick={() => setShowNewsPicker(false)}
-                      className="mm-icon-btn" style={{ fontSize: 18 }}>×</button>
+              <button onClick={() => setShowNewsPicker(false)} className="mm-icon-btn" style={{ fontSize: 18 }}>×</button>
             </div>
 
-            {/* Category */}
-            <p style={{
-              fontSize: 9, letterSpacing: "0.06em",
-              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
-            }}>Category</p>
-            <div className="flex flex-wrap gap-1.5 mb-5">
-              {FIXED_NEWS_TABS.map((tab, i) => (
-                <button key={tab.id}
-                        onClick={() => setActiveNewsTab(i)}
-                        className="mm-filter-tab"
-                        style={{
-                          background: activeNewsTab === i && !isOthersTab ? "var(--mm-gold)" : "var(--mm-surface-3)",
-                          color:      activeNewsTab === i && !isOthersTab ? "#0a0a0a" : "var(--mm-muted)",
-                          border: "none",
-                        }}>
-                  {tab.label}
-                </button>
-              ))}
-              <button onClick={() => setActiveNewsTab(FIXED_NEWS_TABS.length)}
-                      className="mm-filter-tab"
-                      style={{
-                        background: isOthersTab ? "var(--mm-gold)" : "var(--mm-surface-3)",
-                        color:      isOthersTab ? "#0a0a0a" : "var(--mm-muted)",
-                        border: "none",
-                      }}>
-                Custom RSS
-              </button>
-            </div>
-
-            {/* Country */}
-            <p style={{
-              fontSize: 9, letterSpacing: "0.06em",
-              color: "var(--mm-gold)", fontFamily: "'Outfit', sans-serif", marginBottom: 10,
-            }}>Country</p>
-            <div className="flex flex-wrap gap-1.5 mb-5">
-              {NEWS_COUNTRIES.map(c => (
-                <button key={c.code}
-                        onClick={() => {
-                          setNewsCountry(c.code);
-                          localStorage.setItem("mm_news_country", c.code);
-                        }}
-                        className="mm-filter-tab"
-                        style={{
-                          background: newsCountry === c.code ? "var(--mm-gold)" : "var(--mm-surface-3)",
-                          color:      newsCountry === c.code ? "#0a0a0a" : "var(--mm-muted)",
-                          border: "none",
-                        }}>
-                  {c.label}
-                </button>
-              ))}
-            </div>
-
-            {isOthersTab && (
-              <div className="flex gap-2 mb-4">
-                <input value={customRss} onChange={e => setCustomRss(e.target.value)}
-                       placeholder="Paste a custom RSS feed URL…"
-                       className="mm-form-input flex-1 text-xs" />
-                <button onClick={() => { localStorage.setItem("mm_news_custom_url", customRss); }}
-                        className="mm-btn-gold px-4 text-xs">Save</button>
+            {/* 4 editable slots */}
+            <p style={{ fontSize: 9, letterSpacing: "0.06em", color: "var(--mm-gold)",
+                        fontFamily: "'Outfit', sans-serif", marginBottom: 12 }}>
+              Tab Slots (Slot 5 Is Always "Others")
+            </p>
+            {newsSlots.slice(0, 4).map((slotId, slotIdx) => (
+              <div key={slotIdx} className="mb-4">
+                <p style={{ fontSize: 9, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
+                            letterSpacing: "0.05em", marginBottom: 6 }}>
+                  Slot {slotIdx + 1}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_NEWS_CATEGORIES.map(cat => (
+                    <button key={cat.id}
+                            onClick={() => {
+                              const next = [...newsSlots];
+                              next[slotIdx] = cat.id;
+                              setNewsSlots(next);
+                              localStorage.setItem("mm_news_slots", JSON.stringify(next));
+                            }}
+                            className="mm-filter-tab"
+                            style={{
+                              background: newsSlots[slotIdx] === cat.id ? "var(--mm-gold)" : "var(--mm-surface-3)",
+                              color:      newsSlots[slotIdx] === cat.id ? "#0a0a0a" : "var(--mm-muted)",
+                              border: "none",
+                            }}>
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
+            ))}
 
-            <button onClick={() => setShowNewsPicker(false)}
-                    className="mm-btn-gold w-full py-2.5">
+            {/* Country — type-and-autofill datalist */}
+            <p style={{ fontSize: 9, letterSpacing: "0.06em", color: "var(--mm-gold)",
+                        fontFamily: "'Outfit', sans-serif", marginBottom: 8, marginTop: 8 }}>
+              Country Filter
+            </p>
+            <input
+              value={newsCountryLabel}
+              onChange={e => {
+                setNewsCountryLabel(e.target.value);
+                const match = NEWS_COUNTRIES.find(c => c.label.toLowerCase() === e.target.value.toLowerCase());
+                if (match) localStorage.setItem("mm_news_country", match.code);
+              }}
+              list="mm-news-countries"
+              placeholder="Start typing a country…"
+              className="mm-form-input text-xs w-full mb-5" />
+            <datalist id="mm-news-countries">
+              {NEWS_COUNTRIES.map(c => <option key={c.code} value={c.label} />)}
+            </datalist>
+
+            <button onClick={() => setShowNewsPicker(false)} className="mm-btn-gold w-full py-2.5">
               Done
             </button>
           </div>

@@ -60,7 +60,7 @@ export default function CountdownDate() {
         <Calendar size={28} style={{ color: "var(--mm-gold)", opacity: 0.6 }} />
         <p style={{ fontSize: 12, color: "var(--mm-muted)", fontFamily: "'Outfit', sans-serif",
                     letterSpacing: "0.06em" }}>
-          {editDate ? "Change target date" : "Set a countdown date"}
+          {editDate ? "Change Target Date" : "Set A Countdown Date"}
         </p>
         <input
           type="datetime-local"
@@ -174,16 +174,16 @@ export default function CountdownDate() {
           fontSize: 9, color: "var(--mm-muted)", letterSpacing: "0.06em",
           fontFamily: "'Outfit', sans-serif",
         }}>
-          {remaining.days === 1 ? "day" : "days"}
+          {remaining.days === 1 ? "Day" : "Days"}
         </span>
       </div>
 
       {/* HH : MM : SS */}
       <div className="flex items-end gap-0.5">
         {[
-          { v: remaining.hours, l: "hrs" },
-          { v: remaining.mins,  l: "min" },
-          { v: remaining.secs,  l: "sec" },
+          { v: remaining.hours, l: "Hrs" },
+          { v: remaining.mins,  l: "Min" },
+          { v: remaining.secs,  l: "Sec" },
         ].map(({ v, l }, i) => (
           <React.Fragment key={l}>
             {i > 0 && (
@@ -222,7 +222,7 @@ export default function CountdownDate() {
               }}
               onMouseEnter={e => e.currentTarget.style.opacity = "1"}
               onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}>
-        Change date
+        Change Date
       </button>
     </div>
   );
